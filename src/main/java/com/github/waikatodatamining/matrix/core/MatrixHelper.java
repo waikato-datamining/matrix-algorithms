@@ -77,6 +77,46 @@ public class MatrixHelper {
   }
 
   /**
+   * Calculates the mean for the specified column.
+   *
+   * @param data	the matrix to work on
+   * @param col		the column to calculate the mean for
+   * @return		the mean
+   */
+  public static double mean(Matrix data, int col) {
+    double	result;
+    int		i;
+
+    result = 0.0;
+    for (i = 0; i < data.getRowDimension(); i++)
+      result += data.get(i, col) / data.getRowDimension();
+
+    return result;
+  }
+
+  /**
+   * Calculates the standard deviation (sample) for the specified column.
+   *
+   * @param data	the matrix to work on
+   * @param col		the column to calculate the stdev for
+   * @return		the stdev
+   */
+  public static double stdev(Matrix data, int col) {
+    double	result;
+    double	mean;
+    int		i;
+
+    mean   = mean(data, col);
+    result = 0.0;
+    for (i = 0; i < data.getRowDimension(); i++)
+      result += Math.pow(data.get(i, col) - mean, 2);;
+    result /= (data.getRowDimension() - 1);
+    result = Math.sqrt(result);
+
+    return result;
+  }
+
+  /**
    * Reads the matrix from the given CSV file.
    *
    * @param filename	the file to read from
@@ -107,12 +147,12 @@ public class MatrixHelper {
     for (i = 0; i < lines.size(); i++) {
       cells = lines.get(i).split(sep);
       for (j = 0; j < cells.length && j < result.getColumnDimension(); j++) {
-        try {
+	try {
 	  result.set(i, j, Double.parseDouble(cells[j]));
 	}
 	catch (Exception e) {
-          System.err.println("Failed to parse row=" + (header ? (i+1) : i) + " col=" + j + ": " + cells[j]);
-          e.printStackTrace();
+	  System.err.println("Failed to parse row=" + (header ? (i+1) : i) + " col=" + j + ": " + cells[j]);
+	  e.printStackTrace();
 	}
       }
     }
@@ -139,9 +179,9 @@ public class MatrixHelper {
     if (header) {
       line = new StringBuilder();
       for (j = 0; j < data.getColumnDimension(); j++) {
-        if (j > 0)
-          line.append(separator);
-        line.append("col" + (j+1));
+	if (j > 0)
+	  line.append(separator);
+	line.append("col" + (j+1));
       }
       result.add(line.toString());
     }
@@ -149,12 +189,12 @@ public class MatrixHelper {
     for (i = 0; i < data.getRowDimension(); i++) {
       line = new StringBuilder();
       for (j = 0; j < data.getColumnDimension(); j++) {
-        if (j > 0)
-          line.append(separator);
-        if (numDec == -1)
+	if (j > 0)
+	  line.append(separator);
+	if (numDec == -1)
 	  line.append(Double.toString(data.get(i, j)));
-        else
-          line.append(Utils.doubleToStringFixed(data.get(i, j), numDec));
+	else
+	  line.append(Utils.doubleToStringFixed(data.get(i, j), numDec));
       }
       result.add(line.toString());
     }
@@ -206,7 +246,7 @@ public class MatrixHelper {
     lines  = toLines(data, header, separator, numDec);
     for (String line: lines) {
       if (result.length() > 0)
-        result.append("\n");
+	result.append("\n");
       result.append(line);
     }
 

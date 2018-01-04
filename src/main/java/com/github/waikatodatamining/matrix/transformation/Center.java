@@ -21,6 +21,7 @@
 package com.github.waikatodatamining.matrix.transformation;
 
 import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.core.Utils;
 
 /**
@@ -52,15 +53,11 @@ public class Center
    */
   @Override
   public void configure(Matrix data) {
-    int		i;
     int		j;
 
     m_Means = new double[data.getColumnDimension()];
-    for (j = 0; j < data.getColumnDimension(); j++) {
-      for (i = 0; i < data.getRowDimension(); i++) {
-        m_Means[j] += data.get(i, j) / data.getRowDimension();
-      }
-    }
+    for (j = 0; j < data.getColumnDimension(); j++)
+      m_Means[j] = MatrixHelper.mean(data, j);
 
     if (getDebug())
       getLogger().info("Means: " + Utils.arrayToString(m_Means));

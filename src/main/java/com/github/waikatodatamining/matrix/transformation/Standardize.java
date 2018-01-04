@@ -21,6 +21,7 @@
 package com.github.waikatodatamining.matrix.transformation;
 
 import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.core.Utils;
 
 /**
@@ -56,24 +57,15 @@ public class Standardize
    */
   @Override
   public void configure(Matrix data) {
-    int		i;
     int		j;
 
-    m_Means   = new double[data.getColumnDimension()];
-    for (j = 0; j < data.getColumnDimension(); j++) {
-      for (i = 0; i < data.getRowDimension(); i++) {
-        m_Means[j] += data.get(i, j) / data.getRowDimension();
-      }
-    }
+    m_Means = new double[data.getColumnDimension()];
+    for (j = 0; j < data.getColumnDimension(); j++)
+      m_Means[j] = MatrixHelper.mean(data, j);
 
     m_StdDevs = new double[data.getColumnDimension()];
-    for (j = 0; j < data.getColumnDimension(); j++) {
-      for (i = 0; i < data.getRowDimension(); i++) {
-        m_StdDevs[j] += Math.pow(data.get(i, j) - m_Means[j], 2);;
-      }
-      m_StdDevs[j] /= (data.getRowDimension() - 1);
-      m_StdDevs[j] = Math.sqrt(m_StdDevs[j]);
-    }
+    for (j = 0; j < data.getColumnDimension(); j++)
+      m_StdDevs[j] = MatrixHelper.stdev(data, j);
 
     if (getDebug()) {
       getLogger().info("Means: " + Utils.arrayToString(m_Means));
