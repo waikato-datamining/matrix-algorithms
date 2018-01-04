@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.core;
 
+import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
@@ -114,6 +115,129 @@ public class MatrixHelper {
     result = Math.sqrt(result);
 
     return result;
+  }
+
+  /**
+   * returns the given column as a vector (actually a n x 1 matrix)
+   *
+   * @param m the matrix to work on
+   * @param columnIndex the column to return
+   * @return the column as n x 1 matrix
+   */
+  public static Matrix columnAsVector(Matrix m, int columnIndex) {
+    Matrix result;
+    int i;
+
+    result = new Matrix(m.getRowDimension(), 1);
+
+    for (i = 0; i < m.getRowDimension(); i++) {
+      result.set(i, 0, m.get(i, columnIndex));
+    }
+
+    return result;
+  }
+
+  /**
+   * stores the data from the (column) vector in the matrix at the specified
+   * index
+   *
+   * @param v the vector to store in the matrix
+   * @param m the receiving matrix
+   * @param columnIndex the column to store the values in
+   */
+  public static void setVector(Matrix v, Matrix m, int columnIndex) {
+    m.setMatrix(0, m.getRowDimension() - 1, columnIndex, columnIndex, v);
+  }
+
+  /**
+   * returns the (column) vector of the matrix at the specified index
+   *
+   * @param m the matrix to work on
+   * @param columnIndex the column to get the values from
+   * @return the column vector
+   */
+  public static Matrix getVector(Matrix m, int columnIndex) {
+    return m.getMatrix(0, m.getRowDimension() - 1, columnIndex, columnIndex);
+  }
+
+  /**
+   * determines the dominant eigenvector for the given matrix and returns it
+   *
+   * @param m the matrix to determine the dominant eigenvector for
+   * @return the dominant eigenvector
+   */
+  public static Matrix getDominantEigenVector(Matrix m) {
+    EigenvalueDecomposition eigendecomp;
+    double[] eigenvalues;
+    int index;
+    Matrix result;
+
+    eigendecomp = m.eig();
+    eigenvalues = eigendecomp.getRealEigenvalues();
+    index = Utils.maxIndex(eigenvalues);
+    result = columnAsVector(eigendecomp.getV(), index);
+
+    return result;
+  }
+
+  /**
+   * normalizes the given vector (inplace)
+   *
+   * @param v the vector to normalize
+   */
+  public static void normalizeVector(Matrix v) {
+    double sum;
+    int i;
+
+    // determine length
+    sum = 0;
+    for (i = 0; i < v.getRowDimension(); i++) {
+      sum += v.get(i, 0) * v.get(i, 0);
+    }
+    sum = StrictMath.sqrt(sum);
+
+    // normalize content
+    for (i = 0; i < v.getRowDimension(); i++) {
+      v.set(i, 0, v.get(i, 0) / sum);
+    }
+  }
+
+  /**
+   * Compares the two matrices.
+   *
+   * @param m1		the first matrix
+   * @param m2		the second matrix
+   * @return		true if the same dimension and values, otherwise false
+   */
+  public static boolean equal(Matrix m1, Matrix m2) {
+    return equal(m1, m2, 0.0);
+  }
+
+  /**
+   * Compares the two matrices.
+   *
+   * @param m1		the first matrix
+   * @param m2		the second matrix
+   * @param epsilon	the minimal accepted difference between the cells
+   * @return		true if the same dimension and values, otherwise false
+   */
+  public static boolean equal(Matrix m1, Matrix m2, double epsilon) {
+    int		i;
+    int		n;
+
+    if (m1.getColumnDimension() != m2.getColumnDimension())
+      return false;
+    if (m1.getRowDimension() != m2.getRowDimension())
+      return false;
+
+    for (i = 0; i < m1.getRowDimension(); i++) {
+      for (n = 0; n < m1.getColumnDimension(); n++) {
+	if (Math.abs(m1.get(i, n) - m2.get(i, n)) > epsilon)
+	  return false;
+      }
+    }
+
+    return true;
   }
 
   /**

@@ -241,6 +241,28 @@ public class Utils {
   }
 
   /**
+   * Returns index of maximum element in a given array of doubles. First maximum
+   * is returned.
+   *
+   * @param doubles the array of doubles
+   * @return the index of the maximum element
+   */
+  public static/* @pure@ */int maxIndex(double[] doubles) {
+
+    double maximum = 0;
+    int maxIndex = 0;
+
+    for (int i = 0; i < doubles.length; i++) {
+      if ((i == 0) || (doubles[i] > maximum)) {
+        maxIndex = i;
+        maximum = doubles[i];
+      }
+    }
+
+    return maxIndex;
+  }
+
+  /**
    * Rounds a double and converts it into String. Always displays the
    * specified number of decimals.
    *
