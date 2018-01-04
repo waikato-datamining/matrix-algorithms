@@ -31,6 +31,8 @@ import java.util.logging.Logger;
 public abstract class LoggingObject
   implements Serializable {
 
+  private static final long serialVersionUID = -8620918197044300603L;
+
   /** the logger to use. */
   protected transient Logger m_Logger;
 

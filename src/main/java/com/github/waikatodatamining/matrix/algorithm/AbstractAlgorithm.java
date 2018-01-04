@@ -30,4 +30,5 @@ import com.github.waikatodatamining.matrix.core.LoggingObject;
 public abstract class AbstractAlgorithm
   extends LoggingObject {
 
+  private static final long serialVersionUID = 5147733768191663989L;
 }

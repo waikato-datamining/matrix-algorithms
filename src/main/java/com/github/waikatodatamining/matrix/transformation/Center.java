@@ -31,6 +31,8 @@ import com.github.waikatodatamining.matrix.core.Utils;
 public class Center
   extends AbstractTransformation {
 
+  private static final long serialVersionUID = -1411842792256545682L;
+
   /** the means. */
   protected double[] m_Means;
 

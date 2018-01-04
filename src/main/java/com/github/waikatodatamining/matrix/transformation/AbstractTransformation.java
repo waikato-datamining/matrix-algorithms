@@ -31,6 +31,8 @@ import com.github.waikatodatamining.matrix.core.LoggingObject;
 public abstract class AbstractTransformation
   extends LoggingObject {
 
+  private static final long serialVersionUID = 4728192847051793396L;
+
   /** whether the transformer has been configured. */
   protected boolean m_Configured;
 
