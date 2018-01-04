@@ -470,4 +470,23 @@ public class PCA
 
     return result;
   }
+
+  /**
+   * For outputting some information about the algorithm.
+   *
+   * @return		the information
+   */
+  public String toString() {
+    StringBuilder	result;
+
+    result = new StringBuilder();
+    result.append(getClass().getName()).append("\n");
+    result.append(getClass().getName().replaceAll(".", "=")).append("\n\n");
+    result.append("Debug      : " + getDebug()).append("\n");
+    result.append("Variance   : " + getVariance()).append("\n");
+    result.append("Max columns: " + getMaxColumns()).append("\n");
+    result.append("Center     : " + getCenter()).append("\n");
+
+    return result.toString();
+  }
 }

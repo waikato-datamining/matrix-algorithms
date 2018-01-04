@@ -31,4 +31,11 @@ public abstract class AbstractAlgorithm
   extends LoggingObject {
 
   private static final long serialVersionUID = 5147733768191663989L;
+
+  /**
+   * For outputting some information about the algorithm.
+   *
+   * @return		the information
+   */
+  public abstract String toString();
 }
