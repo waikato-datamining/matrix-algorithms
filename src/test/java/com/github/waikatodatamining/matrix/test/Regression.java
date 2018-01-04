@@ -1,0 +1,372 @@
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * Regression.java
+ * Copyright (C) 2010-2018 University of Waikato, Hamilton, New Zealand
+ */
+package com.github.waikatodatamining.matrix.test;
+
+import difflib.Chunk;
+import difflib.DeleteDelta;
+import difflib.Delta;
+import difflib.InsertDelta;
+import difflib.Patch;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+
+/**
+ * Helper class for regression tests.
+ *
+ * @author  fracpete (fracpete at waikato dot ac dot nz)
+ */
+public class Regression {
+
+  /** the storage place for reference files. */
+  public final static String REFERENCES = "src/test/resources";
+
+  /** the extension for references (incl dot). */
+  public final static String EXTENSION = ".ref";
+
+  /** the source indicator. */
+  public final static String SOURCE = "<";
+
+  /** the destination indicator. */
+  public final static String DESTINATION = ">";
+
+  /** the separator for the unified output. */
+  public final static String SEPARATOR_UNIFIED = "---";
+
+  /** the class this regression test is for. */
+  protected Class m_RegressionClass;
+
+  /** the regression file to use. */
+  protected File m_ReferenceFile;
+
+  /**
+   * Initializes the regression check.
+   *
+   * @param cls		the class that is being checked
+   */
+  public Regression(Class cls) {
+    super();
+
+    m_RegressionClass = cls;
+    m_ReferenceFile   = createReferenceFile(m_RegressionClass);
+  }
+
+  /**
+   * Returns the class this regression helper is for.
+   *
+   * @return		the class
+   */
+  public Class getRegressionClass() {
+    return m_RegressionClass;
+  }
+
+  /**
+   * Sets the reference file to use.
+   * <br><br>
+   * Normally, the reference file is determined based on the classname.
+   * This method should only be called if a file different from the class
+   * name must be used, for instance for an additional regression test.
+   * 
+   * @param value	the reference file to use
+   */
+  public void setReferenceFile(File value) {
+    m_ReferenceFile = value;
+  }
+
+  /**
+   * Returns the file for storing the reference data in.
+   *
+   * @return		the reference file
+   */
+  public File getReferenceFile() {
+    return m_ReferenceFile;
+  }
+
+  /**
+   * Assembles the lines into a string.
+   *
+   * @param ind		the indicator string
+   * @param lines	the underlying lines
+   * @return		the generated string
+   */
+  protected String diffToString(String ind, List lines) {
+    StringBuilder	result;
+
+    result = new StringBuilder();
+
+    for (Object line: lines)
+      result.append(ind + " " + line + "\n");
+
+    return result.toString();
+  }
+
+  /**
+   * Creates a range string.
+   *
+   * @param chunk	the chunk to create the range string for
+   * @return		the range string
+   */
+  protected String createRange(Chunk chunk) {
+    if (chunk.size() == 1)
+      return (chunk.getPosition() + 1) + "";
+    else
+      return (chunk.getPosition() + 1) + "," + (chunk.getPosition() + chunk.size());
+  }
+
+  /**
+   * Generates a unified diff for the two lists.
+   *
+   * @param list1	the first list
+   * @param list2	the second list
+   * @return		the unified diff
+   */
+  protected String unified(List<String> list1, List<String> list2) {
+    StringBuilder	result;
+    Patch patch;
+
+    patch  = difflib.DiffUtils.diff(list1, list2);
+    result = new StringBuilder();
+    for (Delta delta: patch.getDeltas()) {
+      if (delta instanceof InsertDelta) {
+	result.append(delta.getOriginal().getPosition() + "a" + createRange(delta.getRevised()) + "\n");
+	result.append(diffToString(DESTINATION, delta.getRevised().getLines()));
+      }
+      else if (delta instanceof DeleteDelta) {
+	result.append(createRange(delta.getOriginal()) + "d" + delta.getRevised().getPosition() + "\n");
+	result.append(diffToString(SOURCE, delta.getOriginal().getLines()));
+      }
+      else {
+	result.append(createRange(delta.getOriginal()) + "c");
+	result.append(createRange(delta.getRevised()) + "\n");
+	result.append(diffToString(SOURCE, delta.getOriginal().getLines()));
+	result.append(SEPARATOR_UNIFIED + "\n");
+	result.append(diffToString(DESTINATION, delta.getRevised().getLines()));
+      }
+    }
+
+    return result.toString();
+  }
+
+  /**
+   * Compares the content generated by the specified class with the stored
+   * regression data. Creates a new reference file if not present yet.
+   *
+   * @param content	the content to check
+   * @return		the difference (or an error message), null if no difference
+   */
+  protected String compare(List<String> content) {
+    String		result;
+    List<String>	reference;
+
+    // reference available?
+    if (!getReferenceFile().exists()) {
+      if (!getReferenceFile().getParentFile().exists()) {
+	if (!getReferenceFile().getParentFile().mkdirs())
+	  return "Failed to create reference file: " + m_ReferenceFile;
+      }
+
+      try {
+	Files.write(getReferenceFile().toPath(), content, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+	System.err.println("Reference file created: " + m_ReferenceFile);
+	return null;
+      }
+      catch (Exception e) {
+	return "Failed to create reference file: " + m_ReferenceFile;
+      }
+    }
+
+    // compare
+    try {
+      reference = Files.readAllLines(getReferenceFile().toPath());
+    }
+    catch (Exception e) {
+      return "Failed to read reference file: " + getReferenceFile();
+    }
+    result = unified(reference, content);
+
+    if (result.length() == 0)
+      return null;
+    else
+      return result;
+  }
+
+  /**
+   * Trims the list, i.e., removes the ignored indices from it.
+   *
+   * @param list	the list to trim
+   * @param ignore	the ignored indices
+   * @return		the trimmed list
+   */
+  public static List<String> trim(List<String> list, int[] ignore) {
+    List<String>	result;
+    HashSet<Integer>	ignored;
+    int			i;
+
+    if (ignore.length == 0)
+      return list;
+
+    result  = new ArrayList<>();
+    ignored = new HashSet<>();
+    for (int ign: ignore)
+      ignored.add(ign);
+
+    for (i = 0; i < list.size(); i++) {
+      if (ignored.contains(i))
+	continue;
+      result.add(list.get(i));
+    }
+
+    return result;
+  }
+
+  /**
+   * Compares the content generated by the specified class with the stored
+   * regression data. Creates a new reference file if not present yet.
+   * Uses "\n" for splitting the string content into lines.
+   *
+   * @param content	the content to check
+   * @return		the difference, null if no difference
+   */
+  public String compare(String content) {
+    return compare(content, "\n");
+  }
+
+  /**
+   * Compares the content generated by the specified class with the stored
+   * regression data. Creates a new reference file if not present yet.
+   * Uses "\n" for splitting the string content into lines.
+   *
+   * @param content	the content to check
+   * @param ignore	the indices of the lines to ignore
+   * @return		the difference, null if no difference
+   */
+  public String compare(String content, int[] ignore) {
+    return compare(content, "\n", ignore);
+  }
+
+  /**
+   * Compares the content generated by the specified class with the stored
+   * regression data. Creates a new reference file if not present yet.
+   *
+   * @param content	the content to check
+   * @param nl		the new line string to use
+   * @return		the difference, null if no difference
+   */
+  public String compare(String content, String nl) {
+    return compare(content, nl, new int[0]);
+  }
+
+  /**
+   * Compares the content generated by the specified class with the stored
+   * regression data. Creates a new reference file if not present yet.
+   *
+   * @param content	the content to check
+   * @param nl		the new line string to use
+   * @param ignore	the indices of the lines to ignore
+   * @return		the difference, null if no difference
+   */
+  public String compare(String content, String nl, int[] ignore) {
+    return compare(trim(Arrays.asList(content.split(nl)), ignore));
+  }
+
+  /**
+   * Compares the file content generated by the specified class with the stored
+   * regression data. Creates a new reference file if not present yet.
+   *
+   * @param files	the files containing the generated output to check
+   * @return		the difference, null if no difference
+   */
+  public String compare(File[] files) {
+    return compare(files, new int[0]);
+  }
+
+  /**
+   * Compares the file content generated by the specified class with the stored
+   * regression data. Creates a new reference file if not present yet.
+   *
+   * @param files	the files containing the generated output to check
+   * @param ignore	the line indices in the files to ignore
+   * @return		the difference, null if no difference
+   */
+  public String compare(File[] files, int[] ignore) {
+    List<String>	content;
+    int			i;
+
+    content = new ArrayList<>();
+    for (i = 0; i < files.length; i++) {
+      content.add("--> " + files[i].getName());
+      if (!files[i].exists()) {
+	content.add("file is missing");
+      }
+      else {
+        try {
+          content.addAll(trim(Files.readAllLines(files[i].toPath()), ignore));
+        }
+        catch (Exception e) {
+          System.err.println("Failed to load: " + files[i]);
+          e.printStackTrace();
+        }
+      }
+      content.add("");
+    }
+
+    return compare(content);
+  }
+
+  /**
+   * Creates a reference file for the specified class.
+   * 
+   * @param regressionClass	the class to build the reference file name for
+   * @return			the generated filename
+   */
+  public static File createReferenceFile(Class regressionClass) {
+    return createReferenceFile(regressionClass, null);
+  }
+
+  /**
+   * Creates a reference file for the specified class.
+   * 
+   * @param regressionClass	the class to build the reference file name for
+   * @param suffix		the suffix to use (between classname and extension), null to omit
+   * @return			the generated filename
+   */
+  public static File createReferenceFile(Class regressionClass, String suffix) {
+    return createReferenceFile(regressionClass, suffix, EXTENSION);
+  }
+
+  /**
+   * Creates a reference file for the specified class.
+   * 
+   * @param regressionClass	the class to build the reference file name for
+   * @param suffix		the suffix to use (between classname and extension), null to omit
+   * @param extension		the file extension (incl the dot, eg ".ref")
+   * @return			the generated filename
+   */
+  public static File createReferenceFile(Class regressionClass, String suffix, String extension) {
+    if (suffix == null)
+      suffix = "";
+    return new File(REFERENCES + "/" + regressionClass.getName().replace(".", "/") + suffix + extension);  
+  }
+}
