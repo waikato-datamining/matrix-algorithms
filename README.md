@@ -23,3 +23,25 @@ Planned:
 * [GLSW](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#GLSW_Algorithm) (orthogonal signal correction)
 * [EPO](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29) (External Parameter Orthogonalization)
 * ...
+
+## Examples
+
+### PCA
+
+```java
+import Jama.Matrix;
+import com.github.waikatodatamining.matrix.algorithm.PCA;
+import com.github.waikatodatamining.matrix.core.MatrixHelper;
+...
+Matrix data = MatrixHelper.read("bolts.csv", true, ',');
+// remove the class column, if present
+//data = MatrixHelper.deleteCol(data, data.getColumnDimension() - 1);
+
+System.out.println("\nInput");
+System.out.println(MatrixHelper.toString(data));
+
+PCA pca = new PCA();
+Matrix transformed = pca.transform(data);
+System.out.println("\nTransformed");
+System.out.println(MatrixHelper.toString(transformed));
+```
