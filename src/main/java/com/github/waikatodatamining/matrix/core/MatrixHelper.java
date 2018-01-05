@@ -78,6 +78,17 @@ public class MatrixHelper {
   }
 
   /**
+   * Returns the specified row as matrix.
+   *
+   * @param data	the matrix to get the row from
+   * @param row		the row index (0-based)
+   * @return		the row
+   */
+  public static Matrix rowAsVector(Matrix data, int row) {
+    return data.getMatrix(row, row, 0, data.getColumnDimension() - 1);
+  }
+
+  /**
    * Calculates the mean for the specified column.
    *
    * @param data	the matrix to work on
@@ -145,8 +156,20 @@ public class MatrixHelper {
    * @param m the receiving matrix
    * @param columnIndex the column to store the values in
    */
-  public static void setVector(Matrix v, Matrix m, int columnIndex) {
+  public static void setColumnVector(Matrix v, Matrix m, int columnIndex) {
     m.setMatrix(0, m.getRowDimension() - 1, columnIndex, columnIndex, v);
+  }
+
+  /**
+   * stores the data from the (row) vector in the matrix at the specified
+   * index
+   *
+   * @param v the vector to store in the matrix
+   * @param m the receiving matrix
+   * @param rowIndex the row to store the values in
+   */
+  public static void setRowVector(Matrix v, Matrix m, int rowIndex) {
+    m.setMatrix(rowIndex, rowIndex, 0, m.getColumnDimension() - 1, v);
   }
 
   /**
@@ -238,6 +261,28 @@ public class MatrixHelper {
     }
 
     return true;
+  }
+
+  /**
+   * Merges the two matrices (must have same number of rows).
+   *
+   * @param left	the left matrix
+   * @param right	the right matrix
+   * @return		the merged matrix
+   */
+  public static Matrix merge(Matrix left, Matrix right) {
+    Matrix	result;
+    int		i;
+
+    if (left.getRowDimension() != right.getRowDimension())
+      throw new IllegalArgumentException("Matrix row dimension differs: " + left.getRowDimension() + " != " + right.getRowDimension());
+
+    result = new Matrix(left.getRowDimension(), left.getColumnDimension() + right.getColumnDimension());
+    result.setMatrix(0, left.getRowDimension() - 1, 0, left.getColumnDimension() - 1, left);
+    for (i = 0; i < right.getColumnDimension(); i++)
+      setColumnVector(columnAsVector(right, i), result, left.getColumnDimension() + i);
+
+    return result;
   }
 
   /**
