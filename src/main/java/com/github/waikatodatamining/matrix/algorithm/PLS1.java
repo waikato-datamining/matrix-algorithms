@@ -183,22 +183,20 @@ public class PLS1
   }
 
   /**
-   * Performs predictions on the data.
+   * Transforms the data.
    *
    * @param predictors the input data
    * @throws Exception if analysis fails
    * @return the transformed data and the predictions
    */
   @Override
-  protected Matrix[] doPredict(Matrix predictors) throws Exception {
-    Matrix[] 	result;
+  protected Matrix doTransform(Matrix predictors) throws Exception {
+    Matrix 	result;
     Matrix 	T, t;
     Matrix 	x, X;
     int 	i, j;
 
-    result    = new Matrix[2];
-    result[0] = new Matrix(predictors.getRowDimension(), getNumComponents());
-    result[1] = new Matrix(predictors.getRowDimension(), 1);
+    result = new Matrix(predictors.getRowDimension(), getNumComponents());
 
     for (i = 0; i < predictors.getRowDimension(); i++) {
       // work on each row
@@ -215,8 +213,53 @@ public class PLS1
 	x = x.minus(MatrixHelper.getVector(m_P, j).transpose().times(t.get(0, 0)));
       }
 
-      MatrixHelper.setRowVector(T, result[0], i);
-      result[1].set(i, 0, T.times(m_b_hat).get(0, 0));
+      MatrixHelper.setRowVector(T, result, i);
+    }
+
+    return result;
+  }
+
+  /**
+   * Returns whether the algorithm can make predictions.
+   *
+   * @return		true if can make predictions
+   */
+  public boolean canPredict() {
+    return true;
+  }
+
+  /**
+   * Performs predictions on the data.
+   *
+   * @param predictors the input data
+   * @throws Exception if analysis fails
+   * @return the transformed data and the predictions
+   */
+  @Override
+  protected Matrix doPredict(Matrix predictors) throws Exception {
+    Matrix 	result;
+    Matrix 	T, t;
+    Matrix 	x, X;
+    int 	i, j;
+
+    result = new Matrix(predictors.getRowDimension(), 1);
+
+    for (i = 0; i < predictors.getRowDimension(); i++) {
+      // work on each row
+      x = MatrixHelper.rowAsVector(predictors, i);
+      X = new Matrix(1, getNumComponents());
+      T = new Matrix(1, getNumComponents());
+
+      for (j = 0; j < getNumComponents(); j++) {
+	MatrixHelper.setColumnVector(x, X, j);
+	// 1. step: tj = xj * wj
+	t = x.times(MatrixHelper.getVector(m_W, j));
+	MatrixHelper.setColumnVector(t, T, j);
+	// 2. step: xj+1 = xj - tj*pj^T (tj is 1x1 matrix!)
+	x = x.minus(MatrixHelper.getVector(m_P, j).transpose().times(t.get(0, 0)));
+      }
+
+      result.set(i, 0, T.times(m_b_hat).get(0, 0));
     }
 
     return result;

@@ -35,6 +35,12 @@ import java.util.List;
 public abstract class AbstractPLSTest<T extends AbstractPLS>
   extends AbstractAlgorithmTest<T> {
 
+  public enum MatrixType {
+    TRANSFORMED,
+    PREDICTIONS,
+    LOADINGS,
+  }
+
   /**
    * Constructs the test case. Called by subclasses.
    *
@@ -78,17 +84,25 @@ public abstract class AbstractPLSTest<T extends AbstractPLS>
    * @return		the processed data
    */
   protected Matrix process(Matrix data, T scheme) {
-    return data;
+    if (!scheme.isInitialized())
+      fail("Algorithm is not initialized!");
+    try {
+      return scheme.transform(data);
+    }
+    catch (Exception e) {
+      fail("Failed to perform prediction: " + e);
+      return null;
+    }
   }
 
   /**
-   * Processes the input data and returns the processed data.
+   * Processes the input data and returns the predictions.
    *
-   * @param scheme	the scheme to process the data with
    * @param data	the data to work on
+   * @param scheme	the scheme to process the data with
    * @return		the transformed data and predictions
    */
-  protected Matrix[] process(T scheme, Matrix data) {
+  protected Matrix predict(Matrix data, T scheme) {
     if (!scheme.isInitialized())
       fail("Algorithm is not initialized!");
     try {
@@ -122,15 +136,15 @@ public abstract class AbstractPLSTest<T extends AbstractPLS>
    *
    * @param input	the input filename (no path)
    * @param no		the number of the test
-   * @param scores	whether scores or loadings
+   * @param type	the matrix type
    * @return		the generated output filename (no path)
    */
-  protected String createOutputFilename(String input, int no, boolean scores) {
+  protected String createOutputFilename(String input, int no, MatrixType type) {
     String	result;
     int		index;
     String	ext;
 
-    ext = "-out" + no + (scores ? "-scores" : "-loadings");
+    ext = "-out" + no + "-" + type.toString().toLowerCase();
 
     index = input.lastIndexOf('.');
     if (index == -1) {
@@ -151,7 +165,8 @@ public abstract class AbstractPLSTest<T extends AbstractPLS>
   public void testRegression() {
     Matrix 		dataInput;
     Matrix 		dataResponse;
-    Matrix[]		processed;
+    Matrix 		transformed;
+    Matrix 		predicted;
     Matrix		loadings;
     boolean		ok;
     String		regression;
@@ -187,17 +202,27 @@ public abstract class AbstractPLSTest<T extends AbstractPLS>
       msg = initialize(setups[i], dataInput, dataResponse);
       assertNull("Failed to initialize with data?", msg);
 
-      processed = process(setups[i], dataInput);
-      assertNotNull("Failed to process data?", processed);
+      transformed = process(dataInput, setups[i]);
+      assertNotNull("Failed to transform data?", transformed);
 
-      outputCurr = createOutputFilename(input[i], i, true);
+      outputCurr = createOutputFilename(input[i], i, MatrixType.TRANSFORMED);
       output.add(outputCurr);
-      ok        = save(processed, outputCurr);
-      assertTrue("Failed to save regression data (scores)?", ok);
+      ok        = save(transformed, outputCurr);
+      assertTrue("Failed to save regression data (transformed)?", ok);
+
+      if (setups[i].canPredict()) {
+	predicted = predict(dataInput, setups[i]);
+	assertNotNull("Failed to predict?", predicted);
+
+	outputCurr = createOutputFilename(input[i], i, MatrixType.PREDICTIONS);
+	output.add(outputCurr);
+	ok        = save(predicted, outputCurr);
+	assertTrue("Failed to save regression data (predicted)?", ok);
+      }
 
       loadings = setups[i].getLoadings();
       if (loadings != null) {
-	outputCurr = createOutputFilename(input[i], i, false);
+	outputCurr = createOutputFilename(input[i], i, MatrixType.LOADINGS);
 	output.add(outputCurr);
 	ok = save(loadings, outputCurr);
 	assertTrue("Failed to save regression data (loadings)?", ok);

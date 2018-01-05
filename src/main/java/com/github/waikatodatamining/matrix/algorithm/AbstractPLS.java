@@ -186,26 +186,56 @@ public abstract class AbstractPLS
   }
 
   /**
-   * Performs predictions on the data.
+   * Returns whether the algorithm can make predictions.
    *
-   * @param predictors	the input data
-   * @return		the transformed data and the predictions
-   * @throws Exception	if analysis fails
+   * @return		true if can make predictions
    */
-  protected abstract Matrix[] doPredict(Matrix predictors) throws Exception;
+  public abstract boolean canPredict();
 
   /**
    * Performs predictions on the data.
    *
    * @param predictors	the input data
-   * @return		the transformed data and the predictions
+   * @return		the predictions
    * @throws Exception	if analysis fails
    */
-  public Matrix[] predict(Matrix predictors) throws Exception {
+  protected abstract Matrix doPredict(Matrix predictors) throws Exception;
+
+  /**
+   * Performs predictions on the data.
+   *
+   * @param predictors	the input data
+   * @return		the predictions
+   * @throws Exception	if analysis fails
+   */
+  public Matrix predict(Matrix predictors) throws Exception {
     if (!isInitialized())
       throw new IllegalStateException("Algorithm hasn't been initialized!");
 
     return doPredict(predictors);
+  }
+
+  /**
+   * Transforms the data.
+   *
+   * @param predictors	the input data
+   * @return		the transformed data
+   * @throws Exception	if analysis fails
+   */
+  protected abstract Matrix doTransform(Matrix predictors) throws Exception;
+
+  /**
+   * Transforms the data.
+   *
+   * @param predictors	the input data
+   * @return		the transformed data
+   * @throws Exception	if analysis fails
+   */
+  public Matrix transform(Matrix predictors) throws Exception {
+    if (!isInitialized())
+      throw new IllegalStateException("Algorithm hasn't been initialized!");
+
+    return doTransform(predictors);
   }
 
   /**

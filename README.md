@@ -68,13 +68,10 @@ if (msg != null) {
   System.out.println("\nInitialization failed:\n" + msg);
   return;
 }
-Matrix[] data = pls.predict(predictors);
 System.out.println("\nTransformed");
-System.out.println(MatrixHelper.toString(data[0]));
+System.out.println(MatrixHelper.toString(pls.transform(predictors)));
 System.out.println("\nPredictions");
-System.out.println(MatrixHelper.toString(data[1]));
-
-Matrix loadings = pls.getLoadings();
+System.out.println(MatrixHelper.toString(pls.predict(predictors)));
 System.out.println("\nLoadings");
-System.out.println(MatrixHelper.toString(loadings));
+System.out.println(MatrixHelper.toString(pls.getLoadings()));
 ```

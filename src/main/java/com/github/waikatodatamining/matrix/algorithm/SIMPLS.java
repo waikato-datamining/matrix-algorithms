@@ -115,7 +115,6 @@ public class SIMPLS
     Matrix A, A_trans;
     Matrix M;
     Matrix X_trans;
-    Matrix y;
     Matrix C, c;
     Matrix Q, q;
     Matrix W, w;
@@ -172,20 +171,35 @@ public class SIMPLS
   }
 
   /**
+   * Transforms the data.
+   *
+   * @param predictors the input data
+   * @throws Exception if analysis fails
+   * @return the transformed data
+   */
+  @Override
+  protected Matrix doTransform(Matrix predictors) throws Exception {
+    return predictors.times(m_W);
+  }
+
+  /**
+   * Returns whether the algorithm can make predictions.
+   *
+   * @return		true if can make predictions
+   */
+  public boolean canPredict() {
+    return true;
+  }
+
+  /**
    * Performs predictions on the data.
    *
    * @param predictors the input data
    * @throws Exception if analysis fails
-   * @return the transformed data and the predictions
+   * @return the predictions
    */
   @Override
-  protected Matrix[] doPredict(Matrix predictors) throws Exception {
-    Matrix[] 	result;
-
-    result    = new Matrix[2];
-    result[0] = predictors.times(m_W);
-    result[1] = predictors.times(m_B);
-
-    return result;
+  protected Matrix doPredict(Matrix predictors) throws Exception {
+    return predictors.times(m_B);
   }
 }
