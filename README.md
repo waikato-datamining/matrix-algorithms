@@ -7,12 +7,12 @@ Java library of 2-dimensional matrix algorithms.
 Available algorithms:
 
 * [PCA](https://web.archive.org/web/20160630035830/http://statmaster.sdu.dk:80/courses/ST02/module05/module.pdf)
+* [PLS1](https://web.archive.org/web/20081001154431/http://statmaster.sdu.dk:80/courses/ST02/module07/module.pdf)
+* [SIMPLS](http://www.statsoft.com/textbook/partial-least-squares/#SIMPLS)
 * ...
 
 Planned:
 
-* [PLS1](https://web.archive.org/web/20081001154431/http://statmaster.sdu.dk:80/courses/ST02/module07/module.pdf)
-* [SIMPLS](http://www.statsoft.com/textbook/partial-least-squares/#SIMPLS)
 * [NIPALS](http://www.statsoft.com/textbook/partial-least-squares/#NIPALS)
 * [rPLS](https://www.researchgate.net/publication/259536250_Recursive_weighted_partial_least_squares_rPLS_An_efficient_variable_selection_method_using_PLS)
 * [iPLS](https://www.researchgate.net/publication/247776629_Interval_Partial_Least-Squares_Regression_iPLS_A_Comparative_Chemometric_Study_with_an_Example_from_Near-Infrared_Spectroscopy)
@@ -44,4 +44,37 @@ PCA pca = new PCA();
 Matrix transformed = pca.transform(data);
 System.out.println("\nTransformed");
 System.out.println(MatrixHelper.toString(transformed));
+```
+
+### SIMPLS
+```java
+import Jama.Matrix;
+import com.github.waikatodatamining.matrix.algorithm.SIMPLS;
+import com.github.waikatodatamining.matrix.core.MatrixHelper;
+...
+Matrix predictors = MatrixHelper.read("bolts.csv", true, ',');
+Matrix response = MatrixHelper.read("bolts_response.csv", true, ',');
+
+System.out.println("\nPredictors");
+System.out.println(MatrixHelper.toString(predictors));
+
+System.out.println("\nResponse");
+System.out.println(MatrixHelper.toString(response));
+
+SIMPLS pls = new SIMPLS();
+pls.setNumComponents(3);
+String msg = pls.initialize(predictors, response);
+if (msg != null) {
+  System.out.println("\nInitialization failed:\n" + msg);
+  return;
+}
+Matrix[] data = pls.predict(predictors);
+System.out.println("\nTransformed");
+System.out.println(MatrixHelper.toString(data[0]));
+System.out.println("\nPredictions");
+System.out.println(MatrixHelper.toString(data[1]));
+
+Matrix loadings = pls.getLoadings();
+System.out.println("\nLoadings");
+System.out.println(MatrixHelper.toString(loadings));
 ```
