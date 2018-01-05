@@ -62,6 +62,20 @@ public abstract class AbstractMultiReponsePLS
   }
 
   /**
+   * Returns the minimum number of columns the response matrix has to have.
+   *
+   * @return		the minimum
+   */
+  protected abstract int getMinColumnsResponse();
+
+  /**
+   * Returns the maximum number of columns the response matrix has to have.
+   *
+   * @return		the maximum, -1 for unlimited
+   */
+  protected abstract int getMaxColumnsResponse();
+
+  /**
    * Hook method for checking the data before training.
    *
    * @param predictors	the input data
@@ -75,8 +89,10 @@ public abstract class AbstractMultiReponsePLS
     result = super.check(predictors, response);
 
     if (result == null) {
-      if (response.getColumnDimension() != 1)
-	result = "Algorithm requires exactly one response variable, found: " + response.getColumnDimension();
+      if (response.getColumnDimension() < getMinColumnsResponse())
+	result = "Algorithm requires at least " + getMinColumnsResponse() + " response columns, found: " + response.getColumnDimension();
+      else if ((getMaxColumnsResponse() != -1) && (response.getColumnDimension() > getMaxColumnsResponse()))
+	result = "Algorithm can handle at most " + getMaxColumnsResponse() + " response columns, found: " + response.getColumnDimension();
     }
 
     return result;
