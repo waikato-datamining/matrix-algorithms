@@ -421,4 +421,14 @@ public class MatrixHelper {
 
     return result.toString();
   }
+
+  /**
+   * Returns a "ROWS x COLS" dimension string.
+   *
+   * @param m		the matrix to get the description string for
+   * @return		the dimensions
+   */
+  public static String dim(Matrix m) {
+    return m.getRowDimension() + " x " + m.getColumnDimension();
+  }
 }
