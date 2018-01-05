@@ -62,13 +62,59 @@ public class PLS1
   }
 
   /**
-   * Generates the loadings. Called when initialization was successful.
+   * Returns the all the available matrices.
    *
-   * @return the loadings
+   * @return		the names of the matrices
    */
   @Override
-  protected Matrix generateLoadings() {
-    return m_P;
+  public String[] getMatrixNames() {
+    return new String[]{
+      "r_hat",
+      "P",
+      "W",
+      "b_hat"
+    };
+  }
+
+  /**
+   * Returns the matrix with the specified name.
+   *
+   * @param name	the name of the matrix
+   * @return		the matrix, null if not available
+   */
+  @Override
+  public Matrix getMatrix(String name) {
+    switch (name) {
+      case "RegVector":
+	return m_r_hat;
+      case "P":
+	return m_P;
+      case "W":
+	return m_W;
+      case "b_hat":
+	return m_b_hat;
+      default:
+	return null;
+    }
+  }
+
+  /**
+   * Whether the algorithm supports return of loadings.
+   *
+   * @return		true if supported
+   * @see		#getLoadings()
+   */
+  public boolean hasLoadings() {
+    return true;
+  }
+
+  /**
+   * Returns the loadings, if available.
+   *
+   * @return		the loadings, null if not available
+   */
+  public Matrix getLoadings() {
+    return getMatrix("P");
   }
 
   /**

@@ -41,12 +41,6 @@ public abstract class AbstractPLS
   /** whether the algorithm has been initialized. */
   protected boolean m_Initialized;
 
-  /** the loadings. */
-  protected Matrix m_Loadings;
-
-  /** the scores. */
-  protected Matrix m_Scores;
-
   /**
    * Resets the scheme.
    */
@@ -54,8 +48,6 @@ public abstract class AbstractPLS
   protected void reset() {
     super.reset();
     m_Initialized = false;
-    m_Loadings    = null;
-    m_Scores      = null;
   }
 
   /**
@@ -116,29 +108,34 @@ public abstract class AbstractPLS
   }
 
   /**
-   * Generates the loadings. Called when initialization was successful.
+   * Returns the all the available matrices.
    *
-   * @return		the loadings
+   * @return		the names of the matrices
    */
-  protected abstract Matrix generateLoadings();
+  public abstract String[] getMatrixNames();
+
+  /**
+   * Returns the matrix with the specified name.
+   *
+   * @param name	the name of the matrix
+   * @return		the matrix, null if not available
+   */
+  public abstract Matrix getMatrix(String name);
+
+  /**
+   * Whether the algorithm supports return of loadings.
+   *
+   * @return		true if supported
+   * @see		#getLoadings()
+   */
+  public abstract boolean hasLoadings();
 
   /**
    * Returns the loadings.
    *
    * @return		the loadings, null if not available
    */
-  public Matrix getLoadings() {
-    return m_Loadings;
-  }
-
-  /**
-   * Returns the scores.
-   *
-   * @return		the scores, null if not available
-   */
-  public Matrix getScores() {
-    return m_Scores;
-  }
+  public abstract Matrix getLoadings();
 
   /**
    * Hook method for checking the data before training.
@@ -183,10 +180,6 @@ public abstract class AbstractPLS
     if (result == null) {
       result        = doInitialize(predictors, response);
       m_Initialized = (result == null);
-      if (m_Initialized) {
-	m_Scores   = predict(predictors)[1];
-	m_Loadings = generateLoadings();
-      }
     }
 
     return result;

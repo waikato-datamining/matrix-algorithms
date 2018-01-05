@@ -54,13 +54,53 @@ public class SIMPLS
   }
 
   /**
-   * Generates the loadings. Called when initialization was successful.
+   * Returns the all the available matrices.
    *
-   * @return the loadings
+   * @return		the names of the matrices
    */
   @Override
-  protected Matrix generateLoadings() {
-    return m_W;
+  public String[] getMatrixNames() {
+    return new String[]{
+      "W",
+      "B"
+    };
+  }
+
+  /**
+   * Returns the matrix with the specified name.
+   *
+   * @param name	the name of the matrix
+   * @return		the matrix, null if not available
+   */
+  @Override
+  public Matrix getMatrix(String name) {
+    switch (name) {
+      case "W":
+	return m_W;
+      case "B":
+	return m_B;
+      default:
+	return null;
+    }
+  }
+
+  /**
+   * Whether the algorithm supports return of loadings.
+   *
+   * @return		true if supported
+   * @see		#getLoadings()
+   */
+  public boolean hasLoadings() {
+    return true;
+  }
+
+  /**
+   * Returns the loadings, if available.
+   *
+   * @return		the loadings, null if not available
+   */
+  public Matrix getLoadings() {
+    return getMatrix("W");
   }
 
   /**
