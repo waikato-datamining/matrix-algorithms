@@ -42,8 +42,11 @@ public abstract class AbstractSingleReponsePLS
   /** the class stddev. */
   protected double m_ClassStdDev;
 
-  /** the transformation. */
-  protected AbstractTransformation m_Transformation;
+  /** the transformation for the predictors. */
+  protected AbstractTransformation m_TransPredictors;
+
+  /** the transformation for the response. */
+  protected AbstractTransformation m_TransResponse;
 
   /**
    * Resets the member variables.
@@ -52,9 +55,10 @@ public abstract class AbstractSingleReponsePLS
   protected void reset() {
     super.reset();
 
-    m_ClassMean      = Double.NaN;
-    m_ClassStdDev    = Double.NaN;
-    m_Transformation = null;
+    m_ClassMean       = Double.NaN;
+    m_ClassStdDev     = Double.NaN;
+    m_TransPredictors = null;
+    m_TransResponse   = null;
   }
 
   /**
@@ -79,14 +83,14 @@ public abstract class AbstractSingleReponsePLS
   }
 
   /**
-   * Builds the matrices using the provided data.
+   * Initializes using the provided data.
    *
    * @param predictors	the input data
    * @param response 	the dependent variable(s)
    * @return		null if successful, otherwise error message
    * @throws Exception	if analysis fails
    */
-  protected abstract String doBuild(Matrix predictors, Matrix response) throws Exception;
+  protected abstract String doPerformInitialization(Matrix predictors, Matrix response) throws Exception;
 
   /**
    * Initializes using the provided data.
@@ -99,34 +103,69 @@ public abstract class AbstractSingleReponsePLS
   protected String doInitialize(Matrix predictors, Matrix response) throws Exception {
     String	result;
 
-    result = null;
-
     switch (m_PreprocessingType) {
       case CENTER:
-	m_ClassMean      = MatrixHelper.mean(response, 0);
-	m_ClassStdDev    = 1;
-	m_Transformation = new Center();
+	m_ClassMean       = MatrixHelper.mean(response, 0);
+	m_ClassStdDev     = 1;
+	m_TransPredictors = new Center();
+	m_TransResponse   = new Center();
 	break;
       case STANDARDIZE:
-	m_ClassMean      = MatrixHelper.mean(response, 0);
-	m_ClassStdDev    = MatrixHelper.stdev(response, 0);
-	m_Transformation = new Standardize();
+	m_ClassMean       = MatrixHelper.mean(response, 0);
+	m_ClassStdDev     = MatrixHelper.stdev(response, 0);
+	m_TransPredictors = new Standardize();
+	m_TransResponse   = new Standardize();
 	break;
       case NONE:
-	m_ClassMean      = 0;
-	m_ClassStdDev    = 1;
-	m_Transformation = null;
+	m_ClassMean       = 0;
+	m_ClassStdDev     = 1;
+	m_TransPredictors = null;
+	m_TransResponse   = null;
 	break;
       default:
 	throw new IllegalStateException("Unhandled preprocessing type; " + m_PreprocessingType);
     }
 
-    if (m_Transformation != null) {
-      m_Transformation.configure(predictors);
-      predictors = m_Transformation.transform(predictors);
+    if (m_TransPredictors != null) {
+      m_TransPredictors.configure(predictors);
+      predictors = m_TransPredictors.transform(predictors);
+    }
+    if (m_TransResponse != null) {
+      m_TransResponse.configure(response);
+      response = m_TransResponse.transform(response);
     }
 
-    result = doBuild(predictors, response);
+    result = doPerformInitialization(predictors, response);
+
+    return result;
+  }
+
+  /**
+   * Performs predictions on the data.
+   *
+   * @param predictors the input data
+   * @throws Exception if analysis fails
+   * @return the transformed data and the predictions
+   */
+  protected abstract Matrix doPerformPredictions(Matrix predictors) throws Exception;
+
+  /**
+   * Performs predictions on the data.
+   *
+   * @param predictors the input data
+   * @throws Exception if analysis fails
+   * @return the transformed data and the predictions
+   */
+  @Override
+  protected Matrix doPredict(Matrix predictors) throws Exception {
+    Matrix	result;
+    int		i;
+
+    result = doPerformPredictions(predictors);
+    if (m_TransResponse != null) {
+      for (i = 0; i < result.getRowDimension(); i++)
+        result.set(i, 0, result.get(i, 0) * m_ClassStdDev + m_ClassMean);
+    }
 
     return result;
   }

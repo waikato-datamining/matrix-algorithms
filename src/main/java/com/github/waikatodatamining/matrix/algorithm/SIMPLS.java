@@ -104,14 +104,14 @@ public class SIMPLS
   }
 
   /**
-   * Builds the matrices using the provided data.
+   * Initializes using the provided data.
    *
    * @param predictors the input data
    * @param response   the dependent variable(s)
    * @throws Exception if analysis fails
    * @return null if successful, otherwise error message
    */
-  protected String doBuild(Matrix predictors, Matrix response) throws Exception {
+  protected String doPerformInitialization(Matrix predictors, Matrix response) throws Exception {
     Matrix A, A_trans;
     Matrix M;
     Matrix X_trans;
@@ -199,7 +199,7 @@ public class SIMPLS
    * @return the predictions
    */
   @Override
-  protected Matrix doPredict(Matrix predictors) throws Exception {
+  protected Matrix doPerformPredictions(Matrix predictors) throws Exception {
     return predictors.times(m_B);
   }
 }

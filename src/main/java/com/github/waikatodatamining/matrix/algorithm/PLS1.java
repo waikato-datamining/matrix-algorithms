@@ -118,14 +118,14 @@ public class PLS1
   }
 
   /**
-   * Builds the matrices using the provided data.
+   * Initializes using the provided data.
    *
    * @param predictors the input data
    * @param response   the dependent variable(s)
    * @throws Exception if analysis fails
    * @return null if successful, otherwise error message
    */
-  protected String doBuild(Matrix predictors, Matrix response) throws Exception {
+  protected String doPerformInitialization(Matrix predictors, Matrix response) throws Exception {
     Matrix 	X_trans;
     Matrix 	W, w;
     Matrix 	T, t, t_trans;
@@ -236,7 +236,7 @@ public class PLS1
    * @return the transformed data and the predictions
    */
   @Override
-  protected Matrix doPredict(Matrix predictors) throws Exception {
+  protected Matrix doPerformPredictions(Matrix predictors) throws Exception {
     Matrix 	result;
     Matrix 	T, t;
     Matrix 	x, X;
