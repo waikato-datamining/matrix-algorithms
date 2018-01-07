@@ -25,7 +25,18 @@ Planned:
 * [GLSW](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#GLSW_Algorithm) (orthogonal signal correction)
 * [EPO](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29) (External Parameter Orthogonalization)
 * ...
+  
+## Maven
 
+Add the following dependency to your `pom.xml`:
+
+```xml
+    <dependency>
+      <groupId>nz.ac.waikato.cms.adams</groupId>
+      <artifactId>matrix-algorithms</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+```
 ## Examples
 
 ### PCA
