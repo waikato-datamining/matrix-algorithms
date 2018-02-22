@@ -52,6 +52,7 @@ public class SIMPLSTest
       "bolts.csv",
       "bolts.csv",
       "bolts.csv",
+      "bolts.csv",
     };
   }
 
@@ -67,6 +68,7 @@ public class SIMPLSTest
       "bolts_response.csv",
       "bolts_response.csv",
       "bolts_response.csv",
+      "bolts_response.csv",
     };
   }
 
@@ -79,7 +81,7 @@ public class SIMPLSTest
   protected SIMPLS[] getRegressionSetups() {
     SIMPLS[]	result;
 
-    result    = new SIMPLS[3];
+    result    = new SIMPLS[4];
     result[0] = new SIMPLS();
     result[0].setNumComponents(3);
 
@@ -90,6 +92,11 @@ public class SIMPLSTest
     result[2] = new SIMPLS();
     result[2].setNumComponents(3);
     result[2].setPreprocessingType(PreprocessingType.STANDARDIZE);
+
+    result[3] = new SIMPLS();
+    result[3].setNumComponents(3);
+    result[3].setNumCoefficients(2);
+    result[3].setPreprocessingType(PreprocessingType.STANDARDIZE);
 
     return result;
   }

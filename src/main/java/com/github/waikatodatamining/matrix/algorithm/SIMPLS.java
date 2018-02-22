@@ -22,6 +22,7 @@ package com.github.waikatodatamining.matrix.algorithm;
 
 import Jama.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
+import com.github.waikatodatamining.matrix.core.Utils;
 
 /**
  * SIMPLS algorithm.
@@ -36,11 +37,23 @@ public class SIMPLS
 
   private static final long serialVersionUID = 4899661745515419256L;
 
+  /** the number of coefficients in W to keep (0 keep all). */
+  protected int m_NumCoefficients;
+
   /** the W matrix */
   protected Matrix m_W;
 
   /** the B matrix (used for prediction) */
   protected Matrix m_B;
+
+  /**
+   * Initializes the members.
+   */
+  @Override
+  protected void initialize() {
+    super.initialize();
+    setNumCoefficients(0);
+  }
 
   /**
    * Resets the member variables.
@@ -51,6 +64,25 @@ public class SIMPLS
 
     m_B = null;
     m_W = null;
+  }
+
+  /**
+   * Sets the number of coefficients of W matrix to keep (rest gets zeroed).
+   *
+   * @param value 	the number of coefficients, 0 to keep all
+   */
+  public void setNumCoefficients(int value) {
+    m_NumCoefficients = value;
+    reset();
+  }
+
+  /**
+   * returns the number of coefficients of W matrix to keep (rest gets zeroed).
+   *
+   * @return 		the maximum number of attributes, 0 to keep all
+   */
+  public int getNumCoefficients() {
+    return m_NumCoefficients;
   }
 
   /**
@@ -101,6 +133,34 @@ public class SIMPLS
    */
   public Matrix getLoadings() {
     return getMatrix("W");
+  }
+
+  /**
+   * Zeroes the coefficients of the W matrix beyond the specified number of
+   * coefficients.
+   *
+   * @param in		the matrix to process in-place
+   */
+  protected void slim(Matrix in) {
+    double[][] B = in.getArray();
+
+    for (int i = 0; i < in.getColumnDimension(); i++) {
+      Matrix l = in.getMatrix(0, in.getRowDimension() - 1, i, i);
+      double[] ld = l.getRowPackedCopy();
+      for (int t = 0; t < ld.length; t++) {
+	ld[t] = Math.abs(ld[t]);
+      }
+      int[] srt = Utils.sort(ld);
+      //int index = srt.length - 1 - srt[Math.min(getNumCoefficients(),srt.length-1)]; //nonono
+      int index = srt[Math.max(srt.length - 1 - getNumCoefficients(), 0)];
+
+      double val = ld[index];
+      for (int c = 0; c < in.getRowDimension(); c++) {
+	if (Math.abs(B[c][i]) < val) {
+	  B[c][i] = 0;
+	}
+      }
+    }
   }
 
   /**
@@ -164,6 +224,8 @@ public class SIMPLS
     }
 
     // finish
+    if (m_NumCoefficients > 0)
+      slim(W);
     m_W = W;
     m_B = W.times(Q.transpose());
 
