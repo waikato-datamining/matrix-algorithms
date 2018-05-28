@@ -33,7 +33,7 @@ import com.github.waikatodatamining.matrix.core.Utils;
  * @author FracPete (fracpete at waikato dot ac dot nz)
  */
 public class SIMPLS
-  extends AbstractSingleReponsePLS {
+  extends AbstractSingleResponsePLS {
 
   private static final long serialVersionUID = 4899661745515419256L;
 

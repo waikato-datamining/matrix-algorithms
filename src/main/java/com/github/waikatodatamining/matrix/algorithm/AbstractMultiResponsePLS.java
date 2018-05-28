@@ -14,7 +14,7 @@
  */
 
 /*
- * AbstractSingleReponsePLS.java
+ * AbstractSingleResponsePLS.java
  * Copyright (C) 2018 University of Waikato, Hamilton, NZ
  */
 
@@ -31,7 +31,7 @@ import com.github.waikatodatamining.matrix.transformation.Standardize;
  *
  * @author FracPete (fracpete at waikato dot ac dot nz)
  */
-public abstract class AbstractMultiReponsePLS
+public abstract class AbstractMultiResponsePLS
   extends AbstractPLS {
 
   private static final long serialVersionUID = -8160023117935320371L;

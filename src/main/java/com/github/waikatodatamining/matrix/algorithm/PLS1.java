@@ -32,7 +32,7 @@ import com.github.waikatodatamining.matrix.core.MatrixHelper;
  * @author FracPete (fracpete at waikato dot ac dot nz)
  */
 public class PLS1
-  extends AbstractSingleReponsePLS {
+  extends AbstractSingleResponsePLS {
 
   private static final long serialVersionUID = 4899661745515419256L;
 
