@@ -12,7 +12,7 @@ Supervised:
 
 * [PLS1](https://web.archive.org/web/20081001154431/http://statmaster.sdu.dk:80/courses/ST02/module07/module.pdf)
 * [SIMPLS](http://www.statsoft.com/textbook/partial-least-squares/#SIMPLS)
-* [KernelPLSPolyKernelTest](http://www.plantbreeding.wzw.tum.de/fileadmin/w00bdb/www/kraemer/icml_kernelpls.pdf)
+* [KernelPLS](http://www.plantbreeding.wzw.tum.de/fileadmin/w00bdb/www/kraemer/icml_kernelpls.pdf)
 
 Planned:
 
