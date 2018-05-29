@@ -39,6 +39,7 @@ public class PassThrough
    */
   @Override
   public void configure(Matrix data) {
+    m_Configured = true;
   }
 
   /**
@@ -49,6 +50,11 @@ public class PassThrough
    */
   @Override
   protected Matrix doTransform(Matrix data) {
+    return data;
+  }
+
+  @Override
+  protected Matrix doInverseTransform(Matrix data) {
     return data;
   }
 }

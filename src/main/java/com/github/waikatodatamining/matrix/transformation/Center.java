@@ -61,6 +61,8 @@ public class Center
 
     if (getDebug())
       getLogger().info("Means: " + Utils.arrayToString(m_Means));
+
+    m_Configured = true;
   }
 
   /**
@@ -81,6 +83,24 @@ public class Center
 	for (i = 0; i < result.getRowDimension(); i++) {
 	  result.set(i, j, result.get(i, j) - m_Means[j]);
 	}
+      }
+    }
+
+    return result;
+  }
+
+  @Override
+  protected Matrix doInverseTransform(Matrix data) {
+    Matrix result;
+    int i;
+    int j;
+
+    result = data.copy();
+    for (j = 0; j < result.getColumnDimension(); j++) {
+      if (m_Means[j] != 0) {
+        for (i = 0; i < result.getRowDimension(); i++) {
+          result.set(i, j, result.get(i, j) + m_Means[j]);
+        }
       }
     }
 

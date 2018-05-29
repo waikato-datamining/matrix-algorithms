@@ -69,4 +69,24 @@ public abstract class AbstractTransformation
       configure(data);
     return doTransform(data);
   }
+
+  /**
+   * Inverse transforms the data.
+   *
+   * @param data	the data to reverse transform
+   * @return		the inverse transformed data
+   */
+  protected abstract Matrix doInverseTransform(Matrix data);
+
+  /**
+   * Inverse transforms the data.
+   *
+   * @param data	the data to reverse transform
+   * @return		the inverse transformed data
+   */
+  public Matrix inverseTransform(Matrix data) {
+    if (!m_Configured)
+      configure(data);
+    return doInverseTransform(data);
+  }
 }

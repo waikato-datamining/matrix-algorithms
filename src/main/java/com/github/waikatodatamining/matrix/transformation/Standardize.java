@@ -71,6 +71,8 @@ public class Standardize
       getLogger().info("Means: " + Utils.arrayToString(m_Means));
       getLogger().info("StdDevs: " + Utils.arrayToString(m_StdDevs));
     }
+
+    m_Configured = true;
   }
 
   /**
@@ -96,6 +98,28 @@ public class Standardize
 	for (i = 0; i < result.getRowDimension(); i++) {
 	  result.set(i, j, result.get(i, j) - m_Means[j]);
 	}
+      }
+    }
+
+    return result;
+  }
+
+  @Override
+  protected Matrix doInverseTransform(Matrix data) {
+    Matrix	result;
+    int		i;
+    int		j;
+
+    result = data.copy();
+    for (j = 0; j < result.getColumnDimension(); j++) {
+      if (m_StdDevs[j] > 0) {
+        for (i = 0; i < result.getRowDimension(); i++) {
+          result.set(i, j, (result.get(i, j) * m_StdDevs[j]) + m_Means[j]);
+        }
+      } else if (m_Means[j] != 0) {
+        for (i = 0; i < result.getRowDimension(); i++) {
+          result.set(i, j, result.get(i, j) + m_Means[j]);
+        }
       }
     }
 

@@ -74,6 +74,18 @@ public abstract class AbstractTransformationTest
   }
 
   /**
+   * Check if inverse transform of transformed data equals the original data.
+   * @param data Input data
+   * @param scheme The transformation scheme
+   * @return True if data == invTrans(trans(data))
+   */
+  protected boolean checkInvertTransform(Matrix data, AbstractTransformation scheme){
+    Matrix transformed = scheme.transform(data);
+    Matrix restored = scheme.inverseTransform(transformed);
+    return MatrixHelper.equal(data, restored, 1e-8);
+  }
+
+  /**
    * Returns the filenames (without path) of the input data files to use
    * in the regression test.
    *
@@ -177,6 +189,8 @@ public abstract class AbstractTransformationTest
     for (i = 0; i < input.length; i++) {
       data = load(input[i]);
       assertNotNull("Could not load data for regression test from " + input[i], data);
+
+      assertTrue("Inverse transformation did not restore original data", checkInvertTransform(data, setups[i]));
 
       processed = process(data, setups[i]);
       assertNotNull("Failed to process data?", processed);
