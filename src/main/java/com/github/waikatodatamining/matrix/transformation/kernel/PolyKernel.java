@@ -81,7 +81,7 @@ public class PolyKernel extends AbstractKernel {
         if (Double.isNaN(m_Gamma)) {
             m_Gamma = 1.0 / x.getRowDimension();
         }
-        return StrictMath.pow(linearTerm + m_Coef0, m_Degree);
+        return StrictMath.pow(m_Gamma * linearTerm + m_Coef0, m_Degree);
     }
 
     @Override
