@@ -37,8 +37,8 @@ public abstract class AbstractKernel implements Serializable {
         Matrix result = new Matrix(X.getRowDimension(), Y.getRowDimension());
         for (int i = 0; i < X.getRowDimension(); i++) {
             for (int j = 0; j < Y.getRowDimension(); j++) {
-                Matrix rowI = MatrixHelper.rowAsVector(X, i);
-                Matrix rowJ = MatrixHelper.rowAsVector(Y, j);
+                Matrix rowI = MatrixHelper.rowAsVector(X, i).transpose();
+                Matrix rowJ = MatrixHelper.rowAsVector(Y, j).transpose();
                 result.set(i, j, applyVector(rowI, rowJ));
             }
         }
