@@ -42,6 +42,9 @@ public class RBFKernel extends AbstractKernel {
     @Override
     public double applyVector(Matrix x, Matrix y) {
         double norm2 = x.minus(y).norm2();
+        if (Double.isNaN(m_Gamma)) {
+            m_Gamma = 1.0 / x.getRowDimension();
+        }
         return StrictMath.exp(-1 * m_Gamma * norm2);
     }
 

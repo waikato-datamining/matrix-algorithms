@@ -79,7 +79,7 @@ public class PolyKernel extends AbstractKernel {
     public double applyVector(Matrix x, Matrix y) {
         double linearTerm = x.transpose().times(y).get(0, 0);
         if (Double.isNaN(m_Gamma)) {
-            m_Gamma = 1 / x.getRowDimension();
+            m_Gamma = 1.0 / x.getRowDimension();
         }
         return StrictMath.pow(linearTerm + m_Coef0, m_Degree);
     }
