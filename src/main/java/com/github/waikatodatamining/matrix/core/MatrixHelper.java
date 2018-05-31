@@ -236,13 +236,15 @@ public class MatrixHelper {
    */
   public static double l2VectorNorm(Matrix v){
     double sum = 0.0;
-    if (v.getRowDimension() == 1){
-      for (int col = 0; col < v.getColumnDimension(); col++) {
+    int columns = v.getColumnDimension();
+    int rows = v.getRowDimension();
+    if (rows == 1){
+      for (int col = 0; col < columns; col++) {
         double val = v.get(0,col);
         sum += val*val;
       }
-    } else if(v.getColumnDimension() == 1){
-      for (int row = 0; row < v.getColumnDimension(); row++) {
+    } else if(columns == 1){
+      for (int row = 0; row < rows; row++) {
         double val = v.get(row, 0);
         sum += val*val;
       }
@@ -252,7 +254,7 @@ public class MatrixHelper {
         "be applied on row or column vectors.");
     }
 
-    return sum;
+    return StrictMath.sqrt(sum);
   }
 
   /**
