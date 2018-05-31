@@ -1,6 +1,7 @@
 package com.github.waikatodatamining.matrix.transformation.kernel;
 
 import Jama.Matrix;
+import static com.github.waikatodatamining.matrix.core.MatrixHelper.l2VectorNorm;
 
 /**
  * Radial Basis Function Kernel.
@@ -41,7 +42,7 @@ public class RBFKernel extends AbstractKernel {
 
     @Override
     public double applyVector(Matrix x, Matrix y) {
-        double norm2 = x.minus(y).norm2();
+        double norm2 = l2VectorNorm(x.minus(y));
         if (Double.isNaN(m_Gamma)) {
             m_Gamma = 1.0 / x.getRowDimension();
         }
