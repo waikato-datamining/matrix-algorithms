@@ -236,6 +236,24 @@ public class KernelPLS extends AbstractMultiResponsePLS {
   }
 
   @Override
+  protected void reset() {
+    super.reset();
+    m_K_orig = null;
+    m_K_deflated = null;
+    m_T = null;
+    m_U = null;
+    m_P = null;
+    m_Q = null;
+    m_B_RHS = null;
+    m_X = null;
+    m_Kernel = null;
+    m_Tol = Double.NaN;
+    m_MaxIter = Integer.MAX_VALUE;
+    m_CenterX = null;
+    m_CenterY = null;
+  }
+
+  @Override
   public Matrix getLoadings() {
     return m_T;
   }
