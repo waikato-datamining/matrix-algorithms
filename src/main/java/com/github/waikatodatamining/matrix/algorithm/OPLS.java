@@ -76,6 +76,12 @@ public class OPLS
     m_Torth = null;
   }
 
+  @Override
+  protected void initialize() {
+    super.initialize();
+    setBasePLS(new PLS1());
+  }
+
   /**
    * Returns the all the available matrices.
    *
