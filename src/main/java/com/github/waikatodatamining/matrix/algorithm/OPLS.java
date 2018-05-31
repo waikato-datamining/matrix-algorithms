@@ -72,7 +72,6 @@ public class OPLS
     m_Porth = null;
     m_Worth = null;
     m_Torth = null;
-    m_BasePLS = new PLS1();
   }
 
   /**
