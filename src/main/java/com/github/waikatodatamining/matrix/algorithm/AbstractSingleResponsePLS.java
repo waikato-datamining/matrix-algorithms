@@ -90,16 +90,6 @@ public abstract class AbstractSingleResponsePLS
    * @return		null if successful, otherwise error message
    * @throws Exception	if analysis fails
    */
-  protected abstract String doPerformInitialization(Matrix predictors, Matrix response) throws Exception;
-
-  /**
-   * Initializes using the provided data.
-   *
-   * @param predictors	the input data
-   * @param response 	the dependent variable(s)
-   * @return		null if successful, otherwise error message
-   * @throws Exception	if analysis fails
-   */
   protected String doInitialize(Matrix predictors, Matrix response) throws Exception {
     String	result;
 
@@ -139,15 +129,6 @@ public abstract class AbstractSingleResponsePLS
 
     return result;
   }
-
-  /**
-   * Performs predictions on the data.
-   *
-   * @param predictors the input data
-   * @throws Exception if analysis fails
-   * @return the transformed data and the predictions
-   */
-  protected abstract Matrix doPerformPredictions(Matrix predictors) throws Exception;
 
   /**
    * Performs predictions on the data.
