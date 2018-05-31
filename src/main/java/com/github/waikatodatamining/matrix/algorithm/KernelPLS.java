@@ -179,7 +179,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
     // Calculate right hand side of the regression matrix B
     Matrix tTtimesKtimesU = m_T.transpose().times(m_K_orig).times(m_U);
     Matrix inv = tTtimesKtimesU.inverse();
-    m_B_RHS = m_U.times(inv).times(m_Q.transpose());
+    m_B_RHS = inv.times(m_Q.transpose());
     return null;
   }
 
@@ -202,12 +202,19 @@ public class KernelPLS extends AbstractMultiResponsePLS {
 
   @Override
   protected Matrix doPerformPredictions(Matrix predictors) {
-    Matrix predictorsCentered = m_CenterX.transform(predictors);
-    Matrix K_t = m_Kernel.applyMatrix(predictorsCentered, m_X);
-    K_t = centralizeInKernelSpace(K_t);
+    Matrix K_t = doTransform(predictors);
     Matrix Y_hat = K_t.times(m_B_RHS);
     Y_hat = m_CenterY.inverseTransform(Y_hat);
     return Y_hat;
+  }
+
+  @Override
+  protected Matrix doTransform(Matrix predictors) {
+    Matrix predictorsCentered = m_CenterX.transform(predictors);
+    Matrix K_t = m_Kernel.applyMatrix(predictorsCentered, m_X);
+    K_t = centralizeInKernelSpace(K_t);
+
+    return K_t.times(m_U);
   }
 
   @Override
@@ -262,12 +269,5 @@ public class KernelPLS extends AbstractMultiResponsePLS {
     return true;
   }
 
-  @Override
-  protected Matrix doTransform(Matrix predictors) throws Exception {
 
-    Matrix K_t = m_Kernel.applyMatrix(predictors, m_X);
-    K_t = centralizeInKernelSpace(K_t);
-
-    return K_t.times(m_U);
-  }
 }
