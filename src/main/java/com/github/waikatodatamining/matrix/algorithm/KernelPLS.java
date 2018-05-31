@@ -6,6 +6,8 @@ import com.github.waikatodatamining.matrix.transformation.Center;
 import com.github.waikatodatamining.matrix.transformation.kernel.AbstractKernel;
 import com.github.waikatodatamining.matrix.transformation.kernel.RBFKernel;
 
+import static com.github.waikatodatamining.matrix.core.MatrixHelper.l2VectorNorm;
+
 /**
  * Kernel Partial Least Squares algorithm.
  * <br>
@@ -156,7 +158,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
 
 	// Update stopping conditions
 	iterations++;
-	iterationChange = u.minus(uOld).norm2();
+	iterationChange = l2VectorNorm(u.minus(uOld));
       }
 
       // Deflate
