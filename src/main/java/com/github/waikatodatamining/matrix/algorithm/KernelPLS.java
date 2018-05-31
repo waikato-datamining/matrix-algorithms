@@ -246,11 +246,11 @@ public class KernelPLS extends AbstractMultiResponsePLS {
     m_Q = null;
     m_B_RHS = null;
     m_X = null;
-    m_Kernel = null;
-    m_Tol = Double.NaN;
-    m_MaxIter = Integer.MAX_VALUE;
-    m_CenterX = null;
-    m_CenterY = null;
+    m_Kernel = new RBFKernel();
+    m_Tol = 1e-6;
+    m_MaxIter = 500;
+    m_CenterX = new Center();
+    m_CenterY = new Center();
   }
 
   @Override
