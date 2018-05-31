@@ -22,6 +22,7 @@ package com.github.waikatodatamining.matrix.core;
 
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 
@@ -224,6 +225,34 @@ public class MatrixHelper {
     for (i = 0; i < v.getRowDimension(); i++) {
       v.set(i, 0, v.get(i, 0) / sum);
     }
+  }
+
+  /**
+   * Calculate the l2 vector norm.
+   * This is faster than using {@link Matrix#norm2()} since it uses SVD
+   * decomposition to get the largest eigenvalue.
+   * @param v Input vector
+   * @return L2 norm of the input vector
+   */
+  public static double l2VectorNorm(Matrix v){
+    double sum = 0.0;
+    if (v.getRowDimension() == 1){
+      for (int col = 0; col < v.getColumnDimension(); col++) {
+        double val = v.get(0,col);
+        sum += val*val;
+      }
+    } else if(v.getColumnDimension() == 1){
+      for (int row = 0; row < v.getColumnDimension(); row++) {
+        double val = v.get(row, 0);
+        sum += val*val;
+      }
+    } else {
+      // Not a vector
+      throw new InvalidShapeException("MatrixHelper.l2VectorNorm() can only " +
+        "be applied on row or column vectors.");
+    }
+
+    return sum;
   }
 
   /**
