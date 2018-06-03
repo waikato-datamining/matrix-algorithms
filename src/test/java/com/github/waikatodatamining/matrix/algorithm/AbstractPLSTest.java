@@ -231,14 +231,15 @@ public abstract class AbstractPLSTest<T extends AbstractPLS>
 
     // test regression
     outputFiles = new TmpFile[output.size()];
-    for (i = 0; i < output.size(); i++)
+    for (i = 0; i < output.size(); i++){
       outputFiles[i] = new TmpFile(output.get(i));
+    }
     regression = m_Regression.compare(outputFiles, ignored);
-    assertNull("Output differs:\n" + regression, regression);
 
     // remove output, clean up scheme
     for (i = 0; i < output.size(); i++) {
       m_TestHelper.deleteFileFromTmp(output.get(i));
     }
+    assertNull("Output differs:\n" + regression, regression);
   }
 }
