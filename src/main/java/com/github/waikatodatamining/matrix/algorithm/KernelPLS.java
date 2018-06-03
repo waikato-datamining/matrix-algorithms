@@ -131,7 +131,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
     m_P = new Matrix(numRows, numComponents);
     m_Q = new Matrix(numClasses, numComponents);
     m_K_orig = m_Kernel.applyMatrix(m_X, m_X);
-    m_K_orig = centralizeInKernelSpace(m_K_orig);
+    m_K_orig = centralizeTrainInKernelSpace(m_K_orig);
     m_K_deflated = m_K_orig.copy();
 
     for (int currentComponent = 0; currentComponent < numComponents; currentComponent++) {
@@ -190,7 +190,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
    * @param K Kernel matrix
    * @return Centralised kernel matrix
    */
-  protected Matrix centralizeInKernelSpace(Matrix K) {
+  protected Matrix centralizeTrainInKernelSpace(Matrix K) {
     int n = m_X.getRowDimension();
     Matrix I = Matrix.identity(n, n);
     Matrix one = new Matrix(n, 1, 1.0);
@@ -198,6 +198,20 @@ public class KernelPLS extends AbstractMultiResponsePLS {
     // Centralize in kernel space
     Matrix part = I.minus(one.times(one.transpose()).times(1.0 / n));
     return part.times(K).times(part);
+  }
+
+  /**
+   * @param K Kernel matrix
+   * @return Centralised kernel matrix
+   */
+  protected Matrix centralizeTestInKernelSpace(Matrix K) {
+    int nTrain = m_X.getRowDimension();
+    int nTest = K.getRowDimension();
+    Matrix I = Matrix.identity(nTrain, nTrain);
+    Matrix onesTrainTestScaled = new Matrix(nTest, nTrain, 1.0 / nTrain);
+
+    Matrix onesTrainScaled = new Matrix(nTrain, nTrain, 1.0 / nTrain);
+    return (K.minus(onesTrainTestScaled.times(m_K_orig))).times(I.minus(onesTrainScaled));
   }
 
   @Override
@@ -212,7 +226,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
   protected Matrix doTransform(Matrix predictors) {
     Matrix predictorsCentered = m_CenterX.transform(predictors);
     Matrix K_t = m_Kernel.applyMatrix(predictorsCentered, m_X);
-    K_t = centralizeInKernelSpace(K_t);
+    K_t = centralizeTestInKernelSpace(K_t);
 
     return K_t.times(m_U);
   }
