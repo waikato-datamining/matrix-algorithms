@@ -69,7 +69,7 @@ public abstract class LoggingObject
    * @param value	true if to output debugging information
    */
   public void setDebug(boolean value) {
-    m_Debug = true;
+    m_Debug = value;
     // reset();  does not reset!
   }
 
