@@ -1,5 +1,6 @@
 package com.github.waikatodatamining.matrix.core;
 
+import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsException;
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixInversionException;
 import org.ojalgo.RecoverableCondition;
@@ -210,6 +211,10 @@ public class Matrix {
    * @return Matrix multiplication result
    */
   public Matrix mul(Matrix other) {
+    if (this.numColumns() != other.numRows()) {
+      throw new InvalidShapeException("Invalid matrix multiplication. Shapes " +
+	"do not match.");
+    }
     return create(data.multiply(other.data));
   }
 
@@ -396,6 +401,22 @@ public class Matrix {
   }
 
   /**
+   * When this matrix is a 1 x 1 matrix, this method returns its value as
+   * double.
+   *
+   * @return Matrix content
+   */
+  public double asDouble() {
+    if (numRows() == 1 && numColumns() == 1) {
+      return asDouble();
+    }
+    else {
+      throw new MatrixAlgorithmsException("Method Matrix#asDouble is invalid " +
+	"when number of rows != 1 or number of columns != 1.");
+    }
+  }
+
+  /**
    * Copy this matrix to a raw 1D double array.
    *
    * @return Raw 1D double array of this matrix
@@ -439,18 +460,15 @@ public class Matrix {
    * @return Concatenated matrices
    */
   public Matrix concatAlongRows(Matrix other) {
-    RowView[] vectors = new RowView[this.numRows() + other.numRows()];
+    Access1D[] vectors = new Access1D[this.numRows() + other.numRows()];
     int count = 0;
-    for (RowView<Double> row : data.rows()) {
-      vectors[count] = row;
-      count++;
+    for (int i = 0; i < numRows(); i++) {
+      vectors[count++] = data.sliceRow(i);
     }
 
-    for (RowView<Double> row : other.data.rows()) {
-      vectors[count] = row;
-      count++;
+    for (int i = 0; i < other.numRows(); i++) {
+      vectors[count++] = other.data.sliceRow(i);
     }
-
     return create(FACTORY.rows(vectors));
   }
 
@@ -584,6 +602,11 @@ public class Matrix {
    */
   public boolean isColumnVector() {
     return data.isVector() && numColumns() == 1;
+  }
+
+  @Override
+  public String toString() {
+    return MatrixHelper.toString(this, false, ',', 3);
   }
 
   @Override

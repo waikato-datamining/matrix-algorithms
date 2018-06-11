@@ -198,7 +198,7 @@ public class SIMPLS
       // 2. wh=Ah*qh, ch=wh'*Mh*wh, wh=wh/sqrt(ch), store wh in W as column
       w = A.mul(q);
       c = w.transpose().mul(M).mul(w);
-      w = w.mul(1.0 / StrictMath.sqrt(c.get(0, 0)));
+      w = w.mul(1.0 / StrictMath.sqrt(c.asDouble()));
       W.setColumn(h, w);
 
       // 3. ph=Mh*wh, store ph in P as column

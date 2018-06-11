@@ -168,7 +168,7 @@ public class OPLS
       p = Xtrans.mul(t).mul(invL2Squared(t));
 
       // Orthogonalize weight
-      wOrth = p.sub(w.mul(w.transpose().mul(p).mul(invL2Squared(w)).get(0, 0)));
+      wOrth = p.sub(w.mul(w.transpose().mul(p).mul(invL2Squared(w)).asDouble()));
       MatrixHelper.normalizeVector(wOrth);
       tOrth = X.mul(wOrth).mul(invL2Squared(wOrth));
       pOrth = Xtrans.mul(tOrth).mul(invL2Squared(tOrth));

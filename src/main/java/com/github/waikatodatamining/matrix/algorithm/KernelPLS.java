@@ -131,7 +131,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
 
 
 
-    m_K_orig = m_Kernel.applyMatrix(m_X, m_X);
+    m_K_orig = m_Kernel.applyMatrix(m_X);
     m_K_orig = centralizeTrainInKernelSpace(m_K_orig);
     m_K_deflated = m_K_orig.copy();
 
@@ -167,7 +167,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
       Matrix part = I.sub(ttTrans);
       m_K_deflated = part.mul(m_K_deflated).mul(part);
       Y = Y.sub(t.mul(q.transpose()));
-      Matrix p = m_K_deflated.transpose().mul(w).div(w.transpose().mul(w).get(0, 0));
+      Matrix p = m_K_deflated.transpose().mul(w).div(w.transpose().mul(w).asDouble());
 
       // Store u,t,c,p
       m_T.setColumn(currentComponent, t);

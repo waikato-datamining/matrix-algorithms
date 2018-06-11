@@ -173,6 +173,10 @@ public abstract class AbstractPLS
   public String initialize(Matrix predictors, Matrix response) throws Exception {
     String	result;
 
+    // Always work on copies
+    predictors = predictors.copy();
+    response = response.copy();
+
     reset();
 
     result = check(predictors, response);

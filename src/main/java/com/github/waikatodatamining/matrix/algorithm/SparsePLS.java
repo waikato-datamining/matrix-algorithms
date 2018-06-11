@@ -183,7 +183,7 @@ public class SparsePLS
    */
   private void checkDirectionVector(Matrix w) {
     // Test if w^Tw = 1
-    if (Math.abs(w.transpose().mul(w).get(0, 0) - 1) > 1e-6) {
+    if (Math.abs(w.transpose().mul(w).asDouble() - 1) > 1e-6) {
       m_Logger.warning("Something is off");
     }
   }

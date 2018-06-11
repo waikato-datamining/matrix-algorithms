@@ -36,9 +36,28 @@ public abstract class AbstractKernel implements Serializable {
     public Matrix applyMatrix(Matrix X, Matrix Y) {
         Matrix result = new Matrix(X.numRows(), Y.numRows());
         for (int i = 0; i < X.numRows(); i++) {
-            for (int j = i + 1; j < Y.numRows(); j++) {
+            for (int j = 0; j < Y.numRows(); j++) {
                 Matrix rowI = X.getRow(i);
                 Matrix rowJ = Y.getRow(j);
+                double value = applyVector(rowI, rowJ);
+                result.set(i, j, value);
+            }
+        }
+        return result;
+    }
+    /**
+     * Create a matrix K that consists of entries K_i,j = K(x_i,x_j) = phi(x_i)*phi(x_j)
+     *
+     * @param X First matrix
+     * @return Matrix K with K_i,j = K(x_i,x_j) = phi(x_i)*phi(x_j)
+     */
+    public Matrix applyMatrix(Matrix X) {
+        int n = X.numRows();
+        Matrix result = new Matrix(n, n);
+        for (int i = 0; i < X.numRows(); i++) {
+            for (int j = i; j < n; j++) {
+                Matrix rowI = X.getRow(i);
+                Matrix rowJ = X.getRow(j);
                 double value = applyVector(rowI, rowJ);
                 result.set(i, j, value);
                 result.set(j, i, value);

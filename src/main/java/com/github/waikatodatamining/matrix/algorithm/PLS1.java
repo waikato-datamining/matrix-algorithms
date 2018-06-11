@@ -154,11 +154,11 @@ public class PLS1
       t_trans = t.transpose();
       T.setColumn(j, t);
       // 3. step: ^bj
-      b = t_trans.mul(response).get(0, 0) / t_trans.mul(t).get(0, 0);
+      b = t_trans.mul(response).asDouble() / t_trans.mul(t).asDouble();
       b_hat.set(j, 0, b);
 
       // 4. step: pj
-      p = X_trans.mul(t).mul(1 / t_trans.mul(t).get(0, 0));
+      p = X_trans.mul(t).mul(1 / t_trans.mul(t).asDouble());
       p_trans = p.transpose();
       P.setColumn(j, p);
 
@@ -209,7 +209,7 @@ public class PLS1
 	t = x.mul(m_W.getColumn(j));
 	T.setColumn(j, t);
 	// 2. step: xj+1 = xj - tj*pj^T (tj is 1x1 matrix!)
-	x = x.sub(m_P.getColumn(j).transpose().mul(t.get(0, 0)));
+	x = x.sub(m_P.getColumn(j).transpose().mul(t.asDouble()));
       }
 
       result.setRow(i, T);
@@ -255,10 +255,10 @@ public class PLS1
 	t = x.mul(m_W.getColumn(j));
 	T.setRow(j, t);
 	// 2. step: xj+1 = xj - tj*pj^T (tj is 1x1 matrix!)
-	x = x.sub(m_P.getColumn(j).transpose().mul(t.get(0, 0)));
+	x = x.sub(m_P.getColumn(j).transpose().mul(t.asDouble()));
       }
 
-      result.set(i, 0, T.mul(m_b_hat).get(0, 0));
+      result.set(i, 0, T.mul(m_b_hat).asDouble());
     }
 
     return result;

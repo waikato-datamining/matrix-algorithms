@@ -77,7 +77,7 @@ public class PolyKernel extends AbstractKernel {
 
     @Override
     public double applyVector(Matrix x, Matrix y) {
-        double linearTerm = x.mul(y).get(0, 0);
+        double linearTerm = x.mul(y).asDouble();
         if (Double.isNaN(m_Gamma)) {
             m_Gamma = 1.0 / x.numRows();
         }
