@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.core.Utils;
 
@@ -142,11 +142,11 @@ public class SIMPLS
    * @param in		the matrix to process in-place
    */
   protected void slim(Matrix in) {
-    double[][] B = in.getArray();
+    double[][] B = in.toRawCopy2D();
 
-    for (int i = 0; i < in.getColumnDimension(); i++) {
-      Matrix l = in.getMatrix(0, in.getRowDimension() - 1, i, i);
-      double[] ld = l.getRowPackedCopy();
+    for (int i = 0; i < in.numColumns(); i++) {
+      Matrix l = in.getSubMatrix(0, in.numRows() - 1, i, i);
+      double[] ld = l.toRawCopy1D();
       for (int t = 0; t < ld.length; t++) {
 	ld[t] = Math.abs(ld[t]);
       }
@@ -155,7 +155,7 @@ public class SIMPLS
       int index = srt[Math.max(srt.length - 1 - getNumCoefficients(), 0)];
 
       double val = ld[index];
-      for (int c = 0; c < in.getRowDimension(); c++) {
+      for (int c = 0; c < in.numRows(); c++) {
 	if (Math.abs(B[c][i]) < val) {
 	  B[c][i] = 0;
 	}
@@ -183,51 +183,51 @@ public class SIMPLS
     int h;
 
     X_trans = predictors.transpose();
-    A = X_trans.times(response);
-    M = X_trans.times(predictors);
-    C = Matrix.identity(predictors.getColumnDimension(), predictors.getColumnDimension());
-    W = new Matrix(predictors.getColumnDimension(), getNumComponents());
-    P = new Matrix(predictors.getColumnDimension(), getNumComponents());
+    A = X_trans.mul(response);
+    M = X_trans.mul(predictors);
+    C = Matrix.identity(predictors.numColumns(), predictors.numColumns());
+    W = new Matrix(predictors.numColumns(), getNumComponents());
+    P = new Matrix(predictors.numColumns(), getNumComponents());
     Q = new Matrix(1, getNumComponents());
 
     for (h = 0; h < getNumComponents(); h++) {
       // 1. qh as dominant EigenVector of Ah'*Ah
       A_trans = A.transpose();
-      q = MatrixHelper.getDominantEigenVector(A_trans.times(A));
+      q = MatrixHelper.getDominantEigenVector(A_trans.mul(A));
 
       // 2. wh=Ah*qh, ch=wh'*Mh*wh, wh=wh/sqrt(ch), store wh in W as column
-      w = A.times(q);
-      c = w.transpose().times(M).times(w);
-      w = w.times(1.0 / StrictMath.sqrt(c.get(0, 0)));
-      MatrixHelper.setColumnVector(w, W, h);
+      w = A.mul(q);
+      c = w.transpose().mul(M).mul(w);
+      w = w.mul(1.0 / StrictMath.sqrt(c.get(0, 0)));
+      W.setColumn(h, w);
 
       // 3. ph=Mh*wh, store ph in P as column
-      p = M.times(w);
+      p = M.mul(w);
       p_trans = p.transpose();
-      MatrixHelper.setColumnVector(p, P, h);
+      P.setColumn(h, p);
 
       // 4. qh=Ah'*wh, store qh in Q as column
-      q = A_trans.times(w);
-      MatrixHelper.setColumnVector(q, Q, h);
+      q = A_trans.mul(w);
+      Q.setColumn(h, q);
 
       // 5. vh=Ch*ph, vh=vh/||vh||
-      v = C.times(p);
+      v = C.mul(p);
       MatrixHelper.normalizeVector(v);
       v_trans = v.transpose();
 
       // 6. Ch+1=Ch-vh*vh', Mh+1=Mh-ph*ph'
-      C = C.minus(v.times(v_trans));
-      M = M.minus(p.times(p_trans));
+      C = C.sub(v.mul(v_trans));
+      M = M.sub(p.mul(p_trans));
 
       // 7. Ah+1=ChAh (actually Ch+1)
-      A = C.times(A);
+      A = C.mul(A);
     }
 
     // finish
     if (m_NumCoefficients > 0)
       slim(W);
     m_W = W;
-    m_B = W.times(Q.transpose());
+    m_B = W.mul(Q.transpose());
 
     return null;
   }
@@ -241,7 +241,7 @@ public class SIMPLS
    */
   @Override
   protected Matrix doTransform(Matrix predictors) throws Exception {
-    return predictors.times(m_W);
+    return predictors.mul(m_W);
   }
 
   /**
@@ -262,6 +262,6 @@ public class SIMPLS
    */
   @Override
   protected Matrix doPerformPredictions(Matrix predictors) throws Exception {
-    return predictors.times(m_B);
+    return predictors.mul(m_B);
   }
 }

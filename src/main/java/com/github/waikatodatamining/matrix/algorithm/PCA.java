@@ -21,7 +21,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import Jama.EigenvalueDecomposition;
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.Utils;
 import com.github.waikatodatamining.matrix.transformation.AbstractTransformation;
 import com.github.waikatodatamining.matrix.transformation.Center;
@@ -207,10 +207,10 @@ public class PCA
     for (int i = 0; i < m_NumCols; i++) {
       for (int j = i; j < m_NumCols; j++) {
         double cov = 0;
-        for (int n = 0; n < m_Train.getRowDimension(); n++)
+        for (int n = 0; n < m_Train.numRows(); n++)
           cov += m_Train.get(n, i) * m_Train.get(n, j);
 
-        cov /= m_Train.getRowDimension() - 1;
+        cov /= m_Train.numRows() - 1;
         m_Correlation[i][j] = cov;
         m_Correlation[j][i] = cov;
       }
@@ -227,11 +227,11 @@ public class PCA
     TIntList 	rows;
     int		j;
 
-    if (m_KeepCols.size() != data.getColumnDimension()) {
+    if (m_KeepCols.size() != data.numColumns()) {
       rows = new TIntArrayList();
-      for (j = 0; j < data.getRowDimension(); j++)
+      for (j = 0; j < data.numRows(); j++)
 	rows.add(j);
-      data = data.getMatrix(rows.toArray(), m_KeepCols.toArray());
+      data = data.getSubMatrix(rows.toArray(), m_KeepCols.toArray());
     }
 
     return data;
@@ -256,9 +256,9 @@ public class PCA
 
     // delete any attributes with only one distinct value or are all missing
     m_KeepCols = new TIntArrayList();
-    for (j = 0; j < m_Train.getColumnDimension(); j++) {
+    for (j = 0; j < m_Train.numColumns(); j++) {
       distinct = new TDoubleHashSet();
-      for (i = 0; i < m_Train.getRowDimension(); i++) {
+      for (i = 0; i < m_Train.numRows(); i++) {
 	distinct.add(m_Train.get(i, j));
 	if (distinct.size() > 1)
 	  break;
@@ -275,22 +275,21 @@ public class PCA
       m_Transformation = new Standardize();
     m_Train = m_Transformation.transform(m_Train);
 
-    m_NumRows = m_Train.getRowDimension();
-    m_NumCols = m_Train.getColumnDimension();
+    m_NumRows = m_Train.numRows();
+    m_NumCols = m_Train.numColumns();
 
     fillCorrelation();
 
     // get eigen vectors/values
     corr = new Matrix(m_Correlation);
-    eig  = corr.eig();
-    V    = eig.getV();
+    V    = corr.getEigenvalues();
     v    = new double[m_NumCols][m_NumCols];
     for (i = 0; i < v.length; i++) {
       for (j = 0; j < v[0].length; j++)
 	v[i][j] = V.get(i, j);
     }
     m_Eigenvectors = v.clone();
-    m_Eigenvalues = eig.getRealEigenvalues().clone();
+    m_Eigenvalues = corr.getEigenvalues().toRawCopy1D();
 
     // any eigenvalues less than 0 are not worth anything --- change to 0
     for (i = 0; i < m_Eigenvalues.length; i++) {
@@ -334,9 +333,9 @@ public class PCA
 
     data       = removeColumns(data);
     data       = m_Transformation.transform(data);
-    values     = new double[data.getRowDimension()][];
+    values     = new double[data.numRows()][];
     numColsAct = 0;
-    for (n = 0; n < data.getRowDimension(); n++) {
+    for (n = 0; n < data.numRows(); n++) {
       newVals = new double[numCols];
 
       cumulative = 0;
@@ -360,7 +359,7 @@ public class PCA
       getLogger().info("numColsAct: " + numColsAct);
 
     // generate matrix based on actual number of retained columns
-    result = new Matrix(data.getRowDimension(), numColsAct);
+    result = new Matrix(data.numRows(), numColsAct);
     for (n = 0; n < values.length; n++) {
       for (i = 0; i < values[n].length && i < numColsAct; i++)
         result.set(n, i, values[n][i]);
@@ -433,7 +432,7 @@ public class PCA
 
     // add the index column
     for (n = 0; n < m_NumCols; n++)
-      result.set(n, result.getColumnDimension() - 1, n+1);
+      result.set(n, result.numColumns() - 1, n+1);
 
     //each arraylist is a single column
     for (i = 0; i< coeff.size() ; i++) {

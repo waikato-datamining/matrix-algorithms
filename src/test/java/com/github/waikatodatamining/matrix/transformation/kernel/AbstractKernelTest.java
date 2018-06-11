@@ -1,6 +1,6 @@
 package com.github.waikatodatamining.matrix.transformation.kernel;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.test.AbstractTestCase;
 import com.github.waikatodatamining.matrix.test.TestHelper;

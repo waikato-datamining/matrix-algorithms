@@ -119,6 +119,12 @@
       <artifactId>jama</artifactId>
       <version>1.0.3</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.ojalgo</groupId>
+      <artifactId>ojalgo</artifactId>
+      <version>45.1.0</version>
+    </dependency>
   </dependencies>
 
   <build>

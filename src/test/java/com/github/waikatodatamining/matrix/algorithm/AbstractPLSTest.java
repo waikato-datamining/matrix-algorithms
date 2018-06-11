@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.test.TmpFile;
 
@@ -123,7 +123,7 @@ public abstract class AbstractPLSTest<T extends AbstractPLS>
    */
   protected boolean save(Matrix[] data, String filename) {
     try {
-      MatrixHelper.write(MatrixHelper.merge(data[0], data[1]), m_TestHelper.getTmpLocationFromResource(filename), true, '\t', 6);
+      MatrixHelper.write(data[0].concat(data[1], 1), m_TestHelper.getTmpLocationFromResource(filename), true, '\t', 6);
       return true;
     }
     catch (Exception e) {

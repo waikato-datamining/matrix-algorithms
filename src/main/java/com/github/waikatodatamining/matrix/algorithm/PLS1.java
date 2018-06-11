@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 
 /**
@@ -138,41 +138,40 @@ public class PLS1
     X_trans = predictors.transpose();
 
     // init
-    W = new Matrix(predictors.getColumnDimension(), getNumComponents());
-    P = new Matrix(predictors.getColumnDimension(), getNumComponents());
-    T = new Matrix(predictors.getRowDimension(), getNumComponents());
+    W = new Matrix(predictors.numColumns(), getNumComponents());
+    P = new Matrix(predictors.numColumns(), getNumComponents());
+    T = new Matrix(predictors.numRows(), getNumComponents());
     b_hat = new Matrix(getNumComponents(), 1);
 
     for (j = 0; j < getNumComponents(); j++) {
       // 1. step: wj
-      w = X_trans.times(response);
+      w = X_trans.mul(response);
       MatrixHelper.normalizeVector(w);
-      MatrixHelper.setColumnVector(w, W, j);
+      W.setColumn(j, w);
 
       // 2. step: tj
-      t = predictors.times(w);
+      t = predictors.mul(w);
       t_trans = t.transpose();
-      MatrixHelper.setColumnVector(t, T, j);
-
+      T.setColumn(j, t);
       // 3. step: ^bj
-      b = t_trans.times(response).get(0, 0) / t_trans.times(t).get(0, 0);
+      b = t_trans.mul(response).get(0, 0) / t_trans.mul(t).get(0, 0);
       b_hat.set(j, 0, b);
 
       // 4. step: pj
-      p = X_trans.times(t).times(1 / t_trans.times(t).get(0, 0));
+      p = X_trans.mul(t).mul(1 / t_trans.mul(t).get(0, 0));
       p_trans = p.transpose();
-      MatrixHelper.setColumnVector(p, P, j);
+      P.setColumn(j, p);
 
       // 5. step: Xj+1
-      predictors = predictors.minus(t.times(p_trans));
-      response = response.minus(t.times(b));
+      predictors = predictors.sub(t.mul(p_trans));
+      response = response.sub(t.mul(b));
     }
 
     // W*(P^T*W)^-1
-    tmp = W.times(((P.transpose()).times(W)).inverse());
+    tmp = W.mul(((P.transpose()).mul(W)).inverse());
 
     // factor = W*(P^T*W)^-1 * b_hat
-    m_r_hat = tmp.times(b_hat);
+    m_r_hat = tmp.mul(b_hat);
 
     // save matrices
     m_P = P;
@@ -196,24 +195,24 @@ public class PLS1
     Matrix 	x, X;
     int 	i, j;
 
-    result = new Matrix(predictors.getRowDimension(), getNumComponents());
+    result = new Matrix(predictors.numRows(), getNumComponents());
 
-    for (i = 0; i < predictors.getRowDimension(); i++) {
+    for (i = 0; i < predictors.numRows(); i++) {
       // work on each row
       x = MatrixHelper.rowAsVector(predictors, i);
       X = new Matrix(1, getNumComponents());
       T = new Matrix(1, getNumComponents());
 
       for (j = 0; j < getNumComponents(); j++) {
-	MatrixHelper.setColumnVector(x, X, j);
+	X.setColumn(j, x);
 	// 1. step: tj = xj * wj
-	t = x.times(MatrixHelper.getVector(m_W, j));
-	MatrixHelper.setColumnVector(t, T, j);
+	t = x.mul(m_W.getColumn(j));
+	T.setColumn(j, t);
 	// 2. step: xj+1 = xj - tj*pj^T (tj is 1x1 matrix!)
-	x = x.minus(MatrixHelper.getVector(m_P, j).transpose().times(t.get(0, 0)));
+	x = x.sub(m_P.getColumn(j).transpose().mul(t.get(0, 0)));
       }
 
-      MatrixHelper.setRowVector(T, result, i);
+      result.setRow(i, T);
     }
 
     return result;
@@ -242,24 +241,24 @@ public class PLS1
     Matrix 	x, X;
     int 	i, j;
 
-    result = new Matrix(predictors.getRowDimension(), 1);
+    result = new Matrix(predictors.numRows(), 1);
 
-    for (i = 0; i < predictors.getRowDimension(); i++) {
+    for (i = 0; i < predictors.numRows(); i++) {
       // work on each row
       x = MatrixHelper.rowAsVector(predictors, i);
       X = new Matrix(1, getNumComponents());
       T = new Matrix(1, getNumComponents());
 
       for (j = 0; j < getNumComponents(); j++) {
-	MatrixHelper.setColumnVector(x, X, j);
+	X.setColumn(j, x);
 	// 1. step: tj = xj * wj
-	t = x.times(MatrixHelper.getVector(m_W, j));
-	MatrixHelper.setColumnVector(t, T, j);
+	t = x.mul(m_W.getColumn(j));
+	T.setRow(j, t);
 	// 2. step: xj+1 = xj - tj*pj^T (tj is 1x1 matrix!)
-	x = x.minus(MatrixHelper.getVector(m_P, j).transpose().times(t.get(0, 0)));
+	x = x.sub(m_P.getColumn(j).transpose().mul(t.get(0, 0)));
       }
 
-      result.set(i, 0, T.times(m_b_hat).get(0, 0));
+      result.set(i, 0, T.mul(m_b_hat).get(0, 0));
     }
 
     return result;

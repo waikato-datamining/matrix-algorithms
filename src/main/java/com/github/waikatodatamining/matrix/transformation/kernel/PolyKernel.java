@@ -1,6 +1,6 @@
 package com.github.waikatodatamining.matrix.transformation.kernel;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 
 /**
  * Linear Kernel.
@@ -77,9 +77,9 @@ public class PolyKernel extends AbstractKernel {
 
     @Override
     public double applyVector(Matrix x, Matrix y) {
-        double linearTerm = x.transpose().times(y).get(0, 0);
+        double linearTerm = x.mul(y).get(0, 0);
         if (Double.isNaN(m_Gamma)) {
-            m_Gamma = 1.0 / x.getRowDimension();
+            m_Gamma = 1.0 / x.numRows();
         }
         return StrictMath.pow(m_Gamma * linearTerm + m_Coef0, m_Degree);
     }

@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 
 /**
  * Ancestor for partial least squares variants.

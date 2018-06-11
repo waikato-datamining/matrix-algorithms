@@ -20,10 +20,9 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 
-import static com.github.waikatodatamining.matrix.core.MatrixHelper.l2VectorNorm;
 
 /**
  * OPLS algorithm.
@@ -153,35 +152,35 @@ public class OPLS
     y = response;
 
     // init
-    m_Worth = new Matrix(predictors.getColumnDimension(), getNumComponents());
-    m_Porth = new Matrix(predictors.getColumnDimension(), getNumComponents());
-    m_Torth = new Matrix(predictors.getRowDimension(), getNumComponents());
+    m_Worth = new Matrix(predictors.numColumns(), getNumComponents());
+    m_Porth = new Matrix(predictors.numColumns(), getNumComponents());
+    m_Torth = new Matrix(predictors.numRows(), getNumComponents());
 
-    w = Xtrans.times(y).times(invL2Squared(y));
+    w = Xtrans.mul(y).mul(invL2Squared(y));
     MatrixHelper.normalizeVector(w);
 
     for (int currentComponent = 0; currentComponent < getNumComponents(); currentComponent++) {
 
       // Calculate scores vector
-      t = X.times(w).times(invL2Squared(w));
+      t = X.mul(w).mul(invL2Squared(w));
 
       // Calculate loadings of X
-      p = Xtrans.times(t).times(invL2Squared(t));
+      p = Xtrans.mul(t).mul(invL2Squared(t));
 
       // Orthogonalize weight
-      wOrth = p.minus(w.times(w.transpose().times(p).times(invL2Squared(w)).get(0, 0)));
+      wOrth = p.sub(w.mul(w.transpose().mul(p).mul(invL2Squared(w)).get(0, 0)));
       MatrixHelper.normalizeVector(wOrth);
-      tOrth = X.times(wOrth).times(invL2Squared(wOrth));
-      pOrth = Xtrans.times(tOrth).times(invL2Squared(tOrth));
+      tOrth = X.mul(wOrth).mul(invL2Squared(wOrth));
+      pOrth = Xtrans.mul(tOrth).mul(invL2Squared(tOrth));
 
       // Remove orthogonal components from X
-      X = X.minus(tOrth.times(pOrth.transpose()));
+      X = X.sub(tOrth.mul(pOrth.transpose()));
       Xtrans = X.transpose();
 
       // Store results
-      MatrixHelper.setColumnVector(wOrth, m_Worth, currentComponent);
-      MatrixHelper.setColumnVector(tOrth, m_Torth, currentComponent);
-      MatrixHelper.setColumnVector(pOrth, m_Porth, currentComponent);
+      m_Worth.setColumn(currentComponent, wOrth);
+      m_Torth.setColumn(currentComponent, tOrth);
+      m_Porth.setColumn(currentComponent, pOrth);
     }
 
     m_Xosc = X.copy();
@@ -196,7 +195,7 @@ public class OPLS
    * @return 1.0 / norm2(v)^2
    */
   protected double invL2Squared(Matrix v) {
-    double l2 = l2VectorNorm(v);
+    double l2 = v.norm2();
     return 1.0 / (l2 * l2);
   }
 
@@ -211,9 +210,9 @@ public class OPLS
   protected Matrix doTransform(Matrix predictors) {
     // Remove signal from X_test that is orthogonal to y_train
     // X_clean = X_test - X_test*W_orth*P_orth^T
-    Matrix T = predictors.times(m_Worth);
-    Matrix Xorth = T.times(m_Porth.transpose());
-    return predictors.minus(Xorth);
+    Matrix T = predictors.mul(m_Worth);
+    Matrix Xorth = T.mul(m_Porth.transpose());
+    return predictors.sub(Xorth);
   }
 
   /**

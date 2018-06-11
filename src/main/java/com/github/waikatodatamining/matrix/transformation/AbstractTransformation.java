@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.transformation;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.LoggingObject;
 
 /**

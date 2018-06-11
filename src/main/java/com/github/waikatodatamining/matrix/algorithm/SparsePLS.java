@@ -20,13 +20,11 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
-import Jama.SingularValueDecomposition;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static com.github.waikatodatamining.matrix.core.MatrixHelper.l2VectorNorm;
 
 /**
  * Sparse PLS algorithm.
@@ -131,14 +129,14 @@ public class SparsePLS
       collectIndices(w);
       Matrix X_A = getSubMatrixOfX(X);
 
-
-      NIPALS pls = new NIPALS();
-      pls.setNumCoefficients(k);
-      pls.initialize(X_A, yj); // fit on yj or y?
+//
+//      NIPALS pls = new NIPALS();
+//      pls.setNumCoefficients(k);
+//      pls.initialize(X_A, yj); // fit on yj or y?
 
       // Todo: Update m_Bpls with PLS estimates of the direction vectors
 
-      yj = y.minus(X.times(m_Bpls));
+      yj = y.sub(X.mul(m_Bpls));
     }
 
     return null;
@@ -151,11 +149,11 @@ public class SparsePLS
    * @return Submatrix of x
    */
   private Matrix getSubMatrixOfX(Matrix x) {
-    Matrix X_A = new Matrix(x.getRowDimension(), m_A.size());
+    Matrix X_A = new Matrix(x.numRows(), m_A.size());
     int colCount = 0;
     for (Integer i : m_A) {
-      Matrix col = MatrixHelper.getVector(x, i);
-      MatrixHelper.setColumnVector(col, X_A, colCount);
+      Matrix col = x.getColumn(i);
+      X_A.setColumn(colCount, col);
       colCount++;
     }
     return X_A;
@@ -168,7 +166,7 @@ public class SparsePLS
    */
   private void collectIndices(Matrix w) {
     // Collect indices for X_A
-    for (int i = 0; i < w.getRowDimension(); i++) {
+    for (int i = 0; i < w.numRows(); i++) {
       if (w.get(i, 0) > 1e-6) {
 	m_A.add(i);
       }
@@ -185,7 +183,7 @@ public class SparsePLS
    */
   private void checkDirectionVector(Matrix w) {
     // Test if w^Tw = 1
-    if (Math.abs(w.transpose().times(w).get(0, 0) - 1) > 1e-6) {
+    if (Math.abs(w.transpose().mul(w).get(0, 0) - 1) > 1e-6) {
       m_Logger.warning("Something is off");
     }
   }
@@ -213,8 +211,8 @@ public class SparsePLS
     double iterationChangeC = m_Tol * 10;
     int iterations = 0;
 
-    w = MatrixHelper.getVector(y, 0);
-    c = MatrixHelper.randn(w.getRowDimension(), w.getColumnDimension(), k);
+    w = y.getColumn(0);
+    c = MatrixHelper.randn(w.numRows(), w.numColumns(), k);
     MatrixHelper.normalizeVector(c);
 
     // Repeat w step and c step until convergence
@@ -222,37 +220,26 @@ public class SparsePLS
 
       // w step
       wOld = w;
-      M = xtrans.times(yj).times(yj.transpose()).times(x);
-      SingularValueDecomposition svd = M.times(c).svd();
-      U = svd.getU();
-      V = svd.getV();
-      w = U.times(V.transpose());
+      M = xtrans.mul(yj).mul(yj.transpose()).mul(x);
+      Matrix mtc = M.mul(c);
+      U = mtc.svdU();
+      V = mtc.svdV();
+      w = U.mul(V.transpose());
 
       // c step
       cOld = c;
-      Zp = xtrans.times(yj).times(1.0 / xtrans.times(yj).norm2());
+      Zp = xtrans.mul(yj).mul(1.0 / xtrans.mul(yj).norm2());
       double max = StrictMath.max(Zp.norm2() - m_lambda / 2.0, 0.0);
       MatrixHelper.sign(Zp);
-      c = Zp.times(max);
+      c = Zp.mul(max);
       MatrixHelper.normalizeVector(c);
 
       // Update stopping conditions
       iterations++;
-      iterationChangeW = l2VectorNorm(w.minus(wOld));
-      iterationChangeC = l2VectorNorm(c.minus(cOld));
+      iterationChangeW = w.sub(wOld).norm2();
+      iterationChangeC = c.sub(cOld).norm2();
     }
     return w;
-  }
-
-  /**
-   * Get the inverse of the squared l2 norm.
-   *
-   * @param v Input vector
-   * @return 1.0 / norm2(v)^2
-   */
-  protected double invL2Squared(Matrix v) {
-    double l2 = l2VectorNorm(v);
-    return 1.0 / (l2 * l2);
   }
 
   /**
@@ -264,7 +251,7 @@ public class SparsePLS
    */
   @Override
   protected Matrix doTransform(Matrix predictors) {
-
+    return null;
   }
 
   /**
@@ -285,6 +272,7 @@ public class SparsePLS
    */
   @Override
   protected Matrix doPerformPredictions(Matrix predictors) throws Exception {
+    return null;
 
   }
 }

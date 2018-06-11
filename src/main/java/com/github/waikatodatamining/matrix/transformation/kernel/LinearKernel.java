@@ -1,6 +1,6 @@
 package com.github.waikatodatamining.matrix.transformation.kernel;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 
 /**
  * Linear Kernel.
@@ -14,7 +14,7 @@ public class LinearKernel extends AbstractKernel {
 
     @Override
     public double applyVector(Matrix x, Matrix y) {
-        return x.transpose().times(y).get(0, 0);
+        return x.mul(y).get(0, 0);
     }
 
     @Override

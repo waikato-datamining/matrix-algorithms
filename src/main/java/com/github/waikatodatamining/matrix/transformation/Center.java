@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.transformation;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.core.Utils;
 
@@ -55,8 +55,8 @@ public class Center
   public void configure(Matrix data) {
     int		j;
 
-    m_Means = new double[data.getColumnDimension()];
-    for (j = 0; j < data.getColumnDimension(); j++)
+    m_Means = new double[data.numColumns()];
+    for (j = 0; j < data.numColumns(); j++)
       m_Means[j] = MatrixHelper.mean(data, j);
 
     if (getDebug())
@@ -78,9 +78,9 @@ public class Center
     int		j;
 
     result = data.copy();
-    for (j = 0; j < result.getColumnDimension(); j++) {
+    for (j = 0; j < result.numColumns(); j++) {
       if (m_Means[j] != 0) {
-	for (i = 0; i < result.getRowDimension(); i++) {
+	for (i = 0; i < result.numRows(); i++) {
 	  result.set(i, j, result.get(i, j) - m_Means[j]);
 	}
       }
@@ -96,9 +96,9 @@ public class Center
     int j;
 
     result = data.copy();
-    for (j = 0; j < result.getColumnDimension(); j++) {
+    for (j = 0; j < result.numColumns(); j++) {
       if (m_Means[j] != 0) {
-        for (i = 0; i < result.getRowDimension(); i++) {
+        for (i = 0; i < result.numRows(); i++) {
           result.set(i, j, result.get(i, j) + m_Means[j]);
         }
       }
