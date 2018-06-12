@@ -157,6 +157,7 @@ public class Matrix {
   public Matrix getEigenvectors() {
     if (eigenvalueDecomposition == null) {
       eigenvalueDecomposition = Eigenvalue.PRIMITIVE.make(data);
+      eigenvalueDecomposition.decompose(data);
     }
     return create(eigenvalueDecomposition.getV());
   }
@@ -169,6 +170,7 @@ public class Matrix {
   public Matrix getEigenvalues() {
     if (eigenvalueDecomposition == null) {
       eigenvalueDecomposition = Eigenvalue.PRIMITIVE.make(data);
+      eigenvalueDecomposition.decompose(data);
     }
     Array1D<ComplexNumber> eigenvalues = eigenvalueDecomposition.getEigenvalues();
     double[] doubles = eigenvalues.toRawCopy1D();
