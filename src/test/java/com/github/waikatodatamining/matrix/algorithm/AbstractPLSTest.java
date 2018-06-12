@@ -71,7 +71,7 @@ public abstract class AbstractPLSTest<T extends AbstractPLS>
       return scheme.initialize(input, response);
     }
     catch (Exception e) {
-      fail("Failed to initialize: " + e);
+      fail("Failed to initialize: " + stackTraceToString(e));
       return null;
     }
   }
@@ -90,7 +90,7 @@ public abstract class AbstractPLSTest<T extends AbstractPLS>
       return scheme.transform(data);
     }
     catch (Exception e) {
-      fail("Failed to perform prediction: " + e);
+      fail("Failed to perform prediction: " + stackTraceToString(e));
       return null;
     }
   }
@@ -109,7 +109,7 @@ public abstract class AbstractPLSTest<T extends AbstractPLS>
       return scheme.predict(data);
     }
     catch (Exception e) {
-      fail("Failed to perform prediction: " + e);
+      fail("Failed to perform prediction: " + stackTraceToString(e));
       return null;
     }
   }

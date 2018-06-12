@@ -6,6 +6,8 @@ import com.github.waikatodatamining.matrix.test.AbstractTestCase;
 import com.github.waikatodatamining.matrix.test.TestHelper;
 import com.github.waikatodatamining.matrix.test.TmpFile;
 
+import static com.github.waikatodatamining.matrix.algorithm.AbstractAlgorithmTest.stackTraceToString;
+
 public abstract class AbstractKernelTest extends AbstractTestCase {
     /**
      * Constructs the test case. Called by subclasses.
@@ -73,7 +75,7 @@ public abstract class AbstractKernelTest extends AbstractTestCase {
             return MatrixHelper.read(new TmpFile(filename).getAbsolutePath(), true, ',');
         }
         catch (Exception e) {
-            fail("Failed to read: " + filename + "\n" + e);
+            fail("Failed to read: " + filename + "\n" + stackTraceToString(e));
             return null;
         }
     }

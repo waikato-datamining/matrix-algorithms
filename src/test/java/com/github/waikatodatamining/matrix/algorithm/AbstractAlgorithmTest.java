@@ -26,6 +26,9 @@ import com.github.waikatodatamining.matrix.test.AbstractTestCase;
 import com.github.waikatodatamining.matrix.test.TestHelper;
 import com.github.waikatodatamining.matrix.test.TmpFile;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * Ancestor for algorithm tests.
  *
@@ -98,7 +101,7 @@ public abstract class AbstractAlgorithmTest<T extends AbstractAlgorithm>
       return MatrixHelper.read(new TmpFile(filename).getAbsolutePath(), true, ',');
     }
     catch (Exception e) {
-      fail("Failed to read: " + filename + "\n" + e);
+      fail("Failed to read: " + filename + "\n" + stackTraceToString(e));
       return null;
     }
   }
@@ -195,5 +198,16 @@ public abstract class AbstractAlgorithmTest<T extends AbstractAlgorithm>
     for (i = 0; i < output.length; i++) {
       m_TestHelper.deleteFileFromTmp(output[i]);
     }
+  }
+
+  /**
+   * Convert a stacktrace from a throwable into a string.
+   * @param e Throwable
+   * @return Stacktrace string
+   */
+  public static String stackTraceToString(Throwable e){
+    StringWriter out = new StringWriter();
+    e.printStackTrace(new PrintWriter(out));
+    return out.toString();
   }
 }

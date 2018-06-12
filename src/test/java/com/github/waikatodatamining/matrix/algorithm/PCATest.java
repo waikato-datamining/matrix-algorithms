@@ -54,7 +54,7 @@ public class PCATest
       return scheme.transform(data);
     }
     catch (Exception e) {
-      fail("Failed to transform data: " + e);
+      fail("Failed to transform data: " + stackTraceToString(e));
       return null;
     }
   }
