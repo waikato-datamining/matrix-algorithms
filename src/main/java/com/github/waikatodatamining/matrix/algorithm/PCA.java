@@ -282,7 +282,7 @@ public class PCA
 
     // get eigen vectors/values
     corr = new Matrix(m_Correlation);
-    V    = corr.getEigenvalues();
+    V    = corr.getEigenvectors();
     v    = new double[m_NumCols][m_NumCols];
     for (i = 0; i < v.length; i++) {
       for (j = 0; j < v[0].length; j++)
