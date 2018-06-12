@@ -43,7 +43,7 @@ public class RBFKernel extends AbstractKernel {
     public double applyVector(Matrix x, Matrix y) {
         double norm2 = x.sub(y).norm2();
         if (Double.isNaN(m_Gamma)) {
-            m_Gamma = 1.0 / x.numRows();
+            m_Gamma = 1.0 / x.numColumns();
         }
         return StrictMath.exp(-1 * m_Gamma * norm2);
     }

@@ -43,7 +43,7 @@ public abstract class AbstractKernelTest extends AbstractTestCase {
      * @return		the processed data
      */
     protected Matrix process(Matrix data, AbstractKernel scheme) {
-        return scheme.applyMatrix(data, data);
+        return scheme.applyMatrix(data);
     }
 
     /**

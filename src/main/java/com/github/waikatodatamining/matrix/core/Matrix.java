@@ -6,11 +6,13 @@ import com.github.waikatodatamining.matrix.core.exceptions.MatrixInversionExcept
 import org.ojalgo.RecoverableCondition;
 import org.ojalgo.access.Access1D;
 import org.ojalgo.access.ColumnView;
-import org.ojalgo.access.RowView;
 import org.ojalgo.array.Array1D;
 import org.ojalgo.function.NullaryFunction;
+import org.ojalgo.function.PrimitiveFunction;
+import org.ojalgo.function.UnaryFunction;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
 import org.ojalgo.matrix.decomposition.SingularValue;
+import org.ojalgo.matrix.store.ElementsSupplier;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
@@ -211,11 +213,139 @@ public class Matrix {
    * @return Matrix multiplication result
    */
   public Matrix mul(Matrix other) {
-    if (this.numColumns() != other.numRows()) {
+    // Check for matching shapes
+    if (numColumns() != other.numRows()) {
       throw new InvalidShapeException("Invalid matrix multiplication. Shapes " +
 	"do not match.");
     }
     return create(data.multiply(other.data));
+  }
+
+  /**
+   * Multiply this matrix with another matrix in place.
+   *
+   * @param other Multiplicand
+   * @return This
+   */
+  public Matrix muli(Matrix other) {
+    // TODO: Enable as soon as https://github.com/optimatika/ojAlgo/issues/102
+    // TODO: is solved
+    if (true){
+      throw new MatrixAlgorithmsException("Inplace multiplication is " +
+        "currently unsupported.");
+    }
+
+    // Check for matching shapes
+    if (!sameShapeAs(other)) {
+      throw new InvalidShapeException("Invalid inplace matrix multiplication. " +
+	"Shapes do not match.");
+    }
+    if (isPhysicalStore()) {
+      data.multiply(other.data, physical());
+    }
+    else {
+      data.multiply(other.data, data.copy());
+    }
+    return this;
+  }
+
+  /**
+   * Store the multiplication result of {@code left} and {@code right} inplace
+   * in this matrix.
+   *
+   * @param left  Left multiplicand
+   * @param right Right multiplicand
+   * @throws MatrixAlgorithmsException Invalid shapes or underlying store is not
+   *                                   physical
+   */
+  public void storeMultiply(Matrix left, Matrix right) {
+
+    // TODO: Enable as soon as https://github.com/optimatika/ojAlgo/issues/102
+    // TODO: is solved
+    if (true){
+      throw new MatrixAlgorithmsException("Inplace multiplication is " +
+        "currently unsupported.");
+    }
+
+    if (!left.isMultiplicableWith(right)) {
+      throw new InvalidShapeException("Left matrix does not match shape with " +
+	"right matrix for multiplication", left, right);
+    }
+    if (left.numRows() != this.numRows()
+      || right.numColumns() != this.numColumns()) {
+      throw new InvalidShapeException("Cannot store the matrix " +
+	"multiplication of shape (1) and (2) into  " +
+	"shape (3)", left, right, this);
+    }
+    // Check for matching shapes
+    if (isPhysicalStore()) {
+      //      ((PhysicalStore<Double>) data).fillByMultiplying(left.data, right.data);
+      left.data.multiply(right.data, (PhysicalStore<Double>) this.data);
+    }
+    else {
+      throw new MatrixAlgorithmsException("Only physical stores should be " +
+	"used as matrix caches.");
+    }
+  }
+
+  /**
+   * Check if the underlying matrix store is physical and with that mutable.
+   *
+   * @return True if {@link Matrix#data} is instance of {@link PhysicalStore}
+   */
+  protected boolean isPhysicalStore() {
+    return data instanceof PhysicalStore;
+  }
+
+  /**
+   * Check if the matrix multiplication between this and the other matrix can be
+   * done regarding shapes.
+   *
+   * @param other Other matrix
+   * @return True if multiplication is valid
+   */
+  public boolean isMultiplicableWith(Matrix other) {
+    return this.numColumns() == other.numRows();
+  }
+
+  /**
+   * Compute the vector dot product. Equivalent to x.transpose().mul(y) but
+   * faster as transposition is skipped.
+   * Both vectors (this and other) have to be in the
+   * shape [1 x n] to skip the explicit transposition.
+   *
+   * @param other Other vector
+   * @return Vector dot product
+   */
+  public double vectorDot(Matrix other) {
+    if (isRowVector() && sameShapeAs(other)) {
+      return data.multiply(other.data).get(0, 0);
+    }
+    else {
+      throw new InvalidShapeException("Shape " + shapeString() + " and " +
+	"" + other.shapeString() + " are incompatible for vector product. " +
+	"Shape [ 1 x n ] has to be ensured on both vectors.");
+    }
+  }
+
+  /**
+   * Check if this matrix is a vector.
+   *
+   * @return True if either {@link Matrix#numRows()} equals 1 or
+   * {@link Matrix#numColumns()} equals 1
+   */
+  private boolean isVector() {
+    return data.isVector();
+  }
+
+  /**
+   * Check if this matrix has the same shape as a second matrix.
+   *
+   * @param other Matrix to be compared
+   * @return True if shapes are the same
+   */
+  private boolean sameShapeAs(Matrix other) {
+    return numRows() == other.numRows() && numColumns() == other.numColumns();
   }
 
   /**
@@ -240,10 +370,10 @@ public class Matrix {
   }
 
   /**
-   * Substract the given matrix from this matrix.
+   * Subtract the given matrix from this matrix.
    *
    * @param other Subtrahend
-   * @return Result of the other matrix substracted from this matrix
+   * @return Result of the other matrix subtracted from this matrix
    */
   public Matrix sub(Matrix other) {
     return create(data.subtract(other.data));
@@ -257,6 +387,65 @@ public class Matrix {
    */
   public Matrix add(Matrix other) {
     return create(data.add(other.data));
+  }
+
+  /**
+   * Add the given scalar to each element of this matrix.
+   *
+   * @param value Scalar value
+   * @return Result of the addition
+   */
+  public Matrix add(double value) {
+    Matrix filled = new Matrix(numRows(), numColumns(), value);
+    return add(filled);
+  }
+
+  /**
+   * Subtract the given scalar from each element of this matrix.
+   *
+   * @param value Scalar value
+   * @return Result of the addition
+   */
+  public Matrix sub(double value) {
+    Matrix filled = new Matrix(numRows(), numColumns(), value);
+    return sub(filled);
+  }
+
+  /**
+   * Apply elementwise power.
+   *
+   * @param exponent Exponent
+   * @return Matrix with elementwise powered elements
+   */
+  public Matrix powElementwise(double exponent) {
+    return create(data.operateOnAll(PrimitiveFunction.POW, exponent).get());
+  }
+
+
+//  public Matrix mulElementwise(Matrix other){
+//    if (!this.sameShapeAs(other)){
+//      throw new InvalidShapeException("Invalid inplace matrix multiplication. " +
+//        "Shapes do not match.");
+//    }
+//
+//    for (int i = 0; i < numRows(); i++) {
+//      for (int j = 0; j < numColumns(); j++) {
+//
+//      }
+//    }
+//  }
+
+  public PhysicalStore<Double> physical(){
+    return (PhysicalStore<Double>) data;
+  }
+
+  /**
+   * Apply the square root to all elements of this matrix.
+   *
+   * @return Matrix with elementwise square roots
+   */
+  public Matrix sqrt() {
+    return create(data.operateOnAll(PrimitiveFunction.SQRT).get());
   }
 
   /**
@@ -408,7 +597,7 @@ public class Matrix {
    */
   public double asDouble() {
     if (numRows() == 1 && numColumns() == 1) {
-      return asDouble();
+      return get(0, 0);
     }
     else {
       throw new MatrixAlgorithmsException("Method Matrix#asDouble is invalid " +
@@ -620,5 +809,14 @@ public class Matrix {
   @Override
   public int hashCode() {
     return Objects.hash(data);
+  }
+
+  /**
+   * Create a string representation of the matrix's shape.
+   *
+   * @return Shape string
+   */
+  public String shapeString() {
+    return "[" + numRows() + " x " + numColumns() + "]";
   }
 }

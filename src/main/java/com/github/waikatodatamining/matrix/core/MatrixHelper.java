@@ -22,6 +22,8 @@ package com.github.waikatodatamining.matrix.core;
 
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
+import org.ojalgo.matrix.store.PhysicalStore;
+import org.ojalgo.matrix.store.PrimitiveDenseStore;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -186,6 +188,44 @@ public class MatrixHelper {
     for (i = 0; i < v.numRows(); i++) {
       v.set(i, 0, v.get(i, 0) / sum);
     }
+  }
+
+  /**
+   * Get the euclidean distance matrix between the two matrices, that is
+   * element (i,j) in the result is the l2-distance of X_i and Y_j.
+   *
+   * @param X       First matrix
+   * @param Y       Second matrix
+   * @param squared Whether the result shall be squared
+   * @return Euclidean distance matrix
+   */
+  public static Matrix euclideanDistance(Matrix X, Matrix Y, boolean squared) {
+    Matrix XX = rowNorms(X, true);
+    Matrix YY = rowNorms(Y, true);
+
+    Matrix distances = X.mul(Y.transpose());
+    distances = distances.mul(-2);
+    distances = distances.add(XX);
+    distances = distances.add(YY);
+
+    // Ensure i==j is set to zero (may not be the case due to floating point
+    // errors
+    if (X.equals(Y)) {
+      ((PhysicalStore<Double>) distances.data).fillDiagonal(0.0);
+    }
+
+    // Skip square root if the squared distances are necessary anyway
+    if (squared) {
+      return distances;
+    }
+    else {
+      return distances.sqrt();
+    }
+  }
+
+  public static Matrix rowNorms(Matrix X, boolean squared){
+    // TODO: Implement efficient elementwise multiplication.
+    return null;
   }
 
   /**
