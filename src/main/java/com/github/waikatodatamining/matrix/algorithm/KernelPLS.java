@@ -164,11 +164,6 @@ public class KernelPLS extends AbstractMultiResponsePLS {
       Matrix ttTrans = t.mul(t.transpose());
       Matrix part = I.sub(ttTrans);
 
-      // TODO: use preallocated matrix store to save memory when confusion
-      // TODO: is solved (https://github.com/optimatika/ojAlgo/issues/102)
-//      m_K_deflated.storeMultiply(part, m_K_deflated);
-//      m_K_deflated.storeMultiply(m_K_deflated, part);
-
       m_K_deflated = part.mul(m_K_deflated).mul(part);
       Y = Y.sub(t.mul(q.transpose()));
       Matrix p = m_K_deflated.transpose().mul(w).div(w.transpose().mul(w).asDouble());
