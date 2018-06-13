@@ -1,12 +1,10 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.transformation.Center;
 import com.github.waikatodatamining.matrix.transformation.kernel.AbstractKernel;
 import com.github.waikatodatamining.matrix.transformation.kernel.RBFKernel;
-
-import static com.github.waikatodatamining.matrix.core.MatrixHelper.l2VectorNorm;
 
 /**
  * Kernel Partial Least Squares algorithm.
@@ -110,7 +108,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
   protected String doPerformInitialization(Matrix predictors, Matrix response) throws Exception {
     Matrix Y, I, t, u, q, w;
 
-
+    getLogger();
     // Init
     int numComponents = getNumComponents();
     m_X = predictors;
@@ -118,8 +116,8 @@ public class KernelPLS extends AbstractMultiResponsePLS {
     Y = response;
     Y = m_CenterY.transform(Y);
 
-    int numRows = m_X.getRowDimension();
-    int numClasses = Y.getColumnDimension();
+    int numRows = m_X.numRows();
+    int numClasses = Y.numColumns();
 
     q = new Matrix(numClasses, 1);
     t = new Matrix(numRows, 1);
@@ -130,7 +128,8 @@ public class KernelPLS extends AbstractMultiResponsePLS {
     m_U = new Matrix(numRows, numComponents);
     m_P = new Matrix(numRows, numComponents);
     m_Q = new Matrix(numClasses, numComponents);
-    m_K_orig = m_Kernel.applyMatrix(m_X, m_X);
+
+    m_K_orig = m_Kernel.applyMatrix(m_X);
     m_K_orig = centralizeTrainInKernelSpace(m_K_orig);
     m_K_deflated = m_K_orig.copy();
 
@@ -144,42 +143,42 @@ public class KernelPLS extends AbstractMultiResponsePLS {
       // number of iterations has been reached (m_MaxIter)
       while (iterationChange > m_Tol && iterations < m_MaxIter) {
 	// 1)
-	t = m_K_deflated.times(u);
+	t = m_K_deflated.mul(u);
 	w = t.copy();
 	MatrixHelper.normalizeVector(t);
 
 	// 2)
-	q = Y.transpose().times(t);
+	q = Y.transpose().mul(t);
 
 	// 3)
 	uOld = u;
-	u = Y.times(q);
+	u = Y.mul(q);
 	MatrixHelper.normalizeVector(u);
 
 	// Update stopping conditions
 	iterations++;
-	iterationChange = l2VectorNorm(u.minus(uOld));
+	iterationChange = u.sub(uOld).norm2();
       }
 
       // Deflate
-      Matrix ttTrans = t.times(t.transpose());
-      Matrix part = I.minus(ttTrans);
-      m_K_deflated = part.times(m_K_deflated).times(part);
-      Y = Y.minus(t.times(q.transpose()));
-      Matrix p = m_K_deflated.transpose().times(w).times(1.0 / w.transpose().times(w).get(0, 0));
+      Matrix ttTrans = t.mul(t.transpose());
+      Matrix part = I.sub(ttTrans);
 
+      m_K_deflated = part.mul(m_K_deflated).mul(part);
+      Y = Y.sub(t.mul(q.transpose()));
+      Matrix p = m_K_deflated.transpose().mul(w).div(w.transpose().mul(w).asDouble());
 
       // Store u,t,c,p
-      MatrixHelper.setColumnVector(t, m_T, currentComponent);
-      MatrixHelper.setColumnVector(u, m_U, currentComponent);
-      MatrixHelper.setColumnVector(q, m_Q, currentComponent);
-      MatrixHelper.setColumnVector(p, m_P, currentComponent);
+      m_T.setColumn(currentComponent, t);
+      m_U.setColumn(currentComponent, u);
+      m_Q.setColumn(currentComponent, q);
+      m_P.setColumn(currentComponent, p);
     }
 
     // Calculate right hand side of the regression matrix B
-    Matrix tTtimesKtimesU = m_T.transpose().times(m_K_orig).times(m_U);
+    Matrix tTtimesKtimesU = m_T.transpose().mul(m_K_orig).mul(m_U);
     Matrix inv = tTtimesKtimesU.inverse();
-    m_B_RHS = inv.times(m_Q.transpose());
+    m_B_RHS = inv.mul(m_Q.transpose());
     return null;
   }
 
@@ -191,13 +190,13 @@ public class KernelPLS extends AbstractMultiResponsePLS {
    * @return Centralised kernel matrix
    */
   protected Matrix centralizeTrainInKernelSpace(Matrix K) {
-    int n = m_X.getRowDimension();
+    int n = m_X.numRows();
     Matrix I = Matrix.identity(n, n);
     Matrix one = new Matrix(n, 1, 1.0);
 
     // Centralize in kernel space
-    Matrix part = I.minus(one.times(one.transpose()).times(1.0 / n));
-    return part.times(K).times(part);
+    Matrix part = I.sub(one.mul(one.transpose()).div(n));
+    return part.mul(K).mul(part);
   }
 
   /**
@@ -205,19 +204,19 @@ public class KernelPLS extends AbstractMultiResponsePLS {
    * @return Centralised kernel matrix
    */
   protected Matrix centralizeTestInKernelSpace(Matrix K) {
-    int nTrain = m_X.getRowDimension();
-    int nTest = K.getRowDimension();
+    int nTrain = m_X.numRows();
+    int nTest = K.numRows();
     Matrix I = Matrix.identity(nTrain, nTrain);
     Matrix onesTrainTestScaled = new Matrix(nTest, nTrain, 1.0 / nTrain);
 
     Matrix onesTrainScaled = new Matrix(nTrain, nTrain, 1.0 / nTrain);
-    return (K.minus(onesTrainTestScaled.times(m_K_orig))).times(I.minus(onesTrainScaled));
+    return (K.sub(onesTrainTestScaled.mul(m_K_orig))).mul(I.sub(onesTrainScaled));
   }
 
   @Override
   protected Matrix doPerformPredictions(Matrix predictors) {
     Matrix K_t = doTransform(predictors);
-    Matrix Y_hat = K_t.times(m_B_RHS);
+    Matrix Y_hat = K_t.mul(m_B_RHS);
     Y_hat = m_CenterY.inverseTransform(Y_hat);
     return Y_hat;
   }
@@ -228,7 +227,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
     Matrix K_t = m_Kernel.applyMatrix(predictorsCentered, m_X);
     K_t = centralizeTestInKernelSpace(K_t);
 
-    return K_t.times(m_U);
+    return K_t.mul(m_U);
   }
 
   @Override

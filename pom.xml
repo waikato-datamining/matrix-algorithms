@@ -96,7 +96,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.2</version>
+      <version>4.12</version>
       <type>jar</type>
       <scope>test</scope>
     </dependency>
@@ -118,6 +118,12 @@
       <groupId>gov.nist.math</groupId>
       <artifactId>jama</artifactId>
       <version>1.0.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.ojalgo</groupId>
+      <artifactId>ojalgo</artifactId>
+      <version>45.1.0</version>
     </dependency>
   </dependencies>
 

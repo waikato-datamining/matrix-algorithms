@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.transformation.AbstractTransformation;
 import com.github.waikatodatamining.matrix.transformation.Center;
@@ -75,8 +75,8 @@ public abstract class AbstractSingleResponsePLS
     result = super.check(predictors, response);
 
     if (result == null) {
-      if (response.getColumnDimension() != 1)
-	result = "Algorithm requires exactly one response variable, found: " + response.getColumnDimension();
+      if (response.numColumns() != 1)
+	result = "Algorithm requires exactly one response variable, found: " + response.numColumns();
     }
 
     return result;
@@ -144,8 +144,9 @@ public abstract class AbstractSingleResponsePLS
 
     result = doPerformPredictions(predictors);
     if (m_TransResponse != null) {
-      for (i = 0; i < result.getRowDimension(); i++)
-        result.set(i, 0, result.get(i, 0) * m_ClassStdDev + m_ClassMean);
+      for (i = 0; i < result.numRows(); i++){
+	result.set(i, 0, result.get(i, 0) * m_ClassStdDev + m_ClassMean);
+      }
     }
 
     return result;

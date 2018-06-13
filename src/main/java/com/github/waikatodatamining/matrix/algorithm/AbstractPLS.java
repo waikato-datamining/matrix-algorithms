@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 
 /**
  * Ancestor for partial least squares variants.
@@ -172,6 +172,10 @@ public abstract class AbstractPLS
    */
   public String initialize(Matrix predictors, Matrix response) throws Exception {
     String	result;
+
+    // Always work on copies
+    predictors = predictors.copy();
+    response = response.copy();
 
     reset();
 

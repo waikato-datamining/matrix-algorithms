@@ -1,10 +1,12 @@
 package com.github.waikatodatamining.matrix.transformation.kernel;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.test.AbstractTestCase;
 import com.github.waikatodatamining.matrix.test.TestHelper;
 import com.github.waikatodatamining.matrix.test.TmpFile;
+
+import static com.github.waikatodatamining.matrix.algorithm.AbstractAlgorithmTest.stackTraceToString;
 
 public abstract class AbstractKernelTest extends AbstractTestCase {
     /**
@@ -43,7 +45,7 @@ public abstract class AbstractKernelTest extends AbstractTestCase {
      * @return		the processed data
      */
     protected Matrix process(Matrix data, AbstractKernel scheme) {
-        return scheme.applyMatrix(data, data);
+        return scheme.applyMatrix(data);
     }
 
     /**
@@ -73,7 +75,7 @@ public abstract class AbstractKernelTest extends AbstractTestCase {
             return MatrixHelper.read(new TmpFile(filename).getAbsolutePath(), true, ',');
         }
         catch (Exception e) {
-            fail("Failed to read: " + filename + "\n" + e);
+            fail("Failed to read: " + filename + "\n" + stackTraceToString(e));
             return null;
         }
     }

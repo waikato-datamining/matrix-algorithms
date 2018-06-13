@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.transformation.AbstractTransformation;
 import com.github.waikatodatamining.matrix.transformation.Center;
@@ -89,10 +89,10 @@ public abstract class AbstractMultiResponsePLS
     result = super.check(predictors, response);
 
     if (result == null) {
-      if (response.getColumnDimension() < getMinColumnsResponse())
-	result = "Algorithm requires at least " + getMinColumnsResponse() + " response columns, found: " + response.getColumnDimension();
-      else if ((getMaxColumnsResponse() != -1) && (response.getColumnDimension() > getMaxColumnsResponse()))
-	result = "Algorithm can handle at most " + getMaxColumnsResponse() + " response columns, found: " + response.getColumnDimension();
+      if (response.numColumns() < getMinColumnsResponse())
+	result = "Algorithm requires at least " + getMinColumnsResponse() + " response columns, found: " + response.numColumns();
+      else if ((getMaxColumnsResponse() != -1) && (response.numColumns() > getMaxColumnsResponse()))
+	result = "Algorithm can handle at most " + getMaxColumnsResponse() + " response columns, found: " + response.numColumns();
     }
 
     return result;
@@ -110,9 +110,9 @@ public abstract class AbstractMultiResponsePLS
     String	result;
     int		i;
 
-    m_ClassMean   = new double[response.getColumnDimension()];
-    m_ClassStdDev = new double[response.getColumnDimension()];
-    for (i = 0; i < response.getColumnDimension(); i++) {
+    m_ClassMean   = new double[response.numColumns()];
+    m_ClassStdDev = new double[response.numColumns()];
+    for (i = 0; i < response.numColumns(); i++) {
       switch (m_PreprocessingType) {
 	case CENTER:
 	  m_ClassMean[i]   = MatrixHelper.mean(response, 0);
@@ -167,8 +167,8 @@ public abstract class AbstractMultiResponsePLS
 
     result = doPerformPredictions(predictors);
     if (m_TransResponse != null) {
-      for (i = 0; i < result.getRowDimension(); i++) {
-	for (j = 0; j < result.getColumnDimension(); j++)
+      for (i = 0; i < result.numRows(); i++) {
+	for (j = 0; j < result.numColumns(); j++)
 	  result.set(i, j, result.get(i, j) * m_ClassStdDev[j] + m_ClassMean[j]);
       }
     }

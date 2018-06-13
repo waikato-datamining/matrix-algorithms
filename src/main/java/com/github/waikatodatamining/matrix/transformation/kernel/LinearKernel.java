@@ -1,24 +1,37 @@
 package com.github.waikatodatamining.matrix.transformation.kernel;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 
 /**
  * Linear Kernel.
  * <p>
- * K(x,y)=x^T*y
+ * K(x_i,y_j)=x_i^T*y_j
+ * or also
+ * K(X, Y)=X*Y^T
  *
  * @author Steven Lang
  */
 public class LinearKernel extends AbstractKernel {
-    private static final long serialVersionUID = 841527107134287683L;
 
-    @Override
-    public double applyVector(Matrix x, Matrix y) {
-        return x.transpose().times(y).get(0, 0);
-    }
+  private static final long serialVersionUID = 841527107134287683L;
 
-    @Override
-    public String toString() {
-        return "Linear Kernel: K(x,y)=x^T*y";
-    }
+  @Override
+  public double applyVector(Matrix x, Matrix y) {
+    return x.vectorDot(y);
+  }
+
+  @Override
+  public Matrix applyMatrix(Matrix X, Matrix Y) {
+    return X.mul(Y.transpose());
+  }
+
+  @Override
+  public Matrix applyMatrix(Matrix X) {
+    return this.applyMatrix(X, X);
+  }
+
+  @Override
+  public String toString() {
+    return "Linear Kernel: K(x,y)=x^T*y";
+  }
 }

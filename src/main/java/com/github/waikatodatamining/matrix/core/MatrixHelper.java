@@ -20,11 +20,9 @@
 
 package com.github.waikatodatamining.matrix.core;
 
-import Jama.EigenvalueDecomposition;
-import Jama.Matrix;
-import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
+import org.ojalgo.matrix.store.PhysicalStore;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -32,6 +30,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 /**
  * Additional matrix operations.
@@ -66,15 +65,15 @@ public class MatrixHelper {
     int		j;
 
     keep = new TIntArrayList();
-    for (i = 0; i < data.getColumnDimension(); i++)
+    for (i = 0; i < data.numColumns(); i++)
       keep.add(i);
     for (int col: cols)
       keep.remove(col);
 
     rows = new TIntArrayList();
-    for (j = 0; j < data.getRowDimension(); j++)
+    for (j = 0; j < data.numRows(); j++)
       rows.add(j);
-    result = data.getMatrix(rows.toArray(), keep.toArray());
+    result = data.getSubMatrix(rows.toArray(), keep.toArray());
 
     return result;
   }
@@ -87,7 +86,7 @@ public class MatrixHelper {
    * @return		the row
    */
   public static Matrix rowAsVector(Matrix data, int row) {
-    return data.getMatrix(row, row, 0, data.getColumnDimension() - 1);
+    return data.getSubMatrix(row, row, 0, data.numColumns() - 1);
   }
 
   /**
@@ -102,8 +101,8 @@ public class MatrixHelper {
     int		i;
 
     result = 0.0;
-    for (i = 0; i < data.getRowDimension(); i++)
-      result += data.get(i, col) / data.getRowDimension();
+    for (i = 0; i < data.numRows(); i++)
+      result += data.get(i, col) / data.numRows();
 
     return result;
   }
@@ -122,9 +121,9 @@ public class MatrixHelper {
 
     mean   = mean(data, col);
     result = 0.0;
-    for (i = 0; i < data.getRowDimension(); i++)
+    for (i = 0; i < data.numRows(); i++)
       result += Math.pow(data.get(i, col) - mean, 2);;
-    result /= (data.getRowDimension() - 1);
+    result /= (data.numRows() - 1);
     result = Math.sqrt(result);
 
     return result;
@@ -141,48 +140,13 @@ public class MatrixHelper {
     Matrix result;
     int i;
 
-    result = new Matrix(m.getRowDimension(), 1);
+    result = new Matrix(m.numRows(), 1);
 
-    for (i = 0; i < m.getRowDimension(); i++) {
+    for (i = 0; i < m.numRows(); i++) {
       result.set(i, 0, m.get(i, columnIndex));
     }
 
     return result;
-  }
-
-  /**
-   * stores the data from the (column) vector in the matrix at the specified
-   * index
-   *
-   * @param v the vector to store in the matrix
-   * @param m the receiving matrix
-   * @param columnIndex the column to store the values in
-   */
-  public static void setColumnVector(Matrix v, Matrix m, int columnIndex) {
-    m.setMatrix(0, m.getRowDimension() - 1, columnIndex, columnIndex, v);
-  }
-
-  /**
-   * stores the data from the (row) vector in the matrix at the specified
-   * index
-   *
-   * @param v the vector to store in the matrix
-   * @param m the receiving matrix
-   * @param rowIndex the row to store the values in
-   */
-  public static void setRowVector(Matrix v, Matrix m, int rowIndex) {
-    m.setMatrix(rowIndex, rowIndex, 0, m.getColumnDimension() - 1, v);
-  }
-
-  /**
-   * returns the (column) vector of the matrix at the specified index
-   *
-   * @param m the matrix to work on
-   * @param columnIndex the column to get the values from
-   * @return the column vector
-   */
-  public static Matrix getVector(Matrix m, int columnIndex) {
-    return m.getMatrix(0, m.getRowDimension() - 1, columnIndex, columnIndex);
   }
 
   /**
@@ -192,15 +156,14 @@ public class MatrixHelper {
    * @return the dominant eigenvector
    */
   public static Matrix getDominantEigenVector(Matrix m) {
-    EigenvalueDecomposition eigendecomp;
     double[] eigenvalues;
     int index;
     Matrix result;
 
-    eigendecomp = m.eig();
-    eigenvalues = eigendecomp.getRealEigenvalues();
+    eigenvalues = m.getEigenvalues().toRawCopy1D();
+    m.getEigenvectors();
     index = Utils.maxIndex(eigenvalues);
-    result = columnAsVector(eigendecomp.getV(), index);
+    result = m.getEigenvectors().getColumn(index);
 
     return result;
   }
@@ -216,45 +179,53 @@ public class MatrixHelper {
 
     // determine length
     sum = 0;
-    for (i = 0; i < v.getRowDimension(); i++) {
+    for (i = 0; i < v.numRows(); i++) {
       sum += v.get(i, 0) * v.get(i, 0);
     }
     sum = StrictMath.sqrt(sum);
 
     // normalize content
-    for (i = 0; i < v.getRowDimension(); i++) {
+    for (i = 0; i < v.numRows(); i++) {
       v.set(i, 0, v.get(i, 0) / sum);
     }
   }
 
   /**
-   * Calculate the l2 vector norm.
-   * This is faster than using {@link Matrix#norm2()} since it uses SVD
-   * decomposition to get the largest eigenvalue.
-   * @param v Input vector
-   * @return L2 norm of the input vector
+   * Get the euclidean distance matrix between the two matrices, that is
+   * element (i,j) in the result is the l2-distance of X_i and Y_j.
+   *
+   * @param X       First matrix
+   * @param Y       Second matrix
+   * @param squared Whether the result shall be squared
+   * @return Euclidean distance matrix
    */
-  public static double l2VectorNorm(Matrix v){
-    double sum = 0.0;
-    int columns = v.getColumnDimension();
-    int rows = v.getRowDimension();
-    if (rows == 1){
-      for (int col = 0; col < columns; col++) {
-        double val = v.get(0,col);
-        sum += val*val;
-      }
-    } else if(columns == 1){
-      for (int row = 0; row < rows; row++) {
-        double val = v.get(row, 0);
-        sum += val*val;
-      }
-    } else {
-      // Not a vector
-      throw new InvalidShapeException("MatrixHelper.l2VectorNorm() can only " +
-        "be applied on row or column vectors.");
+  public static Matrix euclideanDistance(Matrix X, Matrix Y, boolean squared) {
+    Matrix XX = rowNorms(X, true);
+    Matrix YY = rowNorms(Y, true);
+
+    Matrix distances = X.mul(Y.transpose());
+    distances = distances.mul(-2);
+    distances = distances.add(XX);
+    distances = distances.add(YY);
+
+    // Ensure i==j is set to zero (may not be the case due to floating point
+    // errors
+    if (X.equals(Y)) {
+      ((PhysicalStore<Double>) distances.data).fillDiagonal(0.0);
     }
 
-    return StrictMath.sqrt(sum);
+    // Skip square root if the squared distances are necessary anyway
+    if (squared) {
+      return distances;
+    }
+    else {
+      return distances.sqrt();
+    }
+  }
+
+  public static Matrix rowNorms(Matrix X, boolean squared){
+    // TODO: Implement efficient elementwise multiplication.
+    return null;
   }
 
   /**
@@ -280,41 +251,19 @@ public class MatrixHelper {
     int		i;
     int		n;
 
-    if (m1.getColumnDimension() != m2.getColumnDimension())
+    if (m1.numColumns() != m2.numColumns())
       return false;
-    if (m1.getRowDimension() != m2.getRowDimension())
+    if (m1.numRows() != m2.numRows())
       return false;
 
-    for (i = 0; i < m1.getRowDimension(); i++) {
-      for (n = 0; n < m1.getColumnDimension(); n++) {
+    for (i = 0; i < m1.numRows(); i++) {
+      for (n = 0; n < m1.numColumns(); n++) {
 	if (Math.abs(m1.get(i, n) - m2.get(i, n)) > epsilon)
 	  return false;
       }
     }
 
     return true;
-  }
-
-  /**
-   * Merges the two matrices (must have same number of rows).
-   *
-   * @param left	the left matrix
-   * @param right	the right matrix
-   * @return		the merged matrix
-   */
-  public static Matrix merge(Matrix left, Matrix right) {
-    Matrix	result;
-    int		i;
-
-    if (left.getRowDimension() != right.getRowDimension())
-      throw new IllegalArgumentException("Matrix row dimension differs: " + left.getRowDimension() + " != " + right.getRowDimension());
-
-    result = new Matrix(left.getRowDimension(), left.getColumnDimension() + right.getColumnDimension());
-    result.setMatrix(0, left.getRowDimension() - 1, 0, left.getColumnDimension() - 1, left);
-    for (i = 0; i < right.getColumnDimension(); i++)
-      setColumnVector(columnAsVector(right, i), result, left.getColumnDimension() + i);
-
-    return result;
   }
 
   /**
@@ -347,7 +296,7 @@ public class MatrixHelper {
     result = new Matrix(lines.size(), cells.length);
     for (i = 0; i < lines.size(); i++) {
       cells = lines.get(i).split(sep);
-      for (j = 0; j < cells.length && j < result.getColumnDimension(); j++) {
+      for (j = 0; j < cells.length && j < result.numColumns(); j++) {
 	try {
 	  result.set(i, j, Double.parseDouble(cells[j]));
 	}
@@ -379,7 +328,7 @@ public class MatrixHelper {
     result = new ArrayList<>();
     if (header) {
       line = new StringBuilder();
-      for (j = 0; j < data.getColumnDimension(); j++) {
+      for (j = 0; j < data.numColumns(); j++) {
 	if (j > 0)
 	  line.append(separator);
 	line.append("col" + (j+1));
@@ -387,9 +336,9 @@ public class MatrixHelper {
       result.add(line.toString());
     }
 
-    for (i = 0; i < data.getRowDimension(); i++) {
+    for (i = 0; i < data.numRows(); i++) {
       line = new StringBuilder();
-      for (j = 0; j < data.getColumnDimension(); j++) {
+      for (j = 0; j < data.numColumns(); j++) {
 	if (j > 0)
 	  line.append(separator);
 	if (numDec == -1)
@@ -461,7 +410,7 @@ public class MatrixHelper {
    * @return		the dimensions
    */
   public static String dim(Matrix m) {
-    return m.getRowDimension() + " x " + m.getColumnDimension();
+    return m.numRows() + " x " + m.numColumns();
   }
 
   /**
@@ -475,14 +424,13 @@ public class MatrixHelper {
    */
   public static Matrix randn(int m, int n, long seed) {
       Random rand = new Random(seed);
-      Matrix A = new Matrix(m, n);
-      double[][] X = A.getArray();
+      double[][] X = new double[m][n];
       for (int i = 0; i < m; i++) {
           for (int j = 0; j < n; j++) {
               X[i][j] = rand.nextGaussian();
           }
       }
-      return A;
+      return new Matrix(X);
   }
   /**
    * Generate matrix with random elements, sampled from a uniform distribution in (0, 1).
@@ -494,13 +442,50 @@ public class MatrixHelper {
    */
   public static Matrix rand(int m, int n, long seed) {
       Random rand = new Random(seed);
-      Matrix A = new Matrix(m, n);
-      double[][] X = A.getArray();
+      double[][] X = new double[m][n];
       for (int i = 0; i < m; i++) {
           for (int j = 0; j < n; j++) {
               X[i][j] = rand.nextDouble();
           }
       }
-      return A;
+      return new Matrix(X);
+  }
+
+  /**
+   * Create a range matrix.
+   *
+   * @param rows Number of rows
+   * @param columns Number of columns
+   * @param start Start value
+   * @return Range matrix of given size
+   */
+  public static Matrix range(int rows, int columns, int start){
+    double[] doubles = IntStream.range(start, rows*columns + start).mapToDouble(value -> value).toArray();
+
+    double[][] data = new double[rows][columns];
+
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < columns; j++) {
+        int idx = (i + 1) * j;
+        data[i][j] = doubles[idx];
+      }
+    }
+
+    return new Matrix(data);
+  }
+
+  /**
+   * Apply the signum function to a matrix inplace.
+   *
+   * @param mat Matrix so apply signum inplace
+   */
+  public static void sign(Matrix mat) {
+    for (int i = 0; i < mat.numRows(); i++) {
+      for (int j = 0; j < mat.numColumns(); j++) {
+        double v = mat.get(i, j);
+        double sign = StrictMath.signum(v);
+        mat.set(i, j, sign);
+      }
+    }
   }
 }

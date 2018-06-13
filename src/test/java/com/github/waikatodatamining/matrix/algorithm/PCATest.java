@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.Matrix;
+import com.github.waikatodatamining.matrix.core.Matrix;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -54,7 +54,7 @@ public class PCATest
       return scheme.transform(data);
     }
     catch (Exception e) {
-      fail("Failed to transform data: " + e);
+      fail("Failed to transform data: " + stackTraceToString(e));
       return null;
     }
   }
