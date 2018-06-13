@@ -5,21 +5,21 @@ import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsExcep
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixInversionException;
 import org.ojalgo.RecoverableCondition;
 import org.ojalgo.access.Access1D;
-import org.ojalgo.access.ColumnView;
 import org.ojalgo.array.Array1D;
 import org.ojalgo.function.NullaryFunction;
 import org.ojalgo.function.PrimitiveFunction;
-import org.ojalgo.function.UnaryFunction;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
 import org.ojalgo.matrix.decomposition.SingularValue;
-import org.ojalgo.matrix.store.ElementsSupplier;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
 import org.ojalgo.matrix.task.InverterTask;
 import org.ojalgo.scalar.ComplexNumber;
+import org.ojalgo.type.context.NumberContext;
 
+import java.util.Comparator;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 /**
  * Matrix abstraction to the ojAlgo's Matrix PrimitiveDenseStore implementation.
@@ -159,7 +159,19 @@ public class Matrix {
       eigenvalueDecomposition = Eigenvalue.PRIMITIVE.make(data);
       eigenvalueDecomposition.decompose(data);
     }
-    return create(eigenvalueDecomposition.getV());
+    MatrixStore<Double> eigVunsorted = eigenvalueDecomposition.getV();
+    double[] eigVals = eigenvalueDecomposition.getEigenvalues().toRawCopy1D();
+    int[] sortedColumnIndices = IntStream
+      .range(0, eigVals.length)
+      .boxed()
+      .sorted(Comparator.comparingDouble(o -> eigVals[o]))
+      .mapToInt(i -> i)
+      .toArray();
+
+    int[] allRows = IntStream.range(0, (int) eigVunsorted.countRows()).toArray();
+    Matrix eigVsorted = Matrix.create(eigVunsorted).getSubMatrix(allRows, sortedColumnIndices);
+
+    return eigVsorted;
   }
 
   /**
@@ -173,8 +185,8 @@ public class Matrix {
       eigenvalueDecomposition.decompose(data);
     }
     Array1D<ComplexNumber> eigenvalues = eigenvalueDecomposition.getEigenvalues();
-    double[] doubles = eigenvalues.toRawCopy1D();
-    return fromColumn(doubles);
+    eigenvalues.sortAscending();
+    return fromColumn(eigenvalues.toRawCopy1D());
   }
 
   /**
@@ -252,45 +264,6 @@ public class Matrix {
   }
 
   /**
-   * Store the multiplication result of {@code left} and {@code right} inplace
-   * in this matrix.
-   *
-   * @param left  Left multiplicand
-   * @param right Right multiplicand
-   * @throws MatrixAlgorithmsException Invalid shapes or underlying store is not
-   *                                   physical
-   */
-  public void storeMultiply(Matrix left, Matrix right) {
-
-    // TODO: Enable as soon as https://github.com/optimatika/ojAlgo/issues/102
-    // TODO: is solved
-    if (true){
-      throw new MatrixAlgorithmsException("Inplace multiplication is " +
-        "currently unsupported.");
-    }
-
-    if (!left.isMultiplicableWith(right)) {
-      throw new InvalidShapeException("Left matrix does not match shape with " +
-	"right matrix for multiplication", left, right);
-    }
-    if (left.numRows() != this.numRows()
-      || right.numColumns() != this.numColumns()) {
-      throw new InvalidShapeException("Cannot store the matrix " +
-	"multiplication of shape (1) and (2) into  " +
-	"shape (3)", left, right, this);
-    }
-    // Check for matching shapes
-    if (isPhysicalStore()) {
-      //      ((PhysicalStore<Double>) data).fillByMultiplying(left.data, right.data);
-      left.data.multiply(right.data, (PhysicalStore<Double>) this.data);
-    }
-    else {
-      throw new MatrixAlgorithmsException("Only physical stores should be " +
-	"used as matrix caches.");
-    }
-  }
-
-  /**
    * Check if the underlying matrix store is physical and with that mutable.
    *
    * @return True if {@link Matrix#data} is instance of {@link PhysicalStore}
@@ -321,7 +294,7 @@ public class Matrix {
    */
   public double vectorDot(Matrix other) {
     if (isRowVector() && sameShapeAs(other)) {
-      return data.multiply(other.data).get(0, 0);
+      return data.dot(other.data);
     }
     else {
       throw new InvalidShapeException("Shape " + shapeString() + " and " +
@@ -359,6 +332,32 @@ public class Matrix {
   public Matrix mul(double scalar) {
     return create(data.multiply(scalar));
   }
+
+
+  /**
+   * Multiply each element of this matrix with a the element at the same index
+   * in the other matrix.
+   *
+   * @param other Other matrix
+   * @return This matrix with each element multiplied by the element at the same
+   * index in the other matrix
+   */
+  public Matrix mulElementwise(Matrix other) {
+    return create(data.operateOnMatching(PrimitiveFunction.MULTIPLY, other.data).get());
+  }
+
+  /**
+   * Multiply each element of this matrix with a the element at the same index
+   * in the other matrix.
+   *
+   * @param other Other matrix
+   * @return This matrix with each element multiplied by the element at the same
+   * index in the other matrix
+   */
+  public Matrix divElementwise(Matrix other) {
+    return create(data.operateOnMatching(PrimitiveFunction.DIVIDE, other.data).get());
+  }
+
 
   /**
    * Divide each element of this matrix by a scalar.
@@ -651,16 +650,19 @@ public class Matrix {
    * @return Concatenated matrices
    */
   public Matrix concatAlongRows(Matrix other) {
-    Access1D[] vectors = new Access1D[this.numRows() + other.numRows()];
-    int count = 0;
-    for (int i = 0; i < numRows(); i++) {
-      vectors[count++] = data.sliceRow(i);
+    int numRows = numRows();
+    int totalRows = numRows + other.numRows();
+    PrimitiveDenseStore result = FACTORY.makeZero(totalRows, numColumns());
+    for (int i = 0; i < totalRows; i++) {
+      Access1D<Double> row;
+      if (i < numRows){
+        row = data.sliceRow(i);
+      } else {
+        row = other.data.sliceRow(i - numRows);
+      }
+      result.fillRow(i, row);
     }
-
-    for (int i = 0; i < other.numRows(); i++) {
-      vectors[count++] = other.data.sliceRow(i);
-    }
-    return create(FACTORY.rows(vectors));
+    return create(result);
   }
 
   /**
@@ -670,19 +672,19 @@ public class Matrix {
    * @return Concatenated matrices
    */
   public Matrix concatAlongColumns(Matrix other) {
-    ColumnView[] vectors = new ColumnView[this.numRows() + other.numRows()];
-    int count = 0;
-    for (ColumnView<Double> row : data.columns()) {
-      vectors[count] = row;
-      count++;
+    int numCols = numColumns();
+    int totalCols = numCols + other.numColumns();
+    PrimitiveDenseStore result = FACTORY.makeZero(numRows(), totalCols);
+    for (int i = 0; i < totalCols; i++) {
+      Access1D<Double> col;
+      if (i < numCols){
+        col = data.sliceColumn(i);
+      } else {
+        col = other.data.sliceColumn(i - numCols);
+      }
+      result.fillColumn(i, col);
     }
-
-    for (ColumnView<Double> row : other.data.columns()) {
-      vectors[count] = row;
-      count++;
-    }
-
-    return create(FACTORY.columns(vectors));
+    return create(result);
   }
 
   /**
@@ -805,7 +807,8 @@ public class Matrix {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Matrix matrix = (Matrix) o;
-    return Objects.equals(data, matrix.data);
+
+    return data.equals(matrix.data, NumberContext.getMath(7));
   }
 
   @Override
