@@ -157,7 +157,7 @@ public class SIMPLS
       double val = ld[index];
       for (int c = 0; c < in.numRows(); c++) {
 	if (Math.abs(B[c][i]) < val) {
-	  B[c][i] = 0;
+	  in.set(c, i, 0);
 	}
       }
     }
