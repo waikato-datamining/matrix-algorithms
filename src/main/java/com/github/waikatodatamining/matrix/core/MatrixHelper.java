@@ -23,7 +23,6 @@ package com.github.waikatodatamining.matrix.core;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import org.ojalgo.matrix.store.PhysicalStore;
-import org.ojalgo.matrix.store.PrimitiveDenseStore;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -31,6 +30,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 /**
  * Additional matrix operations.
@@ -449,6 +449,29 @@ public class MatrixHelper {
           }
       }
       return new Matrix(X);
+  }
+
+  /**
+   * Create a range matrix.
+   *
+   * @param rows Number of rows
+   * @param columns Number of columns
+   * @param start Start value
+   * @return Range matrix of given size
+   */
+  public static Matrix range(int rows, int columns, int start){
+    double[] doubles = IntStream.range(start, rows*columns + start).mapToDouble(value -> value).toArray();
+
+    double[][] data = new double[rows][columns];
+
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < columns; j++) {
+        int idx = (i + 1) * j;
+        data[i][j] = doubles[idx];
+      }
+    }
+
+    return new Matrix(data);
   }
 
   /**
