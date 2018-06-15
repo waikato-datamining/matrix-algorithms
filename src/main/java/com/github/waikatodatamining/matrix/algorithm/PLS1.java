@@ -126,16 +126,18 @@ public class PLS1
    * @return null if successful, otherwise error message
    */
   protected String doPerformInitialization(Matrix predictors, Matrix response) throws Exception {
-    Matrix 	X_trans;
-    Matrix 	W, w;
-    Matrix 	T, t, t_trans;
-    Matrix 	P, p, p_trans;
-    double 	b;
+    Matrix 	Xk, y;
+    Matrix 	W, wk;
+    Matrix 	T, tk;
+    Matrix 	P, pk;
+    double 	bk;
     Matrix 	b_hat;
-    int 	j;
+    int 	k;
     Matrix 	tmp;
 
-    X_trans = predictors.transpose();
+    Xk = predictors;
+    y = response;
+
 
     // init
     W = new Matrix(predictors.numColumns(), getNumComponents());
@@ -143,28 +145,27 @@ public class PLS1
     T = new Matrix(predictors.numRows(), getNumComponents());
     b_hat = new Matrix(getNumComponents(), 1);
 
-    for (j = 0; j < getNumComponents(); j++) {
+
+    for (k = 0; k < getNumComponents(); k++) {
       // 1. step: wj
-      w = X_trans.mul(response);
-      MatrixHelper.normalizeVector(w);
-      W.setColumn(j, w);
+      wk = Xk.transpose().mul(y).normalized();
+      W.setColumn(k, wk);
 
       // 2. step: tj
-      t = predictors.mul(w);
-      t_trans = t.transpose();
-      T.setColumn(j, t);
+      tk = Xk.mul(wk);
+      T.setColumn(k, tk);
+
       // 3. step: ^bj
-      b = t_trans.mul(response).asDouble() / t_trans.mul(t).asDouble();
-      b_hat.set(j, 0, b);
+      double tdott = tk.vectorDot(tk);
+      bk = tk.vectorDot(y) / tdott;
+      b_hat.set(k, 0, bk);
 
       // 4. step: pj
-      p = X_trans.mul(t).mul(1 / t_trans.mul(t).asDouble());
-      p_trans = p.transpose();
-      P.setColumn(j, p);
+      pk = Xk.transpose().mul(tk).div(tdott);
+      P.setColumn(k, pk);
 
-      // 5. step: Xj+1
-      predictors = predictors.sub(t.mul(p_trans));
-      response = response.sub(t.mul(b));
+      // 5. step: Xk+1 (deflating y is not necessary)
+      Xk = Xk.sub(tk.mul(pk.transpose()));
     }
 
     // W*(P^T*W)^-1
@@ -177,6 +178,7 @@ public class PLS1
     m_P = P;
     m_W = W;
     m_b_hat = b_hat;
+
 
     return null;
   }

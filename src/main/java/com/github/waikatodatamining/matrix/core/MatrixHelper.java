@@ -169,28 +169,6 @@ public class MatrixHelper {
   }
 
   /**
-   * normalizes the given vector (inplace)
-   *
-   * @param v the vector to normalize
-   */
-  public static void normalizeVector(Matrix v) {
-    double sum;
-    int i;
-
-    // determine length
-    sum = 0;
-    for (i = 0; i < v.numRows(); i++) {
-      sum += v.get(i, 0) * v.get(i, 0);
-    }
-    sum = StrictMath.sqrt(sum);
-
-    // normalize content
-    for (i = 0; i < v.numRows(); i++) {
-      v.set(i, 0, v.get(i, 0) / sum);
-    }
-  }
-
-  /**
    * Get the euclidean distance matrix between the two matrices, that is
    * element (i,j) in the result is the l2-distance of X_i and Y_j.
    *

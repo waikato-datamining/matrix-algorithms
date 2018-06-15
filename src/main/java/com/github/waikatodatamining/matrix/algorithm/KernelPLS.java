@@ -143,17 +143,15 @@ public class KernelPLS extends AbstractMultiResponsePLS {
       // number of iterations has been reached (m_MaxIter)
       while (iterationChange > m_Tol && iterations < m_MaxIter) {
 	// 1)
-	t = m_K_deflated.mul(u);
+	t = m_K_deflated.mul(u).normalized();
 	w = t.copy();
-	MatrixHelper.normalizeVector(t);
 
 	// 2)
 	q = Y.transpose().mul(t);
 
 	// 3)
 	uOld = u;
-	u = Y.mul(q);
-	MatrixHelper.normalizeVector(u);
+	u = Y.mul(q).normalized();
 
 	// Update stopping conditions
 	iterations++;

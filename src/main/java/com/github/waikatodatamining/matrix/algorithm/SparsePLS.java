@@ -212,8 +212,7 @@ public class SparsePLS
     int iterations = 0;
 
     w = y.getColumn(0);
-    c = MatrixHelper.randn(w.numRows(), w.numColumns(), k);
-    MatrixHelper.normalizeVector(c);
+    c = MatrixHelper.randn(w.numRows(), w.numColumns(), k).normalized();
 
     // Repeat w step and c step until convergence
     while ((iterationChangeW > m_Tol || iterationChangeC > m_Tol) && iterations < m_MaxIter) {
@@ -231,8 +230,7 @@ public class SparsePLS
       Zp = xtrans.mul(yj).mul(1.0 / xtrans.mul(yj).norm2());
       double max = StrictMath.max(Zp.norm2() - m_lambda / 2.0, 0.0);
       MatrixHelper.sign(Zp);
-      c = Zp.mul(max);
-      MatrixHelper.normalizeVector(c);
+      c = Zp.mul(max).normalized();
 
       // Update stopping conditions
       iterations++;

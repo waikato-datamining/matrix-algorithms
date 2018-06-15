@@ -156,8 +156,8 @@ public class OPLS
     m_Porth = new Matrix(predictors.numColumns(), getNumComponents());
     m_Torth = new Matrix(predictors.numRows(), getNumComponents());
 
-    w = Xtrans.mul(y).mul(invL2Squared(y));
-    MatrixHelper.normalizeVector(w);
+    w = Xtrans.mul(y).mul(invL2Squared(y)).normalized();
+
 
     for (int currentComponent = 0; currentComponent < getNumComponents(); currentComponent++) {
 
@@ -169,7 +169,7 @@ public class OPLS
 
       // Orthogonalize weight
       wOrth = p.sub(w.mul(w.transpose().mul(p).mul(invL2Squared(w)).asDouble()));
-      MatrixHelper.normalizeVector(wOrth);
+      wOrth = wOrth.normalized();
       tOrth = X.mul(wOrth).mul(invL2Squared(wOrth));
       pOrth = Xtrans.mul(tOrth).mul(invL2Squared(tOrth));
 

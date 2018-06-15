@@ -8,8 +8,11 @@ import org.ojalgo.access.Access1D;
 import org.ojalgo.array.Array1D;
 import org.ojalgo.function.NullaryFunction;
 import org.ojalgo.function.PrimitiveFunction;
+import org.ojalgo.function.UnaryFunction;
+import org.ojalgo.function.aggregator.Aggregator;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
 import org.ojalgo.matrix.decomposition.SingularValue;
+import org.ojalgo.matrix.store.ElementsSupplier;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
@@ -236,31 +239,12 @@ public class Matrix {
   }
 
   /**
-   * Multiply this matrix with another matrix in place.
+   * Read data from another matrix and assign it to itself.
    *
-   * @param other Multiplicand
-   * @return This
+   * @param other Other matrix to read the data from
    */
-  public Matrix muli(Matrix other) {
-    // TODO: Enable as soon as https://github.com/optimatika/ojAlgo/issues/102
-    // TODO: is solved
-    if (true){
-      throw new MatrixAlgorithmsException("Inplace multiplication is " +
-        "currently unsupported.");
-    }
-
-    // Check for matching shapes
-    if (!sameShapeAs(other)) {
-      throw new InvalidShapeException("Invalid inplace matrix multiplication. " +
-	"Shapes do not match.");
-    }
-    if (isPhysicalStore()) {
-      data.multiply(other.data, physical());
-    }
-    else {
-      data.multiply(other.data, data.copy());
-    }
-    return this;
+  public void assign(Matrix other) {
+    other.data.supplyTo(physical());
   }
 
   /**
@@ -293,7 +277,7 @@ public class Matrix {
    * @return Vector dot product
    */
   public double vectorDot(Matrix other) {
-    if (isRowVector() && sameShapeAs(other)) {
+    if (isVector() && sameShapeAs(other)) {
       return data.dot(other.data);
     }
     else {
@@ -301,6 +285,45 @@ public class Matrix {
 	"" + other.shapeString() + " are incompatible for vector product. " +
 	"Shape [ 1 x n ] has to be ensured on both vectors.");
     }
+  }
+
+  /**
+   * Return the matrix, normalized over the columns.
+   *
+   * @return Normalized matrix
+   */
+  public Matrix normalized() {
+    return normalized(0);
+  }
+
+  /**
+   * Get the normalized matrix based on a specific normalization axis.
+   *
+   * @param axis Normalization axis
+   * @return Normalized matrix
+   */
+  public Matrix normalized(int axis) {
+    Matrix result = copy();
+    if (axis == 0) {
+      MatrixStore<Double> supplier = data.reduceColumns(Aggregator.NORM2).get();
+      for (int j = 0; j < numColumns(); j++) {
+	Double norm = supplier.get(j);
+	result.setColumn(j, getColumn(j).div(norm));
+      }
+    }
+    else if (axis == 1) {
+      MatrixStore<Double> supplier = data.reduceRows(Aggregator.NORM2).get();
+      for (int i = 0; i < numRows(); i++) {
+	Double norm = supplier.get(i);
+	result.setRow(i, getRow(i).div(norm));
+      }
+    }
+    else {
+      throw new MatrixAlgorithmsException("Invalid axis for normalization. " +
+	"Must be either 0 or 1 but was " + axis);
+    }
+
+    return result;
   }
 
   /**
@@ -333,6 +356,17 @@ public class Matrix {
     return create(data.multiply(scalar));
   }
 
+  /**
+   * Multiply each element of this matrix with a scalar in place.
+   *
+   * @param scalar Scalar value
+   * @return This matrix with each element multiplied by the given scalar
+   */
+  public Matrix muli(double scalar) {
+    physical().modifyAll(PrimitiveUnaryFunctions.mul(scalar));
+    return this;
+  }
+
 
   /**
    * Multiply each element of this matrix with a the element at the same index
@@ -345,6 +379,7 @@ public class Matrix {
   public Matrix mulElementwise(Matrix other) {
     return create(data.operateOnMatching(PrimitiveFunction.MULTIPLY, other.data).get());
   }
+
 
   /**
    * Multiply each element of this matrix with a the element at the same index
@@ -368,6 +403,18 @@ public class Matrix {
 
   public Matrix div(double scalar) {
     return create(data.multiply(1.0 / scalar));
+  }
+
+  /**
+   * Divide each element of this matrix by a scalar in place.
+   *
+   * @param scalar Scalar value
+   * @return This matrix with each element divided by the given scalar
+   */
+
+  public Matrix divi(double scalar) {
+    physical().modifyAll(PrimitiveUnaryFunctions.sub(scalar));
+    return this;
   }
 
   /**
@@ -402,14 +449,36 @@ public class Matrix {
   }
 
   /**
+   * Add the given scalar inplace to each element of this matrix.
+   *
+   * @param value Scalar value
+   * @return This matrix
+   */
+  public Matrix addi(double value) {
+    physical().modifyAll(PrimitiveUnaryFunctions.add(value));
+    return this;
+  }
+
+  /**
    * Subtract the given scalar from each element of this matrix.
    *
    * @param value Scalar value
-   * @return Result of the addition
+   * @return Result of the subtraction
    */
   public Matrix sub(double value) {
     Matrix filled = new Matrix(numRows(), numColumns(), value);
     return sub(filled);
+  }
+
+  /**
+   * Subtract the given scalar in place from each element of this matrix.
+   *
+   * @param value Scalar value
+   * @return This matrix
+   */
+  public Matrix subi(double value) {
+    physical().modifyAll(PrimitiveUnaryFunctions.sub(value));
+    return this;
   }
 
   /**
@@ -422,21 +491,18 @@ public class Matrix {
     return create(data.operateOnAll(PrimitiveFunction.POW, exponent).get());
   }
 
+  /**
+   * Apply elementwise power.
+   *
+   * @param exponent Exponent
+   * @return Matrix with elementwise powered elements
+   */
+  public Matrix powiElementwise(double exponent) {
+    physical().modifyAll(PrimitiveUnaryFunctions.pow(exponent));
+    return this;
+  }
 
-//  public Matrix mulElementwise(Matrix other){
-//    if (!this.sameShapeAs(other)){
-//      throw new InvalidShapeException("Invalid inplace matrix multiplication. " +
-//        "Shapes do not match.");
-//    }
-//
-//    for (int i = 0; i < numRows(); i++) {
-//      for (int j = 0; j < numColumns(); j++) {
-//
-//      }
-//    }
-//  }
-
-  public PhysicalStore<Double> physical(){
+  protected PhysicalStore<Double> physical() {
     return (PhysicalStore<Double>) data;
   }
 
@@ -655,10 +721,11 @@ public class Matrix {
     PrimitiveDenseStore result = FACTORY.makeZero(totalRows, numColumns());
     for (int i = 0; i < totalRows; i++) {
       Access1D<Double> row;
-      if (i < numRows){
-        row = data.sliceRow(i);
-      } else {
-        row = other.data.sliceRow(i - numRows);
+      if (i < numRows) {
+	row = data.sliceRow(i);
+      }
+      else {
+	row = other.data.sliceRow(i - numRows);
       }
       result.fillRow(i, row);
     }
@@ -677,10 +744,11 @@ public class Matrix {
     PrimitiveDenseStore result = FACTORY.makeZero(numRows(), totalCols);
     for (int i = 0; i < totalCols; i++) {
       Access1D<Double> col;
-      if (i < numCols){
-        col = data.sliceColumn(i);
-      } else {
-        col = other.data.sliceColumn(i - numCols);
+      if (i < numCols) {
+	col = data.sliceColumn(i);
+      }
+      else {
+	col = other.data.sliceColumn(i - numCols);
       }
       result.fillColumn(i, col);
     }

@@ -212,7 +212,7 @@ public class SIMPLS
 
       // 5. vh=Ch*ph, vh=vh/||vh||
       v = C.mul(p);
-      MatrixHelper.normalizeVector(v);
+      v = v.normalized();
       v_trans = v.transpose();
 
       // 6. Ch+1=Ch-vh*vh', Mh+1=Mh-ph*ph'
