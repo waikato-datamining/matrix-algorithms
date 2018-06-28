@@ -6,6 +6,7 @@ import com.github.waikatodatamining.matrix.core.exceptions.MatrixInversionExcept
 import org.ojalgo.RecoverableCondition;
 import org.ojalgo.access.Access1D;
 import org.ojalgo.array.Array1D;
+import org.ojalgo.function.BinaryFunction;
 import org.ojalgo.function.NullaryFunction;
 import org.ojalgo.function.PrimitiveFunction;
 import org.ojalgo.function.UnaryFunction;
@@ -460,6 +461,17 @@ public class Matrix {
   }
 
   /**
+   * Add the given matrix inplace to this matrix.
+   *
+   * @param other Matrix to add
+   * @return This matrix
+   */
+  public Matrix addi(Matrix other) {
+    physical().modifyMatching(PrimitiveFunction.ADD, other.data);
+    return this;
+  }
+
+  /**
    * Subtract the given scalar from each element of this matrix.
    *
    * @param value Scalar value
@@ -478,6 +490,18 @@ public class Matrix {
    */
   public Matrix subi(double value) {
     physical().modifyAll(PrimitiveUnaryFunctions.sub(value));
+    return this;
+  }
+
+
+  /**
+   * Add the given matrix inplace to this matrix.
+   *
+   * @param other Matrix to add
+   * @return This matrix
+   */
+  public Matrix subi(Matrix other) {
+    physical().modifyMatching(PrimitiveFunction.SUBTRACT, other.data);
     return this;
   }
 
