@@ -7,6 +7,8 @@ import com.github.waikatodatamining.matrix.transformation.Standardize;
 import com.github.waikatodatamining.matrix.transformation.kernel.AbstractKernel;
 import com.github.waikatodatamining.matrix.transformation.kernel.RBFKernel;
 
+import java.util.Random;
+
 /**
  *
  *
@@ -122,11 +124,13 @@ public class NIPALS extends AbstractMultiResponsePLS {
     m_P = new Matrix(numRows, numComponents);
     m_Q = new Matrix(numClasses, numComponents);
 
-
+    Random rng = new Random(0);
     for (int currentComponent = 0; currentComponent < numComponents; currentComponent++) {
       int iterations = 0;
       Matrix uOld;
-      u = MatrixHelper.randn(numRows, 1, SEED + currentComponent);
+      int randomClassIndex = rng.nextInt(Y.numColumns());
+      u = Y.getColumn(randomClassIndex);
+
       double iterationChange = m_Tol * 10;
 
       // Repeat 1) - 3) until convergence: either change of u is lower than m_Tol or maximum
@@ -184,7 +188,7 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
   @Override
   public String[] getMatrixNames() {
-    return new String[]{"K", "T", "U", "P", "Q"};
+    return new String[]{"T", "U", "P", "Q"};
   }
 
   @Override
