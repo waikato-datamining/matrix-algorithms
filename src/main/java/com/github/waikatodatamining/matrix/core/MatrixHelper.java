@@ -444,7 +444,7 @@ public class MatrixHelper {
 
     for (int i = 0; i < rows; i++) {
       for (int j = 0; j < columns; j++) {
-        int idx = (i + 1) * j;
+        int idx = i + j * columns;
         data[i][j] = doubles[idx];
       }
     }
