@@ -381,6 +381,30 @@ public class Matrix {
     return create(data.operateOnMatching(PrimitiveFunction.MULTIPLY, other.data).get());
   }
 
+  public Matrix scaleByVector(Matrix vector){
+    if (!vector.isVector()) {
+      throw new InvalidShapeException("Parameter vector was not a vector. " +
+        "Actual shape: " + vector.shapeString());
+    }
+
+    if (numRows() != vector.numRows()){
+      throw new InvalidShapeException("First dimension of the matrix and " +
+        "vector has to match. Matrix shape: " + shapeString() + ", vector " +
+        "shape: " + vector.shapeString());
+    }
+
+    Matrix result = copy();
+
+    for (int i = 0; i < numRows(); i++) {
+      Matrix row = getRow(i);
+      double scalar = vector.get(i, 0);
+      Matrix scaledRow = row.mul(scalar);
+      result.setRow(i, scaledRow);
+    }
+
+    return result;
+  }
+
 
   /**
    * Multiply each element of this matrix with a the element at the same index
