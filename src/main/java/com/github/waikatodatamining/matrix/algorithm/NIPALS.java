@@ -1,11 +1,8 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
-import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.transformation.Center;
 import com.github.waikatodatamining.matrix.transformation.Standardize;
-import com.github.waikatodatamining.matrix.transformation.kernel.AbstractKernel;
-import com.github.waikatodatamining.matrix.transformation.kernel.RBFKernel;
 
 import java.util.Random;
 
@@ -21,25 +18,28 @@ public class NIPALS extends AbstractMultiResponsePLS {
   public static final int SEED = 0;
 
   /** Scores on X */
-  protected Matrix m_T;
+  protected Matrix XScores;
 
   /** Scores on Y */
-  protected Matrix m_U;
+  protected Matrix YScores;
 
   /** Loadings on X */
-  protected Matrix m_P;
+  protected Matrix XLoadings;
 
   /** Loadings on Y */
-  protected Matrix m_Q;
+  protected Matrix YLoadings;
 
-  /** Partial regression matrix */
-  protected Matrix m_B;
+  /** Weights on X */
+  protected Matrix XWeights;
+
+  /** Weights on Y */
+  protected Matrix YWeights;
+
+  /** Projection of X into latent space */
+  protected Matrix XRotations;
 
   /** Training points */
   protected Matrix m_X;
-
-  /** Kernel for feature transformation */
-  protected AbstractKernel m_Kernel;
 
 
   /** Inner NIPALS loop improvement tolerance */
@@ -51,25 +51,16 @@ public class NIPALS extends AbstractMultiResponsePLS {
   /** Standardize X transformation */
   protected Standardize m_StandardizeX;
 
-  /** Center Y transformation */
-  protected Center m_CenterY;
+  /** Standardize Y transformation */
+  protected Standardize m_StandardizeY;
 
   @Override
   protected void initialize() {
     super.initialize();
-    setKernel(new RBFKernel());
     setTol(1e-6);
     setMaxIter(500);
     m_StandardizeX = new Standardize();
-    m_CenterY = new Center();
-  }
-
-  public AbstractKernel getKernel() {
-    return m_Kernel;
-  }
-
-  public void setKernel(AbstractKernel kernel) {
-    this.m_Kernel = kernel;
+    m_StandardizeY = new Standardize();
   }
 
   public int getMaxIter() {
@@ -100,90 +91,116 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
   @Override
   protected String doPerformInitialization(Matrix predictors, Matrix response) throws Exception {
-    Matrix X, Y, I, t, u, q, w, p;
+    Matrix X, Y, I, xkScore, ykScore, xkLoading, ykLoading, xkWeight, ykWeight;
+
 
     getLogger();
+
     // Init
-    int numComponents = getNumComponents();
     m_X = predictors;
     m_X = m_StandardizeX.transform(m_X);
     Y = response;
-    Y = m_CenterY.transform(Y);
+    Y = m_StandardizeY.transform(Y);
 
+    // Dimensions
     int numRows = m_X.numRows();
+    int numFeatures = m_X.numColumns();
     int numClasses = Y.numColumns();
+    int numComponents = getNumComponents();
 
-    q = new Matrix(numClasses, 1);
-    p = new Matrix(numRows, 1);
-    t = new Matrix(numRows, 1);
-    w = new Matrix(numRows, 1);
-    I = Matrix.identity(numRows, numRows);
 
-    m_T = new Matrix(numRows, numComponents);
-    m_U = new Matrix(numRows, numComponents);
-    m_P = new Matrix(numRows, numComponents);
-    m_Q = new Matrix(numClasses, numComponents);
+    XScores = new Matrix(numRows, numComponents); // T
+    YScores = new Matrix(numRows, numComponents); // U
 
-    Random rng = new Random(0);
+    XWeights = new Matrix(numFeatures, numComponents); // W
+    YWeights = new Matrix(numClasses, numComponents); // C
+
+    XLoadings = new Matrix(numFeatures, numComponents); // P
+    YLoadings = new Matrix(numClasses, numComponents); // Q
+
+    xkScore = new Matrix(numRows, 1);
+    ykScore = new Matrix(numRows, 1);
+
+    xkWeight = new Matrix(numFeatures, 1);
+    ykWeight = new Matrix(numClasses, 1);
+
+    xkLoading = new Matrix(numFeatures, 1);
+    ykLoading = new Matrix(numClasses, 1);
+
+
+    Random rng = new Random(SEED);
     for (int currentComponent = 0; currentComponent < numComponents; currentComponent++) {
       int iterations = 0;
-      Matrix uOld;
+      Matrix ykScoreOld;
       int randomClassIndex = rng.nextInt(Y.numColumns());
-      u = Y.getColumn(randomClassIndex);
+      ykScore = Y.getColumn(randomClassIndex); // (y scores)
 
       double iterationChange = m_Tol * 10;
 
       // Repeat 1) - 3) until convergence: either change of u is lower than m_Tol or maximum
       // number of iterations has been reached (m_MaxIter)
       while (iterationChange > m_Tol && iterations < m_MaxIter) {
-        // 1) Calculate p
-        p = m_X.transpose().mul(u).normalized();
+        // 1) Calculate w
+        xkWeight = m_X.transpose().mul(ykScore).normalized();
 
 	// 2) Calculate t
-	t = m_X.mul(p);
+	xkScore = m_X.mul(xkWeight);
 
-	// 3) Calculate q
-	q = Y.transpose().mul(t).normalized();
+	// 3) Calculate u
+        ykWeight = Y.t().mul(xkScore).normalized(); // sklearn divides by xkScore l2 norm
 
-	// 4) Calculate u
-	uOld = u;
-	u = Y.mul(q);
+	ykScoreOld = ykScore;
+	ykScore = Y.mul(ykWeight);
 
 	// Update stopping conditions
 	iterations++;
-	iterationChange = u.sub(uOld).norm2();
+	iterationChange = ykScore.sub(ykScoreOld).norm2();
       }
 
-      // Deflate
-      m_X.subi(t.mul(p.transpose()));
-      Y.subi(u.mul(q.transpose()));
 
-      // Store u,t,c,p
-      m_T.setColumn(currentComponent, t);
-      m_U.setColumn(currentComponent, u);
-      m_Q.setColumn(currentComponent, q);
-      m_P.setColumn(currentComponent, p);
+      xkLoading = m_X.t().mul(xkScore).normalized(); // Is normalized correct here? sklearn divides by xkScore l2 norm
+      ykLoading = Y.t().mul(ykScore).normalized();
+
+
+      // Store results
+      XScores.setColumn(currentComponent, xkScore);
+      YScores.setColumn(currentComponent, ykScore);
+      XWeights.setColumn(currentComponent, xkWeight);
+      YWeights.setColumn(currentComponent, ykWeight);
+      XLoadings.setColumn(currentComponent, xkLoading);
+      YLoadings.setColumn(currentComponent, ykLoading);
+
+
+      // Deflate X and Y
+      m_X.subi(xkScore.mul(xkLoading.t()));
+      Y.subi(ykScore.mul(ykLoading.t()));
     }
 
-    // Regress U = TB
-    m_B = m_T.transpose().mul(m_T).inverse().mul(m_T.transpose()).mul(m_U);
+    XRotations = XWeights.mul((XLoadings.t().mul(XWeights)).inverse());
+
     return null;
   }
 
 
   @Override
   protected Matrix doPerformPredictions(Matrix predictors) {
-    Matrix K_t = doTransform(predictors);
-    Matrix Y_hat = K_t.mul(m_B);
-    Y_hat = m_CenterY.inverseTransform(Y_hat);
+    Matrix X = m_StandardizeX.transform(predictors);
+
+    // Y = X W(P'W)^-1Q' + Err = XB + Err
+    //            # => B = W*Q' (p x q)
+
+    Matrix yStds = Matrix.fromColumn(m_StandardizeY.getStdDevs());
+
+    Matrix coef = XRotations.mul(YLoadings.t()).scaleByVector(yStds);
+    Matrix Y_hat = X.mul(coef);
     return Y_hat;
   }
 
   @Override
   protected Matrix doTransform(Matrix predictors) {
-    Matrix stand = m_StandardizeX.transform(predictors);
+    Matrix X = m_StandardizeX.transform(predictors);
 
-    return predictors.mul(m_T.transpose());
+    return X.mul(XRotations);
   }
 
   @Override
@@ -195,13 +212,13 @@ public class NIPALS extends AbstractMultiResponsePLS {
   public Matrix getMatrix(String name) {
     switch (name) {
       case "T":
-	return m_T;
+	return XScores;
       case "U":
-	return m_U;
+	return YScores;
       case "P":
-	return m_P;
+	return XLoadings;
       case "Q":
-	return m_Q;
+	return YLoadings;
     }
     return null;
   }
@@ -214,19 +231,20 @@ public class NIPALS extends AbstractMultiResponsePLS {
   @Override
   protected void reset() {
     super.reset();
-    m_T = null;
-    m_U = null;
-    m_P = null;
-    m_Q = null;
-    m_B = null;
+    XScores = null;
+    YScores = null;
+    XLoadings = null;
+    YLoadings = null;
+    XWeights = null;
+    YWeights = null;
     m_X = null;
     m_StandardizeX = new Standardize();
-    m_CenterY = new Center();
+    m_StandardizeY = new Standardize();
   }
 
   @Override
   public Matrix getLoadings() {
-    return m_T;
+    return XScores;
   }
 
   @Override
