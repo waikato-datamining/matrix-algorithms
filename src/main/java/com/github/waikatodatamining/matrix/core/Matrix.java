@@ -549,6 +549,16 @@ public class Matrix {
   }
 
   /**
+   * Shortcut for transposition.
+   *
+   * @return This matrix, transposed
+   * @see Matrix#transpose()
+   */
+  public Matrix t() {
+    return transpose();
+  }
+
+  /**
    * Number of columns.
    *
    * @return Number of columns
