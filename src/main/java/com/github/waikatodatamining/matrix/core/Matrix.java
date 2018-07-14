@@ -225,6 +225,16 @@ public class Matrix {
   }
 
   /**
+   * Calculate the squared l2-norm of this matrix.
+   *
+   * @return Squared l2 norm
+   */
+  public double norm2squared() {
+    double norm2 = data.norm();
+    return norm2 * norm2;
+  }
+
+  /**
    * Multiply this matrix with another matrix.
    *
    * @param other Multiplicand
@@ -381,25 +391,25 @@ public class Matrix {
     return create(data.operateOnMatching(PrimitiveFunction.MULTIPLY, other.data).get());
   }
 
-  public Matrix scaleByVector(Matrix vector){
+  public Matrix scaleByVector(Matrix vector) {
     if (!vector.isVector()) {
       throw new InvalidShapeException("Parameter vector was not a vector. " +
-        "Actual shape: " + vector.shapeString());
+	"Actual shape: " + vector.shapeString());
     }
 
-    if (numRows() != vector.numRows()){
-      throw new InvalidShapeException("First dimension of the matrix and " +
-        "vector has to match. Matrix shape: " + shapeString() + ", vector " +
-        "shape: " + vector.shapeString());
+    if (numColumns() != vector.numRows()) {
+      throw new InvalidShapeException("Second dimension of the matrix and sie of" +
+	"vector has to match. Matrix shape: " + shapeString() + ", vector " +
+	"shape: " + vector.shapeString());
     }
 
     Matrix result = copy();
 
-    for (int i = 0; i < numRows(); i++) {
-      Matrix row = getRow(i);
-      double scalar = vector.get(i, 0);
-      Matrix scaledRow = row.mul(scalar);
-      result.setRow(i, scaledRow);
+    for (int j = 0; j < numColumns(); j++) {
+      Matrix col = getColumn(j);
+      double scalar = vector.get(j, 0);
+      Matrix scaledCol = col.mul(scalar);
+      result.setColumn(j, scaledCol);
     }
 
     return result;
@@ -449,7 +459,12 @@ public class Matrix {
    * @return Result of the other matrix subtracted from this matrix
    */
   public Matrix sub(Matrix other) {
-    return create(data.subtract(other.data));
+    if (sameShapeAs(other)) {
+      return create(data.subtract(other.data));
+    }
+    else {
+      throw new InvalidShapeException("", this, other);
+    }
   }
 
   /**
@@ -459,7 +474,13 @@ public class Matrix {
    * @return Result of the addition
    */
   public Matrix add(Matrix other) {
-    return create(data.add(other.data));
+    if (sameShapeAs(other)) {
+      return create(data.add(other.data));
+    }
+    else {
+      throw new InvalidShapeException("", this, other);
+    }
+
   }
 
   /**
