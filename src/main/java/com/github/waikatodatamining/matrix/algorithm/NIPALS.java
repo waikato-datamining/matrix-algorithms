@@ -1,14 +1,11 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
-import com.github.waikatodatamining.matrix.transformation.Center;
 import com.github.waikatodatamining.matrix.transformation.Standardize;
 
 import java.util.Random;
 
 /**
- *
- *
  * @author Steven Lang
  */
 public class NIPALS extends AbstractMultiResponsePLS {
@@ -18,25 +15,25 @@ public class NIPALS extends AbstractMultiResponsePLS {
   public static final int SEED = 0;
 
   /** Scores on X */
-  protected Matrix XScores;
+  protected Matrix m_XScores;
 
   /** Scores on Y */
-  protected Matrix YScores;
+  protected Matrix m_YScores;
 
   /** Loadings on X */
-  protected Matrix XLoadings;
+  protected Matrix m_XLoadings;
 
   /** Loadings on Y */
-  protected Matrix YLoadings;
+  protected Matrix m_YLoadings;
 
   /** Weights on X */
-  protected Matrix XWeights;
+  protected Matrix m_XWeights;
 
   /** Weights on Y */
-  protected Matrix YWeights;
+  protected Matrix m_YWeights;
 
   /** Projection of X into latent space */
-  protected Matrix XRotations;
+  protected Matrix m_XRotations;
 
   /** Training points */
   protected Matrix m_X;
@@ -109,14 +106,14 @@ public class NIPALS extends AbstractMultiResponsePLS {
     int numComponents = getNumComponents();
 
 
-    XScores = new Matrix(numRows, numComponents); // T
-    YScores = new Matrix(numRows, numComponents); // U
+    m_XScores = new Matrix(numRows, numComponents); // T
+    m_YScores = new Matrix(numRows, numComponents); // U
 
-    XWeights = new Matrix(numFeatures, numComponents); // W
-    YWeights = new Matrix(numClasses, numComponents); // C
+    m_XWeights = new Matrix(numFeatures, numComponents); // W
+    m_YWeights = new Matrix(numClasses, numComponents); // C
 
-    XLoadings = new Matrix(numFeatures, numComponents); // P
-    YLoadings = new Matrix(numClasses, numComponents); // Q
+    m_XLoadings = new Matrix(numFeatures, numComponents); // P
+    m_YLoadings = new Matrix(numClasses, numComponents); // Q
 
     xkScore = new Matrix(numRows, 1);
     ykScore = new Matrix(numRows, 1);
@@ -127,11 +124,12 @@ public class NIPALS extends AbstractMultiResponsePLS {
     xkLoading = new Matrix(numFeatures, 1);
     ykLoading = new Matrix(numClasses, 1);
 
+    double eps = 1e-10;
 
     Random rng = new Random(SEED);
     for (int currentComponent = 0; currentComponent < numComponents; currentComponent++) {
       int iterations = 0;
-      Matrix ykScoreOld;
+      Matrix xkScoreOld;
       int randomClassIndex = rng.nextInt(Y.numColumns());
       ykScore = Y.getColumn(randomClassIndex); // (y scores)
 
@@ -140,43 +138,53 @@ public class NIPALS extends AbstractMultiResponsePLS {
       // Repeat 1) - 3) until convergence: either change of u is lower than m_Tol or maximum
       // number of iterations has been reached (m_MaxIter)
       while (iterationChange > m_Tol && iterations < m_MaxIter) {
-        // 1) Calculate w
-        xkWeight = m_X.transpose().mul(ykScore).normalized();
+	// 1) Calculate xkWeights
+	xkWeight = m_X.t().mul(ykScore).div(ykScore.norm2squared());
 
-	// 2) Calculate t
-	xkScore = m_X.mul(xkWeight);
+	// Add eps if necessary to converge to a more acceptable solution
+	if(xkWeight.t().mul(xkWeight).asDouble() < eps){
+	  xkWeight.addi(eps);
+        }
 
-	// 3) Calculate u
-        ykWeight = Y.t().mul(xkScore).normalized(); // sklearn divides by xkScore l2 norm
+        // Normalize
+        xkWeight.divi(Math.sqrt(xkWeight.norm2squared()) + eps);
 
-	ykScoreOld = ykScore;
-	ykScore = Y.mul(ykWeight);
+
+	// 2) Calculate xkScores
+        xkScoreOld = xkScore;
+        xkScore = m_X.mul(xkWeight);
+
+        // 3) Calculate ykWeights
+        ykWeight = Y.t().mul(xkScore).div(xkScore.norm2squared());
+
+        // 4) Caluclate ykScores
+	ykScore = Y.mul(ykWeight).div(ykWeight.norm2squared() + eps);
 
 	// Update stopping conditions
 	iterations++;
-	iterationChange = ykScore.sub(ykScoreOld).norm2();
+	iterationChange = xkScore.sub(xkScoreOld).norm2();
       }
 
 
-      xkLoading = m_X.t().mul(xkScore).normalized(); // Is normalized correct here? sklearn divides by xkScore l2 norm
-      ykLoading = Y.t().mul(ykScore).normalized();
+      xkLoading = m_X.t().mul(xkScore).div(xkScore.norm2squared());
+      ykLoading = Y.t().mul(xkScore).div(xkScore.norm2squared());
 
 
       // Store results
-      XScores.setColumn(currentComponent, xkScore);
-      YScores.setColumn(currentComponent, ykScore);
-      XWeights.setColumn(currentComponent, xkWeight);
-      YWeights.setColumn(currentComponent, ykWeight);
-      XLoadings.setColumn(currentComponent, xkLoading);
-      YLoadings.setColumn(currentComponent, ykLoading);
+      m_XScores.setColumn(currentComponent, xkScore);
+      m_YScores.setColumn(currentComponent, ykScore);
+      m_XWeights.setColumn(currentComponent, xkWeight);
+      m_YWeights.setColumn(currentComponent, ykWeight);
+      m_XLoadings.setColumn(currentComponent, xkLoading);
+      m_YLoadings.setColumn(currentComponent, ykLoading);
 
 
       // Deflate X and Y
       m_X.subi(xkScore.mul(xkLoading.t()));
-      Y.subi(ykScore.mul(ykLoading.t()));
+      Y.subi(xkScore.mul(ykLoading.t()));
     }
 
-    XRotations = XWeights.mul((XLoadings.t().mul(XWeights)).inverse());
+    m_XRotations = m_XWeights.mul((m_XLoadings.t().mul(m_XWeights)).inverse());
 
     return null;
   }
@@ -191,7 +199,7 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
     Matrix yStds = Matrix.fromColumn(m_StandardizeY.getStdDevs());
 
-    Matrix coef = XRotations.mul(YLoadings.t()).scaleByVector(yStds);
+    Matrix coef = m_XRotations.mul(m_YLoadings.t()).scaleByVector(yStds);
     Matrix Y_hat = X.mul(coef);
     return Y_hat;
   }
@@ -200,7 +208,7 @@ public class NIPALS extends AbstractMultiResponsePLS {
   protected Matrix doTransform(Matrix predictors) {
     Matrix X = m_StandardizeX.transform(predictors);
 
-    return X.mul(XRotations);
+    return X.mul(m_XRotations);
   }
 
   @Override
@@ -212,13 +220,13 @@ public class NIPALS extends AbstractMultiResponsePLS {
   public Matrix getMatrix(String name) {
     switch (name) {
       case "T":
-	return XScores;
+	return m_XScores;
       case "U":
-	return YScores;
+	return m_YScores;
       case "P":
-	return XLoadings;
+	return m_XLoadings;
       case "Q":
-	return YLoadings;
+	return m_YLoadings;
     }
     return null;
   }
@@ -231,12 +239,12 @@ public class NIPALS extends AbstractMultiResponsePLS {
   @Override
   protected void reset() {
     super.reset();
-    XScores = null;
-    YScores = null;
-    XLoadings = null;
-    YLoadings = null;
-    XWeights = null;
-    YWeights = null;
+    m_XScores = null;
+    m_YScores = null;
+    m_XLoadings = null;
+    m_YLoadings = null;
+    m_XWeights = null;
+    m_YWeights = null;
     m_X = null;
     m_StandardizeX = new Standardize();
     m_StandardizeY = new Standardize();
@@ -244,7 +252,7 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
   @Override
   public Matrix getLoadings() {
-    return XScores;
+    return m_XScores;
   }
 
   @Override
