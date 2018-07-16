@@ -451,4 +451,17 @@ public class MatrixHelper {
 
     return new Matrix(data);
   }
+
+  /**
+   * Static method for matrix inverse. Makes the following eq. more clear:
+   * B=W(P'W)^(-1)q
+   * Without static method: B = W.mul(P.t().mul(W).inv()).mul(q)
+   * With static method:    B = W.mul(inv(P.t().mul(W))).mul(q)
+   *
+   * @param x Input matrix
+   * @return Inverse of input matrix
+   */
+  public static Matrix inv(Matrix x) {
+    return x.inverse();
+  }
 }
