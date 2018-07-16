@@ -1,5 +1,6 @@
 package com.github.waikatodatamining.matrix.core;
 
+import com.github.waikatodatamining.matrix.core.exceptions.InvalidAxisException;
 import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsException;
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixInversionException;
@@ -216,6 +217,44 @@ public class Matrix {
   }
 
   /**
+   * Compute the sum over a certain axis.
+   *
+   * @param axis Indicating axis index
+   * @return Sum over axis
+   */
+  public Matrix sum(int axis) {
+    if (axis == 0) {
+      Matrix result = new Matrix(1, numColumns());
+
+      for (int i = 0; i < numColumns(); i++) {
+	result.set(0, i, data.aggregateColumn(i, Aggregator.SUM));
+      }
+
+      return result;
+    }
+    else if (axis == 1) {
+      Matrix result = new Matrix(numRows(), 1);
+      for (int i = 0; i < numRows(); i++) {
+	result.set(i, 0, data.aggregateRow(i, Aggregator.SUM));
+      }
+
+      return result;
+    }
+    else {
+      throw new InvalidAxisException(axis);
+    }
+  }
+
+  /**
+   * Calculate the l1-norm of this matrix.
+   *
+   * @return L1 norm
+   */
+  public double norm1() {
+    return data.aggregateAll(Aggregator.NORM1);
+  }
+
+  /**
    * Calculate the l2-norm of this matrix.
    *
    * @return L2 norm
@@ -391,6 +430,13 @@ public class Matrix {
     return create(data.operateOnMatching(PrimitiveFunction.MULTIPLY, other.data).get());
   }
 
+  /**
+   * Scale the i-th column of this matrix by the i-th element of the input
+   * vector.
+   *
+   * @param vector Scale input vector
+   * @return Scaled matrix
+   */
   public Matrix scaleByVector(Matrix vector) {
     if (!vector.isVector()) {
       throw new InvalidShapeException("Parameter vector was not a vector. " +
@@ -409,6 +455,38 @@ public class Matrix {
       Matrix col = getColumn(j);
       double scalar = vector.get(j, 0);
       Matrix scaledCol = col.mul(scalar);
+      result.setColumn(j, scaledCol);
+    }
+
+    return result;
+  }
+
+
+  /**
+   * Add the i-th element of the input vector each element of the i-th
+   * column of this matrix.
+   *
+   * @param vector Add input vector
+   * @return Matrix
+   */
+  public Matrix addByVector(Matrix vector) {
+    if (!vector.isVector()) {
+      throw new InvalidShapeException("Parameter vector was not a vector. " +
+	"Actual shape: " + vector.shapeString());
+    }
+
+    if (numColumns() != vector.numRows()) {
+      throw new InvalidShapeException("Second dimension of the matrix and sie of" +
+	"vector has to match. Matrix shape: " + shapeString() + ", vector " +
+	"shape: " + vector.shapeString());
+    }
+
+    Matrix result = copy();
+
+    for (int j = 0; j < numColumns(); j++) {
+      Matrix col = getColumn(j);
+      double scalar = vector.get(j, 0);
+      Matrix scaledCol = col.add(scalar);
       result.setColumn(j, scaledCol);
     }
 
@@ -448,7 +526,7 @@ public class Matrix {
    */
 
   public Matrix divi(double scalar) {
-    physical().modifyAll(PrimitiveUnaryFunctions.sub(scalar));
+    physical().modifyAll(PrimitiveUnaryFunctions.div(scalar));
     return this;
   }
 

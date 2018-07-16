@@ -35,9 +35,14 @@ public class NIPALS extends AbstractMultiResponsePLS {
   /** Projection of X into latent space */
   protected Matrix m_XRotations;
 
+  /** Projection of Y into latent space */
+  protected Matrix m_YRotations;
+
   /** Training points */
   protected Matrix m_X;
 
+  /** Regression coefficients */
+  protected Matrix m_Coef;
 
   /** Inner NIPALS loop improvement tolerance */
   protected double m_Tol;
@@ -45,19 +50,36 @@ public class NIPALS extends AbstractMultiResponsePLS {
   /** Inner NIPALS loop maximum number of iterations */
   protected int m_MaxIter;
 
+  /** Flag to normalize Y weights */
+  protected boolean m_NormYWeights;
+
   /** Standardize X transformation */
   protected Standardize m_StandardizeX;
 
   /** Standardize Y transformation */
   protected Standardize m_StandardizeY;
 
+  /** X and Y deflation Mode */
+  protected DeflationMode m_deflationMode;
+
   @Override
   protected void initialize() {
     super.initialize();
     setTol(1e-6);
     setMaxIter(500);
+    setNormYWeights(false);
     m_StandardizeX = new Standardize();
     m_StandardizeY = new Standardize();
+
+    setDeflationMode(DeflationMode.REGRESSION);
+  }
+
+  public boolean isNormYWeights() {
+    return m_NormYWeights;
+  }
+
+  public void setNormYWeights(boolean normYWeights) {
+    m_NormYWeights = normYWeights;
   }
 
   public int getMaxIter() {
@@ -86,26 +108,33 @@ public class NIPALS extends AbstractMultiResponsePLS {
     return -1;
   }
 
+  public DeflationMode getDeflationMode() {
+    return m_deflationMode;
+  }
+
+  public void setDeflationMode(DeflationMode deflationMode) {
+    m_deflationMode = deflationMode;
+  }
+
   @Override
   protected String doPerformInitialization(Matrix predictors, Matrix response) throws Exception {
-    Matrix X, Y, I, xkScore, ykScore, xkLoading, ykLoading, xkWeight, ykWeight;
-
+    Matrix X, Y, xkScore, ykScore, xkLoading, ykLoading, xkWeight, ykWeight;
 
     getLogger();
 
     // Init
-    m_X = predictors;
-    m_X = m_StandardizeX.transform(m_X);
+    X = predictors;
+    X = m_StandardizeX.transform(X);
     Y = response;
     Y = m_StandardizeY.transform(Y);
 
     // Dimensions
-    int numRows = m_X.numRows();
-    int numFeatures = m_X.numColumns();
+    int numRows = X.numRows();
+    int numFeatures = X.numColumns();
     int numClasses = Y.numColumns();
     int numComponents = getNumComponents();
 
-
+    // Init matrices
     m_XScores = new Matrix(numRows, numComponents); // T
     m_YScores = new Matrix(numRows, numComponents); // U
 
@@ -115,92 +144,137 @@ public class NIPALS extends AbstractMultiResponsePLS {
     m_XLoadings = new Matrix(numFeatures, numComponents); // P
     m_YLoadings = new Matrix(numClasses, numComponents); // Q
 
-    xkScore = new Matrix(numRows, 1);
-    ykScore = new Matrix(numRows, 1);
-
-    xkWeight = new Matrix(numFeatures, 1);
-    ykWeight = new Matrix(numClasses, 1);
-
-    xkLoading = new Matrix(numFeatures, 1);
     ykLoading = new Matrix(numClasses, 1);
 
     double eps = 1e-10;
+    for (int k = 0; k < numComponents; k++) {
+      NipalsLoopResult res = nipalsLoop(X, Y);
+      xkWeight = res.xWeights;
+      ykWeight = res.yWeights;
 
-    Random rng = new Random(SEED);
-    for (int currentComponent = 0; currentComponent < numComponents; currentComponent++) {
-      int iterations = 0;
-      Matrix xkScoreOld;
-      int randomClassIndex = rng.nextInt(Y.numColumns());
-      ykScore = Y.getColumn(randomClassIndex); // (y scores)
-
-      double iterationChange = m_Tol * 10;
-
-      // Repeat 1) - 3) until convergence: either change of u is lower than m_Tol or maximum
-      // number of iterations has been reached (m_MaxIter)
-      while (iterationChange > m_Tol && iterations < m_MaxIter) {
-	// 1) Calculate xkWeights
-	xkWeight = m_X.t().mul(ykScore).div(ykScore.norm2squared());
-
-	// Add eps if necessary to converge to a more acceptable solution
-	if(xkWeight.t().mul(xkWeight).asDouble() < eps){
-	  xkWeight.addi(eps);
-        }
-
-        // Normalize
-        xkWeight.divi(Math.sqrt(xkWeight.norm2squared()) + eps);
+      // Calculate latent X and Y scores
+      xkScore = X.mul(xkWeight);
+      ykScore = Y.mul(ykWeight).div(ykWeight.norm2squared());
 
 
-	// 2) Calculate xkScores
-        xkScoreOld = xkScore;
-        xkScore = m_X.mul(xkWeight);
+      if (xkScore.norm2squared() < eps) {
+	m_Logger.warning("X scores are null at component " + k);
+	break;
+      }
 
-        // 3) Calculate ykWeights
-        ykWeight = Y.t().mul(xkScore).div(xkScore.norm2squared());
+      // Deflate X
+      xkLoading = X.t().mul(xkScore).div(xkScore.norm2squared());
+      X.subi(xkScore.mul(xkLoading.t()));
 
-        // 4) Caluclate ykScores
-	ykScore = Y.mul(ykWeight).div(ykWeight.norm2squared() + eps);
-
-	// Update stopping conditions
-	iterations++;
-	iterationChange = xkScore.sub(xkScoreOld).norm2();
+      // Deflate Y
+      switch (m_deflationMode) {
+	case CANONICAL:
+	  ykLoading = Y.t().mul(ykScore).div(ykScore.norm2squared());
+	  Y.subi(ykScore.mul(ykLoading.t()));
+	  break;
+	case REGRESSION:
+	  ykLoading = Y.t().mul(xkScore).div(xkScore.norm2squared());
+	  Y.subi(xkScore.mul(ykLoading.t()));
+	  break;
       }
 
 
-      xkLoading = m_X.t().mul(xkScore).div(xkScore.norm2squared());
-      ykLoading = Y.t().mul(xkScore).div(xkScore.norm2squared());
-
-
       // Store results
-      m_XScores.setColumn(currentComponent, xkScore);
-      m_YScores.setColumn(currentComponent, ykScore);
-      m_XWeights.setColumn(currentComponent, xkWeight);
-      m_YWeights.setColumn(currentComponent, ykWeight);
-      m_XLoadings.setColumn(currentComponent, xkLoading);
-      m_YLoadings.setColumn(currentComponent, ykLoading);
+      m_XScores.setColumn(k, xkScore);
+      m_YScores.setColumn(k, ykScore);
+      m_XWeights.setColumn(k, xkWeight);
+      m_YWeights.setColumn(k, ykWeight);
+      m_XLoadings.setColumn(k, xkLoading);
+      m_YLoadings.setColumn(k, ykLoading);
 
 
-      // Deflate X and Y
-      m_X.subi(xkScore.mul(xkLoading.t()));
-      Y.subi(xkScore.mul(ykLoading.t()));
     }
 
+    m_X = X;
     m_XRotations = m_XWeights.mul((m_XLoadings.t().mul(m_XWeights)).inverse());
+    if (Y.numColumns() > 1) {
+      m_YRotations = m_YWeights.mul((m_YLoadings.t().mul(m_YWeights)).inverse());
+    }
+    else {
+      m_YRotations = new Matrix(1, 1, 1.0);
+    }
 
+    // Calculate regression coefficients
+    Matrix yStds = Matrix.fromColumn(m_StandardizeY.getStdDevs());
+    m_Coef = m_XRotations.mul(m_YLoadings.t()).scaleByVector(yStds);
     return null;
   }
 
+  /**
+   * Perform the inner NIPALS loop
+   *
+   * @param X Predictors Matrix
+   * @param Y Response Matrix
+   * @return NipalsLoopResult
+   */
+  protected NipalsLoopResult nipalsLoop(Matrix X, Matrix Y) {
+    int iterations = 0;
+
+    Matrix yScore = Y.getColumn(0); // (y scores)
+    Matrix xWeight;
+    Matrix xWeightOld = new Matrix(X.numColumns(), 1, 0);
+    Matrix yWeight;
+    Matrix xScore;
+
+    double eps = 1e-16;
+
+    // Repeat 1) - 3) until convergence: either change of u is lower than m_Tol or maximum
+    // number of iterations has been reached (m_MaxIter)
+    while (true) {
+      // 1) Update X weights
+      xWeight = X.t().mul(yScore).div(yScore.norm2squared());
+
+      // Add eps if necessary to converge to a more acceptable solution
+      if (xWeight.norm2squared() < eps) {
+	xWeight.addi(eps);
+      }
+
+      // Normalize
+      xWeight.divi(Math.sqrt(xWeight.norm2squared()) + eps);
+
+
+      // 2) Calculate latent X scores
+      xScore = X.mul(xWeight);
+
+      // 3) Update Y weights
+      yWeight = Y.t().mul(xScore).div(xScore.norm2squared());
+
+      // Normalize Y weights
+      if (m_NormYWeights) {
+	yWeight.divi(Math.sqrt(yWeight.norm2squared()) + eps);
+      }
+
+      // 4) Calculate ykScores
+      yScore = Y.mul(yWeight).div(yWeight.norm2squared() + eps);
+
+      Matrix xWeightDiff = xWeight.sub(xWeightOld);
+
+      if (xWeightDiff.norm2squared() < m_Tol || Y.numColumns() == 1) {
+	break;
+      }
+
+      if (iterations >= m_MaxIter) {
+	break;
+      }
+
+      // Update stopping conditions
+      iterations++;
+    }
+
+    return new NipalsLoopResult(xWeight, yWeight, iterations);
+  }
 
   @Override
   protected Matrix doPerformPredictions(Matrix predictors) {
     Matrix X = m_StandardizeX.transform(predictors);
 
-    // Y = X W(P'W)^-1Q' + Err = XB + Err
-    //            # => B = W*Q' (p x q)
-
-    Matrix yStds = Matrix.fromColumn(m_StandardizeY.getStdDevs());
-
-    Matrix coef = m_XRotations.mul(m_YLoadings.t()).scaleByVector(yStds);
-    Matrix Y_hat = X.mul(coef);
+    Matrix yMeans = Matrix.fromColumn(m_StandardizeY.getMeans());
+    Matrix Y_hat = X.mul(m_Coef).addByVector(yMeans);
     return Y_hat;
   }
 
@@ -208,7 +282,17 @@ public class NIPALS extends AbstractMultiResponsePLS {
   protected Matrix doTransform(Matrix predictors) {
     Matrix X = m_StandardizeX.transform(predictors);
 
-    return X.mul(m_XRotations);
+    // Apply rotations
+    Matrix xScores = X.mul(m_XRotations);
+    return xScores;
+  }
+
+  protected Matrix doTransformResponse(Matrix response) {
+    Matrix Y = m_StandardizeY.transform(response);
+
+    // Apply rotations
+    Matrix yScores = Y.mul(m_YRotations);
+    return yScores;
   }
 
   @Override
@@ -245,7 +329,12 @@ public class NIPALS extends AbstractMultiResponsePLS {
     m_YLoadings = null;
     m_XWeights = null;
     m_YWeights = null;
+    m_Coef = null;
     m_X = null;
+    m_NormYWeights = false;
+    m_deflationMode = DeflationMode.REGRESSION;
+    m_XRotations = null;
+    m_YRotations = null;
     m_StandardizeX = new Standardize();
     m_StandardizeY = new Standardize();
   }
@@ -260,5 +349,29 @@ public class NIPALS extends AbstractMultiResponsePLS {
     return true;
   }
 
+  /**
+   * NIPALS loop result: x and y weight matrices and number of iterations.
+   */
+  private class NipalsLoopResult {
 
+    Matrix xWeights;
+
+    Matrix yWeights;
+
+    int iterations;
+
+    public NipalsLoopResult(Matrix xWeights, Matrix yWeights, int iterations) {
+      this.xWeights = xWeights;
+      this.yWeights = yWeights;
+      this.iterations = iterations;
+    }
+  }
+
+  /**
+   * Deflation mode Enum.
+   */
+  public enum DeflationMode {
+    CANONICAL,
+    REGRESSION
+  }
 }
