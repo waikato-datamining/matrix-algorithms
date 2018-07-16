@@ -22,7 +22,10 @@ import org.ojalgo.matrix.task.InverterTask;
 import org.ojalgo.scalar.ComplexNumber;
 import org.ojalgo.type.context.NumberContext;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -1028,8 +1031,8 @@ public class Matrix {
    *
    * @param body Function body
    */
-  public void modifyEach(Function<Double, Double> body) {
-    data.operateOnAll(new UnaryFunction<Double>() {
+  public Matrix modifyEach(Function<Double, Double> body) {
+    return create(data.operateOnAll(new UnaryFunction<Double>() {
       @Override
       public double invoke(double arg) {
 	return body.apply(arg);
@@ -1039,7 +1042,7 @@ public class Matrix {
       public Double invoke(Double arg) {
 	return body.apply(arg);
       }
-    });
+    }).get());
   }
 
   /**
@@ -1048,24 +1051,13 @@ public class Matrix {
    * @param lowerBound Lower bound threshold
    * @param upperBound Upper bound threshold
    */
-  public void clip(double lowerBound, double upperBound) {
+  public Matrix clip(double lowerBound, double upperBound) {
     if (lowerBound > upperBound) {
       throw new MatrixAlgorithmsException("Invalid clipping values. Lower " +
 	"bound must be below upper bound");
     }
 
-    modifyEach(aDouble -> {
-      double result = aDouble;
-      if (aDouble < lowerBound) {
-	result = lowerBound;
-      }
-
-      if (aDouble > upperBound) {
-	result = upperBound;
-      }
-
-      return result;
-    });
+    return modifyEach(value -> StrictMath.min(upperBound, StrictMath.max(lowerBound, value)));
   }
 
   /**
@@ -1073,8 +1065,8 @@ public class Matrix {
    *
    * @param lowerBound Lower bound
    */
-  public void clipLower(double lowerBound) {
-    clip(lowerBound, Double.POSITIVE_INFINITY);
+  public Matrix clipLower(double lowerBound) {
+    return clip(lowerBound, Double.POSITIVE_INFINITY);
   }
 
   /**
@@ -1082,15 +1074,99 @@ public class Matrix {
    *
    * @param upperBound Upper bound
    */
-  public void clipUpper(double upperBound) {
-    clip(Double.NEGATIVE_INFINITY, upperBound);
+  public Matrix clipUpper(double upperBound) {
+    return clip(Double.NEGATIVE_INFINITY, upperBound);
   }
 
   /**
    * Apply the signum function to each matrix element.
    */
-  public void sign(){
-    modifyEach(StrictMath::signum);
+  public Matrix sign() {
+    return modifyEach(StrictMath::signum);
+  }
+
+  /**
+   * Take the absolute of each element.
+   */
+  public Matrix abs() {
+    return modifyEach(StrictMath::abs);
+  }
+
+  /**
+   * Get the maximum value in that matrix.
+   *
+   * @return Max value
+   */
+  public double max() {
+    return data
+      .reduceColumns(Aggregator.MAXIMUM).get()
+      .reduceRows(Aggregator.MAXIMUM).get()
+      .get(0, 0);
+  }
+
+  /**
+   * Get the median value in that matrix.
+   *
+   * @return Median value
+   */
+  public double median() {
+    double[] rawData = data.toRawCopy1D();
+    Arrays.sort(rawData);
+    int size = rawData.length;
+    if (size % 2 == 0) {
+      return  (rawData[size / 2] + rawData[size / 2 - 1]) / 2;
+    }
+    else {
+      return rawData[size / 2];
+    }
+  }
+
+  /**
+   * Get indices that match the condition.
+   *
+   * @param condition Condition
+   * @return List of indices that match the condition
+   */
+  public List<Integer> whereVector(Function<Double, Boolean> condition) {
+    List<Integer> idxs = new ArrayList<>();
+    data.loopAll((row, col) -> {
+      if (condition.apply(get((int) row, (int) col))) {
+	if (isRowVector()) {
+	  idxs.add((int) col);
+	}
+	else if (isColumnVector()) {
+	  idxs.add((int) row);
+	}
+	else {
+	  throw new MatrixAlgorithmsException("whereVector is only applicable " +
+	    "on either row or column vectors!");
+	}
+      }
+    });
+
+    return idxs;
+  }
+
+  /**
+   * Get first 5 rows.
+   *
+   * @return First 5 rows
+   */
+  public Matrix head() {
+    return head(5);
+  }
+
+  /**
+   * Get first n rows.
+   *
+   * @return First n rows
+   */
+  public Matrix head(int n) {
+    Matrix result = getRow(0);
+    for (int i = 1; i < n; i++) {
+      result = result.concat(getRow(i), 0);
+    }
+    return result;
   }
 
   @Override
