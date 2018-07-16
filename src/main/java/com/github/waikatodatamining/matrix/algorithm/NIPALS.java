@@ -341,12 +341,16 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
   @Override
   public Matrix getLoadings() {
-    return m_XScores;
+    return m_XLoadings;
   }
 
   @Override
   public boolean canPredict() {
     return true;
+  }
+
+  public Matrix getCoef() {
+    return m_Coef;
   }
 
   /**
