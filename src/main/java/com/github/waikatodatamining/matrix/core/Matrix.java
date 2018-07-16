@@ -24,6 +24,7 @@ import org.ojalgo.type.context.NumberContext;
 
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 /**
@@ -1020,6 +1021,76 @@ public class Matrix {
    */
   public boolean isColumnVector() {
     return data.isVector() && numColumns() == 1;
+  }
+
+  /**
+   * Modify each element by applying the given function to the element.
+   *
+   * @param body Function body
+   */
+  public void modifyEach(Function<Double, Double> body) {
+    data.operateOnAll(new UnaryFunction<Double>() {
+      @Override
+      public double invoke(double arg) {
+	return body.apply(arg);
+      }
+
+      @Override
+      public Double invoke(Double arg) {
+	return body.apply(arg);
+      }
+    });
+  }
+
+  /**
+   * Clip the matrix values with a lower and upper bound.
+   *
+   * @param lowerBound Lower bound threshold
+   * @param upperBound Upper bound threshold
+   */
+  public void clip(double lowerBound, double upperBound) {
+    if (lowerBound > upperBound) {
+      throw new MatrixAlgorithmsException("Invalid clipping values. Lower " +
+	"bound must be below upper bound");
+    }
+
+    modifyEach(aDouble -> {
+      double result = aDouble;
+      if (aDouble < lowerBound) {
+	result = lowerBound;
+      }
+
+      if (aDouble > upperBound) {
+	result = upperBound;
+      }
+
+      return result;
+    });
+  }
+
+  /**
+   * Clip matrix elements by lower bound.
+   *
+   * @param lowerBound Lower bound
+   */
+  public void clipLower(double lowerBound) {
+    clip(lowerBound, Double.POSITIVE_INFINITY);
+  }
+
+  /**
+   * Clip matrix elements by upper bound.
+   *
+   * @param upperBound Upper bound
+   */
+  public void clipUpper(double upperBound) {
+    clip(Double.NEGATIVE_INFINITY, upperBound);
+  }
+
+  /**
+   * Apply the signum function to each matrix element.
+   */
+  public void sign(){
+    modifyEach(StrictMath::signum);
   }
 
   @Override

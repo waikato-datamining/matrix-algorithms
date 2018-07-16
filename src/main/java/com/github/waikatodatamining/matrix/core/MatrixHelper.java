@@ -451,19 +451,4 @@ public class MatrixHelper {
 
     return new Matrix(data);
   }
-
-  /**
-   * Apply the signum function to a matrix inplace.
-   *
-   * @param mat Matrix so apply signum inplace
-   */
-  public static void sign(Matrix mat) {
-    for (int i = 0; i < mat.numRows(); i++) {
-      for (int j = 0; j < mat.numColumns(); j++) {
-        double v = mat.get(i, j);
-        double sign = StrictMath.signum(v);
-        mat.set(i, j, sign);
-      }
-    }
-  }
 }
