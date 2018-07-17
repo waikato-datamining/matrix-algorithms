@@ -39,6 +39,10 @@ import java.util.stream.Collectors;
  * mentioned paper:
  * <a href="https://github.com/cran/spls">Sparse Partial Least Squares (SPLS) Regression and Classification</a>
  *
+ * The lambda parameter controls the features sparseness. For sufficiently small
+ * lambda, all features will be selected and the algorithm results are equal
+ * to NIPALS'.
+ *
  * @author Steven Lang
  */
 public class SparsePLS
