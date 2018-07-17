@@ -35,6 +35,10 @@ import java.util.stream.Collectors;
  * See here:
  * <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2810828/">Sparse partial least squares regression for simultaneous dimension reduction and variable selection</a>
  *
+ * Implementation was oriented at the R SPLS package, which implemnets the above
+ * mentioned paper:
+ * <a href="https://github.com/cran/spls">Sparse Partial Least Squares (SPLS) Regression and Classification</a>
+ *
  * @author Steven Lang
  */
 public class SparsePLS

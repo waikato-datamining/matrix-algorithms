@@ -4,16 +4,17 @@ import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.transformation.Standardize;
 
-import java.util.Random;
-
 /**
+ * Nonlinear Iterative Partial Least Squares
+ *
+ * Implementation oriented at scikit-learn's NIPALS implementation:
+ * <a href="https://github.com/scikit-learn/scikit-learn/blob/ed5e127b/sklearn/cross_decomposition/pls_.py#L455">Github scikit-learn NIPALS</a>
+ *
  * @author Steven Lang
  */
 public class NIPALS extends AbstractMultiResponsePLS {
 
   private static final long serialVersionUID = -2760078672082710402L;
-
-  public static final int SEED = 0;
 
   /** Scores on X */
   protected Matrix m_XScores;
