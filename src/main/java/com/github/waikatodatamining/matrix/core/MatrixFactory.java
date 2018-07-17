@@ -59,6 +59,16 @@ public class MatrixFactory {
     return create(FACTORY.makeEye(rows, columns));
   }
 
+  /**
+   * Create an identity matrix, base on the shape of the given matrix.
+   * @param other Reference matrix for shape
+   * @return Eye like other
+   * @see MatrixFactory#eye(int, int)
+   */
+  public static Matrix eyeLike(Matrix other){
+    return eye(other.numRows(), other.numColumns());
+  }
+
   public static Matrix fromRaw(double[][] data) {
     return create(FACTORY.rows(data));
   }
@@ -71,6 +81,16 @@ public class MatrixFactory {
    */
   public static Matrix zeros(int rows, int columns) {
     return create(FACTORY.makeZero(rows, columns));
+  }
+
+  /**
+   * Constructor initializing a new matrix with zeroes with the same shape
+   * another matrix.
+   *
+   * @param other Matrix indicating the shape
+   */
+  public static Matrix zerosLike(Matrix other) {
+    return zeros(other.numRows(), other.numColumns());
   }
 
   /**
@@ -94,6 +114,17 @@ public class MatrixFactory {
     });
 
     return create(data);
+  }
+
+  /**
+   * Constructor initializing a new matrix with the same shape like another
+   * matrix with a given value.
+   *
+   * @param other Reference Matrix for shape
+   * @param initialValue Initial matrix value for each element
+   */
+  public static Matrix filledLike(Matrix other, double initialValue) {
+    return filled(other.numRows(), other.numColumns(), initialValue);
   }
 
 
