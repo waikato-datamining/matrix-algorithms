@@ -125,4 +125,12 @@ public class Standardize
 
     return result;
   }
+
+  public double[] getMeans() {
+    return m_Means;
+  }
+
+  public double[] getStdDevs() {
+    return m_StdDevs;
+  }
 }

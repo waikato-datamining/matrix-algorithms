@@ -21,6 +21,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 
 
@@ -152,12 +153,12 @@ public class OPLS
     y = response;
 
     // init
-    m_Worth = new Matrix(predictors.numColumns(), getNumComponents());
-    m_Porth = new Matrix(predictors.numColumns(), getNumComponents());
-    m_Torth = new Matrix(predictors.numRows(), getNumComponents());
+    m_Worth = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
+    m_Porth = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
+    m_Torth = MatrixFactory.zeros(predictors.numRows(), getNumComponents());
 
-    w = Xtrans.mul(y).mul(invL2Squared(y));
-    MatrixHelper.normalizeVector(w);
+    w = Xtrans.mul(y).mul(invL2Squared(y)).normalized();
+
 
     for (int currentComponent = 0; currentComponent < getNumComponents(); currentComponent++) {
 
@@ -169,7 +170,7 @@ public class OPLS
 
       // Orthogonalize weight
       wOrth = p.sub(w.mul(w.transpose().mul(p).mul(invL2Squared(w)).asDouble()));
-      MatrixHelper.normalizeVector(wOrth);
+      wOrth = wOrth.normalized();
       tOrth = X.mul(wOrth).mul(invL2Squared(wOrth));
       pOrth = Xtrans.mul(tOrth).mul(invL2Squared(tOrth));
 

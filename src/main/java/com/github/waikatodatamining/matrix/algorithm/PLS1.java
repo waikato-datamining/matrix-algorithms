@@ -21,6 +21,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 
 /**
@@ -126,45 +127,46 @@ public class PLS1
    * @return null if successful, otherwise error message
    */
   protected String doPerformInitialization(Matrix predictors, Matrix response) throws Exception {
-    Matrix 	X_trans;
-    Matrix 	W, w;
-    Matrix 	T, t, t_trans;
-    Matrix 	P, p, p_trans;
-    double 	b;
+    Matrix 	Xk, y;
+    Matrix 	W, wk;
+    Matrix 	T, tk;
+    Matrix 	P, pk;
+    double 	bk;
     Matrix 	b_hat;
-    int 	j;
+    int 	k;
     Matrix 	tmp;
 
-    X_trans = predictors.transpose();
+    Xk = predictors;
+    y = response;
+
 
     // init
-    W = new Matrix(predictors.numColumns(), getNumComponents());
-    P = new Matrix(predictors.numColumns(), getNumComponents());
-    T = new Matrix(predictors.numRows(), getNumComponents());
-    b_hat = new Matrix(getNumComponents(), 1);
+    W = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
+    P = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
+    T = MatrixFactory.zeros(predictors.numRows(), getNumComponents());
+    b_hat = MatrixFactory.zeros(getNumComponents(), 1);
 
-    for (j = 0; j < getNumComponents(); j++) {
+
+    for (k = 0; k < getNumComponents(); k++) {
       // 1. step: wj
-      w = X_trans.mul(response);
-      MatrixHelper.normalizeVector(w);
-      W.setColumn(j, w);
+      wk = Xk.transpose().mul(y).normalized();
+      W.setColumn(k, wk);
 
       // 2. step: tj
-      t = predictors.mul(w);
-      t_trans = t.transpose();
-      T.setColumn(j, t);
+      tk = Xk.mul(wk);
+      T.setColumn(k, tk);
+
       // 3. step: ^bj
-      b = t_trans.mul(response).asDouble() / t_trans.mul(t).asDouble();
-      b_hat.set(j, 0, b);
+      double tdott = tk.vectorDot(tk);
+      bk = tk.vectorDot(y) / tdott;
+      b_hat.set(k, 0, bk);
 
       // 4. step: pj
-      p = X_trans.mul(t).mul(1 / t_trans.mul(t).asDouble());
-      p_trans = p.transpose();
-      P.setColumn(j, p);
+      pk = Xk.transpose().mul(tk).div(tdott);
+      P.setColumn(k, pk);
 
-      // 5. step: Xj+1
-      predictors = predictors.sub(t.mul(p_trans));
-      response = response.sub(t.mul(b));
+      // 5. step: Xk+1 (deflating y is not necessary)
+      Xk = Xk.sub(tk.mul(pk.transpose()));
     }
 
     // W*(P^T*W)^-1
@@ -177,6 +179,7 @@ public class PLS1
     m_P = P;
     m_W = W;
     m_b_hat = b_hat;
+
 
     return null;
   }
@@ -195,13 +198,13 @@ public class PLS1
     Matrix 	x, X;
     int 	i, j;
 
-    result = new Matrix(predictors.numRows(), getNumComponents());
+    result = MatrixFactory.zeros(predictors.numRows(), getNumComponents());
 
     for (i = 0; i < predictors.numRows(); i++) {
       // work on each row
       x = MatrixHelper.rowAsVector(predictors, i);
-      X = new Matrix(1, getNumComponents());
-      T = new Matrix(1, getNumComponents());
+      X = MatrixFactory.zeros(1, getNumComponents());
+      T = MatrixFactory.zeros(1, getNumComponents());
 
       for (j = 0; j < getNumComponents(); j++) {
 	X.setColumn(j, x);
@@ -241,13 +244,13 @@ public class PLS1
     Matrix 	x, X;
     int 	i, j;
 
-    result = new Matrix(predictors.numRows(), 1);
+    result = MatrixFactory.zeros(predictors.numRows(), 1);
 
     for (i = 0; i < predictors.numRows(); i++) {
       // work on each row
       x = MatrixHelper.rowAsVector(predictors, i);
-      X = new Matrix(1, getNumComponents());
-      T = new Matrix(1, getNumComponents());
+      X = MatrixFactory.zeros(1, getNumComponents());
+      T = MatrixFactory.zeros(1, getNumComponents());
 
       for (j = 0; j < getNumComponents(); j++) {
 	X.setColumn(j, x);

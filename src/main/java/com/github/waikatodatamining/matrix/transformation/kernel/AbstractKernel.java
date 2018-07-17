@@ -2,7 +2,7 @@ package com.github.waikatodatamining.matrix.transformation.kernel;
 
 
 import com.github.waikatodatamining.matrix.core.Matrix;
-import com.github.waikatodatamining.matrix.core.MatrixHelper;
+import com.github.waikatodatamining.matrix.core.MatrixFactory;
 
 import java.io.Serializable;
 
@@ -34,7 +34,7 @@ public abstract class AbstractKernel implements Serializable {
      * @return Matrix K with K_i,j = K(x_i,y_j) = phi(x_i)*phi(y_j)
      */
     public Matrix applyMatrix(Matrix X, Matrix Y) {
-        Matrix result = new Matrix(X.numRows(), Y.numRows());
+        Matrix result = MatrixFactory.zeros(X.numRows(), Y.numRows());
         for (int i = 0; i < X.numRows(); i++) {
             for (int j = 0; j < Y.numRows(); j++) {
                 Matrix rowI = X.getRow(i);
@@ -53,7 +53,7 @@ public abstract class AbstractKernel implements Serializable {
      */
     public Matrix applyMatrix(Matrix X) {
         int n = X.numRows();
-        Matrix result = new Matrix(n, n);
+        Matrix result = MatrixFactory.zeros(n, n);
         for (int i = 0; i < X.numRows(); i++) {
             for (int j = i; j < n; j++) {
                 Matrix rowI = X.getRow(i);

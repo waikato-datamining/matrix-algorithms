@@ -1,15 +1,20 @@
 package com.github.waikatodatamining.matrix.core;
 
+import com.github.waikatodatamining.matrix.core.exceptions.InvalidAxisException;
 import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsException;
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixInversionException;
 import org.ojalgo.RecoverableCondition;
 import org.ojalgo.access.Access1D;
 import org.ojalgo.array.Array1D;
+import org.ojalgo.function.BinaryFunction;
 import org.ojalgo.function.NullaryFunction;
 import org.ojalgo.function.PrimitiveFunction;
+import org.ojalgo.function.UnaryFunction;
+import org.ojalgo.function.aggregator.Aggregator;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
 import org.ojalgo.matrix.decomposition.SingularValue;
+import org.ojalgo.matrix.store.ElementsSupplier;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
@@ -17,9 +22,15 @@ import org.ojalgo.matrix.task.InverterTask;
 import org.ojalgo.scalar.ComplexNumber;
 import org.ojalgo.type.context.NumberContext;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.IntStream;
+
+import static com.github.waikatodatamining.matrix.core.MatrixFactory.create;
 
 /**
  * Matrix abstraction to the ojAlgo's Matrix PrimitiveDenseStore implementation.
@@ -28,9 +39,7 @@ import java.util.stream.IntStream;
  */
 public class Matrix {
 
-  /** Matrix Factory */
-  private final static PhysicalStore.Factory<Double, PrimitiveDenseStore> FACTORY =
-    PrimitiveDenseStore.FACTORY;
+
 
   /** Underlying data store */
   protected MatrixStore<Double> data;
@@ -50,48 +59,8 @@ public class Matrix {
    *
    * @param data Matrix store
    */
-  private Matrix(MatrixStore<Double> data) {
+  protected Matrix(MatrixStore<Double> data) {
     this.data = data;
-  }
-
-  /**
-   * Constructor for creating a new matrix wrapper from a raw 2d double array.
-   *
-   * @param data Raw data
-   */
-  public Matrix(double[][] data) {
-    this.data = FACTORY.rows(data);
-  }
-
-  /**
-   * Constructor initializing a new matrix with zeroes.
-   *
-   * @param rows    Number of rows
-   * @param columns Number of columns
-   */
-  public Matrix(int rows, int columns) {
-    data = FACTORY.makeZero(rows, columns);
-  }
-
-  /**
-   * Constructor initializing a new matrix with a given value.
-   *
-   * @param rows         Number of rows
-   * @param columns      Number of columns
-   * @param initialValue Initial matrix value for each element
-   */
-  public Matrix(int rows, int columns, double initialValue) {
-    data = FACTORY.makeFilled(rows, columns, new NullaryFunction<Number>() {
-      @Override
-      public double doubleValue() {
-	return initialValue;
-      }
-
-      @Override
-      public Number invoke() {
-	return initialValue;
-      }
-    });
   }
 
   /**
@@ -107,7 +76,7 @@ public class Matrix {
     for (int i = 0; i < rows.length; i++) {
       rowVectors[i] = data.sliceRow(rows[i]);
     }
-    MatrixStore<Double> rows1 = FACTORY.rows(rowVectors);
+    MatrixStore<Double> rows1 = MatrixFactory.FACTORY.rows(rowVectors);
 
     // Select columns
     Access1D[] columnVectors = new Access1D[columns.length];
@@ -115,7 +84,7 @@ public class Matrix {
       columnVectors[j] = rows1.sliceColumn(columns[j]);
     }
 
-    MatrixStore<Double> subMatrix = FACTORY.columns(columnVectors);
+    MatrixStore<Double> subMatrix = MatrixFactory.FACTORY.columns(columnVectors);
     return create(subMatrix);
   }
 
@@ -169,7 +138,7 @@ public class Matrix {
       .toArray();
 
     int[] allRows = IntStream.range(0, (int) eigVunsorted.countRows()).toArray();
-    Matrix eigVsorted = Matrix.create(eigVunsorted).getSubMatrix(allRows, sortedColumnIndices);
+    Matrix eigVsorted = MatrixFactory.create(eigVunsorted).getSubMatrix(allRows, sortedColumnIndices);
 
     return eigVsorted;
   }
@@ -186,7 +155,7 @@ public class Matrix {
     }
     Array1D<ComplexNumber> eigenvalues = eigenvalueDecomposition.getEigenvalues();
     eigenvalues.sortAscending();
-    return fromColumn(eigenvalues.toRawCopy1D());
+    return MatrixFactory.fromColumn(eigenvalues.toRawCopy1D());
   }
 
   /**
@@ -212,12 +181,60 @@ public class Matrix {
   }
 
   /**
+   * Compute the sum over a certain axis.
+   *
+   * @param axis Indicating axis index
+   * @return Sum over axis
+   */
+  public Matrix sum(int axis) {
+    if (axis == 0) {
+      Matrix result = MatrixFactory.zeros(1, numColumns());
+
+      for (int i = 0; i < numColumns(); i++) {
+	result.set(0, i, data.aggregateColumn(i, Aggregator.SUM));
+      }
+
+      return result;
+    }
+    else if (axis == 1) {
+      Matrix result = MatrixFactory.zeros(numRows(), 1);
+      for (int i = 0; i < numRows(); i++) {
+	result.set(i, 0, data.aggregateRow(i, Aggregator.SUM));
+      }
+
+      return result;
+    }
+    else {
+      throw new InvalidAxisException(axis);
+    }
+  }
+
+  /**
+   * Calculate the l1-norm of this matrix.
+   *
+   * @return L1 norm
+   */
+  public double norm1() {
+    return data.aggregateAll(Aggregator.NORM1);
+  }
+
+  /**
    * Calculate the l2-norm of this matrix.
    *
    * @return L2 norm
    */
   public double norm2() {
     return data.norm();
+  }
+
+  /**
+   * Calculate the squared l2-norm of this matrix.
+   *
+   * @return Squared l2 norm
+   */
+  public double norm2squared() {
+    double norm2 = data.norm();
+    return norm2 * norm2;
   }
 
   /**
@@ -236,31 +253,12 @@ public class Matrix {
   }
 
   /**
-   * Multiply this matrix with another matrix in place.
+   * Read data from another matrix and assign it to itself.
    *
-   * @param other Multiplicand
-   * @return This
+   * @param other Other matrix to read the data from
    */
-  public Matrix muli(Matrix other) {
-    // TODO: Enable as soon as https://github.com/optimatika/ojAlgo/issues/102
-    // TODO: is solved
-    if (true){
-      throw new MatrixAlgorithmsException("Inplace multiplication is " +
-        "currently unsupported.");
-    }
-
-    // Check for matching shapes
-    if (!sameShapeAs(other)) {
-      throw new InvalidShapeException("Invalid inplace matrix multiplication. " +
-	"Shapes do not match.");
-    }
-    if (isPhysicalStore()) {
-      data.multiply(other.data, physical());
-    }
-    else {
-      data.multiply(other.data, data.copy());
-    }
-    return this;
+  public void assign(Matrix other) {
+    other.data.supplyTo(physical());
   }
 
   /**
@@ -293,7 +291,7 @@ public class Matrix {
    * @return Vector dot product
    */
   public double vectorDot(Matrix other) {
-    if (isRowVector() && sameShapeAs(other)) {
+    if (isVector() && sameShapeAs(other)) {
       return data.dot(other.data);
     }
     else {
@@ -301,6 +299,45 @@ public class Matrix {
 	"" + other.shapeString() + " are incompatible for vector product. " +
 	"Shape [ 1 x n ] has to be ensured on both vectors.");
     }
+  }
+
+  /**
+   * Return the matrix, normalized over the columns.
+   *
+   * @return Normalized matrix
+   */
+  public Matrix normalized() {
+    return normalized(0);
+  }
+
+  /**
+   * Get the normalized matrix based on a specific normalization axis.
+   *
+   * @param axis Normalization axis
+   * @return Normalized matrix
+   */
+  public Matrix normalized(int axis) {
+    Matrix result = copy();
+    if (axis == 0) {
+      MatrixStore<Double> supplier = data.reduceColumns(Aggregator.NORM2).get();
+      for (int j = 0; j < numColumns(); j++) {
+	Double norm = supplier.get(j);
+	result.setColumn(j, getColumn(j).div(norm));
+      }
+    }
+    else if (axis == 1) {
+      MatrixStore<Double> supplier = data.reduceRows(Aggregator.NORM2).get();
+      for (int i = 0; i < numRows(); i++) {
+	Double norm = supplier.get(i);
+	result.setRow(i, getRow(i).div(norm));
+      }
+    }
+    else {
+      throw new MatrixAlgorithmsException("Invalid axis for normalization. " +
+	"Must be either 0 or 1 but was " + axis);
+    }
+
+    return result;
   }
 
   /**
@@ -333,6 +370,17 @@ public class Matrix {
     return create(data.multiply(scalar));
   }
 
+  /**
+   * Multiply each element of this matrix with a scalar in place.
+   *
+   * @param scalar Scalar value
+   * @return This matrix with each element multiplied by the given scalar
+   */
+  public Matrix muli(double scalar) {
+    physical().modifyAll(PrimitiveUnaryFunctions.mul(scalar));
+    return this;
+  }
+
 
   /**
    * Multiply each element of this matrix with a the element at the same index
@@ -345,6 +393,70 @@ public class Matrix {
   public Matrix mulElementwise(Matrix other) {
     return create(data.operateOnMatching(PrimitiveFunction.MULTIPLY, other.data).get());
   }
+
+  /**
+   * Scale the i-th column of this matrix by the i-th element of the input
+   * vector.
+   *
+   * @param vector Scale input vector
+   * @return Scaled matrix
+   */
+  public Matrix scaleByVector(Matrix vector) {
+    if (!vector.isVector()) {
+      throw new InvalidShapeException("Parameter vector was not a vector. " +
+	"Actual shape: " + vector.shapeString());
+    }
+
+    if (numColumns() != vector.numRows()) {
+      throw new InvalidShapeException("Second dimension of the matrix and sie of" +
+	"vector has to match. Matrix shape: " + shapeString() + ", vector " +
+	"shape: " + vector.shapeString());
+    }
+
+    Matrix result = copy();
+
+    for (int j = 0; j < numColumns(); j++) {
+      Matrix col = getColumn(j);
+      double scalar = vector.get(j, 0);
+      Matrix scaledCol = col.mul(scalar);
+      result.setColumn(j, scaledCol);
+    }
+
+    return result;
+  }
+
+
+  /**
+   * Add the i-th element of the input vector each element of the i-th
+   * column of this matrix.
+   *
+   * @param vector Add input vector
+   * @return Matrix
+   */
+  public Matrix addByVector(Matrix vector) {
+    if (!vector.isVector()) {
+      throw new InvalidShapeException("Parameter vector was not a vector. " +
+	"Actual shape: " + vector.shapeString());
+    }
+
+    if (numColumns() != vector.numRows()) {
+      throw new InvalidShapeException("Second dimension of the matrix and sie of" +
+	"vector has to match. Matrix shape: " + shapeString() + ", vector " +
+	"shape: " + vector.shapeString());
+    }
+
+    Matrix result = copy();
+
+    for (int j = 0; j < numColumns(); j++) {
+      Matrix col = getColumn(j);
+      double scalar = vector.get(j, 0);
+      Matrix scaledCol = col.add(scalar);
+      result.setColumn(j, scaledCol);
+    }
+
+    return result;
+  }
+
 
   /**
    * Multiply each element of this matrix with a the element at the same index
@@ -371,13 +483,30 @@ public class Matrix {
   }
 
   /**
+   * Divide each element of this matrix by a scalar in place.
+   *
+   * @param scalar Scalar value
+   * @return This matrix with each element divided by the given scalar
+   */
+
+  public Matrix divi(double scalar) {
+    physical().modifyAll(PrimitiveUnaryFunctions.div(scalar));
+    return this;
+  }
+
+  /**
    * Subtract the given matrix from this matrix.
    *
    * @param other Subtrahend
    * @return Result of the other matrix subtracted from this matrix
    */
   public Matrix sub(Matrix other) {
-    return create(data.subtract(other.data));
+    if (sameShapeAs(other)) {
+      return create(data.subtract(other.data));
+    }
+    else {
+      throw new InvalidShapeException("", this, other);
+    }
   }
 
   /**
@@ -387,7 +516,13 @@ public class Matrix {
    * @return Result of the addition
    */
   public Matrix add(Matrix other) {
-    return create(data.add(other.data));
+    if (sameShapeAs(other)) {
+      return create(data.add(other.data));
+    }
+    else {
+      throw new InvalidShapeException("", this, other);
+    }
+
   }
 
   /**
@@ -397,19 +532,64 @@ public class Matrix {
    * @return Result of the addition
    */
   public Matrix add(double value) {
-    Matrix filled = new Matrix(numRows(), numColumns(), value);
+    Matrix filled = MatrixFactory.filled(numRows(), numColumns(), value);
     return add(filled);
+  }
+
+  /**
+   * Add the given scalar inplace to each element of this matrix.
+   *
+   * @param value Scalar value
+   * @return This matrix
+   */
+  public Matrix addi(double value) {
+    physical().modifyAll(PrimitiveUnaryFunctions.add(value));
+    return this;
+  }
+
+  /**
+   * Add the given matrix inplace to this matrix.
+   *
+   * @param other Matrix to add
+   * @return This matrix
+   */
+  public Matrix addi(Matrix other) {
+    physical().modifyMatching(PrimitiveFunction.ADD, other.data);
+    return this;
   }
 
   /**
    * Subtract the given scalar from each element of this matrix.
    *
    * @param value Scalar value
-   * @return Result of the addition
+   * @return Result of the subtraction
    */
   public Matrix sub(double value) {
-    Matrix filled = new Matrix(numRows(), numColumns(), value);
+    Matrix filled = MatrixFactory.filled(numRows(), numColumns(), value);
     return sub(filled);
+  }
+
+  /**
+   * Subtract the given scalar in place from each element of this matrix.
+   *
+   * @param value Scalar value
+   * @return This matrix
+   */
+  public Matrix subi(double value) {
+    physical().modifyAll(PrimitiveUnaryFunctions.sub(value));
+    return this;
+  }
+
+
+  /**
+   * Add the given matrix inplace to this matrix.
+   *
+   * @param other Matrix to add
+   * @return This matrix
+   */
+  public Matrix subi(Matrix other) {
+    physical().modifyMatching(PrimitiveFunction.SUBTRACT, other.data);
+    return this;
   }
 
   /**
@@ -422,21 +602,18 @@ public class Matrix {
     return create(data.operateOnAll(PrimitiveFunction.POW, exponent).get());
   }
 
+  /**
+   * Apply elementwise power.
+   *
+   * @param exponent Exponent
+   * @return Matrix with elementwise powered elements
+   */
+  public Matrix powiElementwise(double exponent) {
+    physical().modifyAll(PrimitiveUnaryFunctions.pow(exponent));
+    return this;
+  }
 
-//  public Matrix mulElementwise(Matrix other){
-//    if (!this.sameShapeAs(other)){
-//      throw new InvalidShapeException("Invalid inplace matrix multiplication. " +
-//        "Shapes do not match.");
-//    }
-//
-//    for (int i = 0; i < numRows(); i++) {
-//      for (int j = 0; j < numColumns(); j++) {
-//
-//      }
-//    }
-//  }
-
-  public PhysicalStore<Double> physical(){
+  protected PhysicalStore<Double> physical() {
     return (PhysicalStore<Double>) data;
   }
 
@@ -456,6 +633,16 @@ public class Matrix {
    */
   public Matrix transpose() {
     return create(data.transpose());
+  }
+
+  /**
+   * Shortcut for transposition.
+   *
+   * @return This matrix, transposed
+   * @see Matrix#transpose()
+   */
+  public Matrix t() {
+    return transpose();
   }
 
   /**
@@ -553,7 +740,7 @@ public class Matrix {
    * @return Row at the given index
    */
   public Matrix getRow(int rowIdx) {
-    return fromRow(data.sliceRow(rowIdx));
+    return MatrixFactory.fromRow(data.sliceRow(rowIdx));
   }
 
   /**
@@ -563,7 +750,7 @@ public class Matrix {
    * @return Column at the given index
    */
   public Matrix getColumn(int columnidx) {
-    return fromColumn(data.sliceColumn(columnidx));
+    return MatrixFactory.fromColumn(data.sliceColumn(columnidx));
   }
 
   /**
@@ -652,13 +839,14 @@ public class Matrix {
   public Matrix concatAlongRows(Matrix other) {
     int numRows = numRows();
     int totalRows = numRows + other.numRows();
-    PrimitiveDenseStore result = FACTORY.makeZero(totalRows, numColumns());
+    PrimitiveDenseStore result = MatrixFactory.FACTORY.makeZero(totalRows, numColumns());
     for (int i = 0; i < totalRows; i++) {
       Access1D<Double> row;
-      if (i < numRows){
-        row = data.sliceRow(i);
-      } else {
-        row = other.data.sliceRow(i - numRows);
+      if (i < numRows) {
+	row = data.sliceRow(i);
+      }
+      else {
+	row = other.data.sliceRow(i - numRows);
       }
       result.fillRow(i, row);
     }
@@ -674,13 +862,14 @@ public class Matrix {
   public Matrix concatAlongColumns(Matrix other) {
     int numCols = numColumns();
     int totalCols = numCols + other.numColumns();
-    PrimitiveDenseStore result = FACTORY.makeZero(numRows(), totalCols);
+    PrimitiveDenseStore result = MatrixFactory.FACTORY.makeZero(numRows(), totalCols);
     for (int i = 0; i < totalCols; i++) {
       Access1D<Double> col;
-      if (i < numCols){
-        col = data.sliceColumn(i);
-      } else {
-        col = other.data.sliceColumn(i - numCols);
+      if (i < numCols) {
+	col = data.sliceColumn(i);
+      }
+      else {
+	col = other.data.sliceColumn(i - numCols);
       }
       result.fillColumn(i, col);
     }
@@ -694,89 +883,6 @@ public class Matrix {
   protected void resetCache() {
     this.eigenvalueDecomposition = null;
     this.singularvalueDecomposition = null;
-  }
-
-  /**
-   * Create a matrix from raw double data.
-   *
-   * @param data Raw data
-   * @return Wrapped data
-   */
-  protected static Matrix create(double[][] data) {
-    return create(FACTORY.rows(data));
-  }
-
-  /**
-   * Create a matrix from a given matrix store.
-   *
-   * @param data Matrix store
-   * @return Wrapped matrix store
-   */
-  private static Matrix create(MatrixStore<Double> data) {
-    return new Matrix(data);
-  }
-
-  /**
-   * Create a matrix from a given vector.
-   *
-   * @param vector 1D vector
-   * @return Wrapped vector
-   */
-  private static Matrix fromRow(Access1D<Double> vector) {
-    return new Matrix(FACTORY.rows(vector));
-  }
-
-  /**
-   * Create a matrix from a given raw data vector.
-   *
-   * @param vector Raw data vector
-   * @return Wrapped raw data
-   */
-  public static Matrix fromRow(double[] vector) {
-    return new Matrix(FACTORY.rows(vector));
-  }
-
-  /**
-   * Create a matrix from a given vector.
-   *
-   * @param vector 1D vector
-   * @return Wrapped vector
-   */
-  private static Matrix fromColumn(Access1D<Double> vector) {
-    return new Matrix(FACTORY.columns(vector));
-  }
-
-  /**
-   * Create a matrix from a given raw data vector.
-   *
-   * @param vector Raw data vector
-   * @return Wrapped raw data
-   */
-  public static Matrix fromColumn(double[] vector) {
-    return new Matrix(FACTORY.columns(vector));
-  }
-
-  /**
-   * Create an n x n identity matrix.
-   *
-   * @param n Size of the matrix
-   * @return Identity matrix
-   */
-  public static Matrix identity(int n) {
-    return identity(n, n);
-  }
-
-  /**
-   * Create an identity matrix, based on the given sizes. If rows > columns, the
-   * lower rows that are out of bound will be zero. Same vice versa with
-   * columns.
-   *
-   * @param rows    Number of rows
-   * @param columns Number of columns
-   * @return Asymmetrical identity matrix
-   */
-  public static Matrix identity(int rows, int columns) {
-    return create(FACTORY.makeEye(rows, columns));
   }
 
   /**
@@ -795,6 +901,149 @@ public class Matrix {
    */
   public boolean isColumnVector() {
     return data.isVector() && numColumns() == 1;
+  }
+
+  /**
+   * Modify each element by applying the given function to the element.
+   *
+   * @param body Function body
+   */
+  public Matrix modifyEach(Function<Double, Double> body) {
+    return create(data.operateOnAll(new UnaryFunction<Double>() {
+      @Override
+      public double invoke(double arg) {
+	return body.apply(arg);
+      }
+
+      @Override
+      public Double invoke(Double arg) {
+	return body.apply(arg);
+      }
+    }).get());
+  }
+
+  /**
+   * Clip the matrix values with a lower and upper bound.
+   *
+   * @param lowerBound Lower bound threshold
+   * @param upperBound Upper bound threshold
+   */
+  public Matrix clip(double lowerBound, double upperBound) {
+    if (lowerBound > upperBound) {
+      throw new MatrixAlgorithmsException("Invalid clipping values. Lower " +
+	"bound must be below upper bound");
+    }
+
+    return modifyEach(value -> StrictMath.min(upperBound, StrictMath.max(lowerBound, value)));
+  }
+
+  /**
+   * Clip matrix elements by lower bound.
+   *
+   * @param lowerBound Lower bound
+   */
+  public Matrix clipLower(double lowerBound) {
+    return clip(lowerBound, Double.POSITIVE_INFINITY);
+  }
+
+  /**
+   * Clip matrix elements by upper bound.
+   *
+   * @param upperBound Upper bound
+   */
+  public Matrix clipUpper(double upperBound) {
+    return clip(Double.NEGATIVE_INFINITY, upperBound);
+  }
+
+  /**
+   * Apply the signum function to each matrix element.
+   */
+  public Matrix sign() {
+    return modifyEach(StrictMath::signum);
+  }
+
+  /**
+   * Take the absolute of each element.
+   */
+  public Matrix abs() {
+    return modifyEach(StrictMath::abs);
+  }
+
+  /**
+   * Get the maximum value in that matrix.
+   *
+   * @return Max value
+   */
+  public double max() {
+    return data
+      .reduceColumns(Aggregator.MAXIMUM).get()
+      .reduceRows(Aggregator.MAXIMUM).get()
+      .get(0, 0);
+  }
+
+  /**
+   * Get the median value in that matrix.
+   *
+   * @return Median value
+   */
+  public double median() {
+    double[] rawData = data.toRawCopy1D();
+    Arrays.sort(rawData);
+    int size = rawData.length;
+    if (size % 2 == 0) {
+      return  (rawData[size / 2] + rawData[size / 2 - 1]) / 2;
+    }
+    else {
+      return rawData[size / 2];
+    }
+  }
+
+  /**
+   * Get indices that match the condition.
+   *
+   * @param condition Condition
+   * @return List of indices that match the condition
+   */
+  public List<Integer> whereVector(Function<Double, Boolean> condition) {
+    List<Integer> idxs = new ArrayList<>();
+    data.loopAll((row, col) -> {
+      if (condition.apply(get((int) row, (int) col))) {
+	if (isRowVector()) {
+	  idxs.add((int) col);
+	}
+	else if (isColumnVector()) {
+	  idxs.add((int) row);
+	}
+	else {
+	  throw new MatrixAlgorithmsException("whereVector is only applicable " +
+	    "on either row or column vectors!");
+	}
+      }
+    });
+
+    return idxs;
+  }
+
+  /**
+   * Get first 5 rows.
+   *
+   * @return First 5 rows
+   */
+  public Matrix head() {
+    return head(5);
+  }
+
+  /**
+   * Get first n rows.
+   *
+   * @return First n rows
+   */
+  public Matrix head(int n) {
+    Matrix result = getRow(0);
+    for (int i = 1; i < n; i++) {
+      result = result.concat(getRow(i), 0);
+    }
+    return result;
   }
 
   @Override

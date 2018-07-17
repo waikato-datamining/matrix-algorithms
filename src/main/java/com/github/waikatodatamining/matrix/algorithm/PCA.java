@@ -22,6 +22,7 @@ package com.github.waikatodatamining.matrix.algorithm;
 
 import Jama.EigenvalueDecomposition;
 import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.Utils;
 import com.github.waikatodatamining.matrix.transformation.AbstractTransformation;
 import com.github.waikatodatamining.matrix.transformation.Center;
@@ -281,7 +282,7 @@ public class PCA
     fillCorrelation();
 
     // get eigen vectors/values
-    corr = new Matrix(m_Correlation);
+    corr = MatrixFactory.fromRaw(m_Correlation);
     V    = corr.getEigenvectors();
     v    = new double[m_NumCols][m_NumCols];
     for (i = 0; i < v.length; i++) {
@@ -359,7 +360,7 @@ public class PCA
       getLogger().info("numColsAct: " + numColsAct);
 
     // generate matrix based on actual number of retained columns
-    result = new Matrix(data.numRows(), numColsAct);
+    result = MatrixFactory.zeros(data.numRows(), numColsAct);
     for (n = 0; n < values.length; n++) {
       for (i = 0; i < values[n].length && i < numColsAct; i++)
         result.set(n, i, values[n][i]);
@@ -428,7 +429,7 @@ public class PCA
     List<List<Double>> 	coeff;
 
     coeff  = getCoefficients();
-    result = new Matrix(m_NumCols, coeff.size() + 1);
+    result = MatrixFactory.zeros(m_NumCols, coeff.size() + 1);
 
     // add the index column
     for (n = 0; n < m_NumCols; n++)
@@ -460,7 +461,7 @@ public class PCA
    */
   public Matrix transform(Matrix data) throws Exception {
     Matrix	result;
-    
+
     reset();
     configure(data);
     result     = doTransform(data);

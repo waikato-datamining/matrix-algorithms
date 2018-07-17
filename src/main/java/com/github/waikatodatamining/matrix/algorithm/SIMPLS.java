@@ -21,6 +21,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.core.Utils;
 
@@ -185,10 +186,10 @@ public class SIMPLS
     X_trans = predictors.transpose();
     A = X_trans.mul(response);
     M = X_trans.mul(predictors);
-    C = Matrix.identity(predictors.numColumns(), predictors.numColumns());
-    W = new Matrix(predictors.numColumns(), getNumComponents());
-    P = new Matrix(predictors.numColumns(), getNumComponents());
-    Q = new Matrix(1, getNumComponents());
+    C = MatrixFactory.eye(predictors.numColumns(), predictors.numColumns());
+    W = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
+    P = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
+    Q = MatrixFactory.zeros(1, getNumComponents());
 
     for (h = 0; h < getNumComponents(); h++) {
       // 1. qh as dominant EigenVector of Ah'*Ah
@@ -212,7 +213,7 @@ public class SIMPLS
 
       // 5. vh=Ch*ph, vh=vh/||vh||
       v = C.mul(p);
-      MatrixHelper.normalizeVector(v);
+      v = v.normalized();
       v_trans = v.transpose();
 
       // 6. Ch+1=Ch-vh*vh', Mh+1=Mh-ph*ph'

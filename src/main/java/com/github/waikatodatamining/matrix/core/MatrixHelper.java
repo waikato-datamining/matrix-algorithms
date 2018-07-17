@@ -140,7 +140,7 @@ public class MatrixHelper {
     Matrix result;
     int i;
 
-    result = new Matrix(m.numRows(), 1);
+    result = MatrixFactory.zeros(m.numRows(), 1);
 
     for (i = 0; i < m.numRows(); i++) {
       result.set(i, 0, m.get(i, columnIndex));
@@ -166,28 +166,6 @@ public class MatrixHelper {
     result = m.getEigenvectors().getColumn(index);
 
     return result;
-  }
-
-  /**
-   * normalizes the given vector (inplace)
-   *
-   * @param v the vector to normalize
-   */
-  public static void normalizeVector(Matrix v) {
-    double sum;
-    int i;
-
-    // determine length
-    sum = 0;
-    for (i = 0; i < v.numRows(); i++) {
-      sum += v.get(i, 0) * v.get(i, 0);
-    }
-    sum = StrictMath.sqrt(sum);
-
-    // normalize content
-    for (i = 0; i < v.numRows(); i++) {
-      v.set(i, 0, v.get(i, 0) / sum);
-    }
   }
 
   /**
@@ -293,7 +271,7 @@ public class MatrixHelper {
 
     sep    = "" + separator;
     cells  = lines.get(0).split(sep);
-    result = new Matrix(lines.size(), cells.length);
+    result = MatrixFactory.zeros(lines.size(), cells.length);
     for (i = 0; i < lines.size(); i++) {
       cells = lines.get(i).split(sep);
       for (j = 0; j < cells.length && j < result.numColumns(); j++) {
@@ -430,7 +408,7 @@ public class MatrixHelper {
               X[i][j] = rand.nextGaussian();
           }
       }
-      return new Matrix(X);
+      return MatrixFactory.fromRaw(X);
   }
   /**
    * Generate matrix with random elements, sampled from a uniform distribution in (0, 1).
@@ -448,7 +426,7 @@ public class MatrixHelper {
               X[i][j] = rand.nextDouble();
           }
       }
-      return new Matrix(X);
+      return MatrixFactory.fromRaw(X);
   }
 
   /**
@@ -466,26 +444,24 @@ public class MatrixHelper {
 
     for (int i = 0; i < rows; i++) {
       for (int j = 0; j < columns; j++) {
-        int idx = (i + 1) * j;
+        int idx = i + j * columns;
         data[i][j] = doubles[idx];
       }
     }
 
-    return new Matrix(data);
+    return MatrixFactory.fromRaw(data);
   }
 
   /**
-   * Apply the signum function to a matrix inplace.
+   * Static method for matrix inverse. Makes the following eq. more clear:
+   * B=W(P'W)^(-1)q
+   * Without static method: B = W.mul(P.t().mul(W).inv()).mul(q)
+   * With static method:    B = W.mul(inv(P.t().mul(W))).mul(q)
    *
-   * @param mat Matrix so apply signum inplace
+   * @param x Input matrix
+   * @return Inverse of input matrix
    */
-  public static void sign(Matrix mat) {
-    for (int i = 0; i < mat.numRows(); i++) {
-      for (int j = 0; j < mat.numColumns(); j++) {
-        double v = mat.get(i, j);
-        double sign = StrictMath.signum(v);
-        mat.set(i, j, sign);
-      }
-    }
+  public static Matrix inv(Matrix x) {
+    return x.inverse();
   }
 }
