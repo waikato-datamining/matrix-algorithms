@@ -1,6 +1,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import com.github.waikatodatamining.matrix.transformation.Center;
 import com.github.waikatodatamining.matrix.transformation.kernel.AbstractKernel;
@@ -119,15 +120,15 @@ public class KernelPLS extends AbstractMultiResponsePLS {
     int numRows = m_X.numRows();
     int numClasses = Y.numColumns();
 
-    q = new Matrix(numClasses, 1);
-    t = new Matrix(numRows, 1);
-    w = new Matrix(numRows, 1);
-    I = Matrix.identity(numRows, numRows);
+    q = MatrixFactory.zeros(numClasses, 1);
+    t = MatrixFactory.zeros(numRows, 1);
+    w = MatrixFactory.zeros(numRows, 1);
+    I = MatrixFactory.eye(numRows, numRows);
 
-    m_T = new Matrix(numRows, numComponents);
-    m_U = new Matrix(numRows, numComponents);
-    m_P = new Matrix(numRows, numComponents);
-    m_Q = new Matrix(numClasses, numComponents);
+    m_T = MatrixFactory.zeros(numRows, numComponents);
+    m_U = MatrixFactory.zeros(numRows, numComponents);
+    m_P = MatrixFactory.zeros(numRows, numComponents);
+    m_Q = MatrixFactory.zeros(numClasses, numComponents);
 
     m_K_orig = m_Kernel.applyMatrix(m_X);
     m_K_orig = centralizeTrainInKernelSpace(m_K_orig);
@@ -189,8 +190,8 @@ public class KernelPLS extends AbstractMultiResponsePLS {
    */
   protected Matrix centralizeTrainInKernelSpace(Matrix K) {
     int n = m_X.numRows();
-    Matrix I = Matrix.identity(n, n);
-    Matrix one = new Matrix(n, 1, 1.0);
+    Matrix I = MatrixFactory.eye(n, n);
+    Matrix one = MatrixFactory.filled(n, 1, 1.0);
 
     // Centralize in kernel space
     Matrix part = I.sub(one.mul(one.transpose()).div(n));
@@ -204,10 +205,10 @@ public class KernelPLS extends AbstractMultiResponsePLS {
   protected Matrix centralizeTestInKernelSpace(Matrix K) {
     int nTrain = m_X.numRows();
     int nTest = K.numRows();
-    Matrix I = Matrix.identity(nTrain, nTrain);
-    Matrix onesTrainTestScaled = new Matrix(nTest, nTrain, 1.0 / nTrain);
+    Matrix I = MatrixFactory.eye(nTrain, nTrain);
+    Matrix onesTrainTestScaled = MatrixFactory.filled(nTest, nTrain, 1.0 / nTrain);
 
-    Matrix onesTrainScaled = new Matrix(nTrain, nTrain, 1.0 / nTrain);
+    Matrix onesTrainScaled = MatrixFactory.filled(nTrain, nTrain, 1.0 / nTrain);
     return (K.sub(onesTrainTestScaled.mul(m_K_orig))).mul(I.sub(onesTrainScaled));
   }
 

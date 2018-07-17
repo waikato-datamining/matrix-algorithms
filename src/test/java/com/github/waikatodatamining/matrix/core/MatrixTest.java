@@ -31,8 +31,8 @@ public class MatrixTest {
     double[][] dataB = MatrixHelper.randn(10, 20, 2).toRawCopy2D();
 
 
-    a = new Matrix(dataA);
-    b = new Matrix(dataB);
+    a = MatrixFactory.fromRaw(dataA);
+    b = MatrixFactory.fromRaw(dataB);
     ja = new Jama.Matrix(dataA).copy();
     jb = new Jama.Matrix(dataB).copy();
 
@@ -41,7 +41,7 @@ public class MatrixTest {
   }
 
   public static void assertMatrixEquals(Jama.Matrix jx, Matrix x) {
-    assertEquals(x, new Matrix(jx.getArray()));
+    assertEquals(x, MatrixFactory.fromRaw(jx.getArray()));
   }
 
   @Test
@@ -67,7 +67,7 @@ public class MatrixTest {
   public void getEigenvalues() {
     Matrix aa = a.mul(a.transpose());
     Jama.Matrix aaj = ja.times(ja.transpose());
-    assertEquals(Matrix.fromColumn(aaj.eig().getRealEigenvalues()), aa.getEigenvalues());
+    assertEquals(MatrixFactory.fromColumn(aaj.eig().getRealEigenvalues()), aa.getEigenvalues());
   }
 
   @Test
@@ -93,7 +93,7 @@ public class MatrixTest {
     Matrix subB = b.getColumn(0).transpose();
 
     double expected = subA.vectorDot(subB);
-    double actual = new Matrix(subJA.getArray()).vectorDot(new Matrix(subJB
+    double actual = MatrixFactory.fromRaw(subJA.getArray()).vectorDot(MatrixFactory.fromRaw(subJB
       .getArray()));
     double actual2 = subJA.times(subJB.transpose()).get(0, 0);
 
@@ -125,12 +125,12 @@ public class MatrixTest {
 
   @Test
   public void add1() {
-    assertMatrixEquals(ja.plus(new Jama.Matrix(new Matrix(ja.getRowDimension(), ja.getColumnDimension(), 5).toRawCopy2D())), a.add(5));
+    assertMatrixEquals(ja.plus(new Jama.Matrix(MatrixFactory.filled(ja.getRowDimension(), ja.getColumnDimension(), 5).toRawCopy2D())), a.add(5));
   }
 
   @Test
   public void sub1() {
-    assertMatrixEquals(ja.minus(new Jama.Matrix(new Matrix(ja.getRowDimension(), ja.getColumnDimension(), 5).toRawCopy2D())), a.sub(5));
+    assertMatrixEquals(ja.minus(new Jama.Matrix(MatrixFactory.filled(ja.getRowDimension(), ja.getColumnDimension(), 5).toRawCopy2D())), a.sub(5));
   }
 
   @Test
@@ -184,9 +184,9 @@ public class MatrixTest {
     double[][] expectedInverse = {{-2, 1}, {3.0 / 2.0, -1.0 / 2.0}};
     double[][] identity = {{1, 0}, {0, 1}};
 
-    Matrix mat = new Matrix(d);
-    Matrix matInvExp = new Matrix(expectedInverse);
-    Matrix matId = new Matrix(identity);
+    Matrix mat = MatrixFactory.fromRaw(d);
+    Matrix matInvExp = MatrixFactory.fromRaw(expectedInverse);
+    Matrix matId = MatrixFactory.fromRaw(identity);
 
     Jama.Matrix matJama = new Jama.Matrix(mat.toRawCopy2D());
 
@@ -210,21 +210,21 @@ public class MatrixTest {
 
   @Test
   public void asDouble() {
-    assertEquals(new Matrix(1, 1, 1.0).asDouble(), 1.0, PRECISION);
+    assertEquals(MatrixFactory.filled(1, 1, 1.0).asDouble(), 1.0, PRECISION);
   }
 
   @Test
   public void toRawCopy1D() {
     double[][] data = {{1, 2, 3, 4}};
     double[] doubles1 = new Jama.Matrix(data).getRowPackedCopy();
-    double[] doubles2 = new Matrix(data).toRawCopy1D();
+    double[] doubles2 = MatrixFactory.fromRaw(data).toRawCopy1D();
 
     assertArrayEquals(doubles1, doubles2, PRECISION);
   }
 
   @Test
   public void toRawCopy2D() {
-    assertMatrixEquals(new Jama.Matrix(a.toRawCopy2D()), new Matrix(ja.getArray()));
+    assertMatrixEquals(new Jama.Matrix(a.toRawCopy2D()), MatrixFactory.fromRaw(ja.getArray()));
   }
 
   @Test
@@ -234,18 +234,18 @@ public class MatrixTest {
     double[][] dataWithRow = {{1, 2}, {2, 3}, {3, 4}, {4, 5}};
     double[][] column = {{3}, {4}, {5}};
     double[][] dataWithCol = {{1, 2, 3}, {2, 3, 4}, {3, 4, 5}};
-    Matrix rowConcat = new Matrix(data).concat(new Matrix(row), 0);
-    Matrix colConcat = new Matrix(data).concat(new Matrix(column), 1);
+    Matrix rowConcat = MatrixFactory.fromRaw(data).concat(MatrixFactory.fromRaw(row), 0);
+    Matrix colConcat = MatrixFactory.fromRaw(data).concat(MatrixFactory.fromRaw(column), 1);
 
-    assertEquals(rowConcat, new Matrix(dataWithRow));
-    assertEquals(colConcat, new Matrix(dataWithCol));
+    assertEquals(rowConcat, MatrixFactory.fromRaw(dataWithRow));
+    assertEquals(colConcat, MatrixFactory.fromRaw(dataWithCol));
   }
 
 
   @Test
   public void fromRow() {
     double[] row = {1, 2, 3};
-    Matrix matrix = Matrix.fromRow(row);
+    Matrix matrix = MatrixFactory.fromRow(row);
     assertEquals(1, matrix.numRows());
     assertEquals(3, matrix.numColumns());
   }
@@ -253,7 +253,7 @@ public class MatrixTest {
   @Test
   public void fromColumn() {
     double[] column = {1, 2, 3};
-    Matrix matrix = Matrix.fromColumn(column);
+    Matrix matrix = MatrixFactory.fromColumn(column);
     assertEquals(1, matrix.numColumns());
     assertEquals(3, matrix.numRows());
   }
@@ -262,19 +262,19 @@ public class MatrixTest {
   public void identity() {
     double[][] data = {{1, 0}, {0, 1}, {0, 0}};
     double[][] data2 = {{1, 0, 0}, {0, 1, 0}};
-    Matrix id = Matrix.identity(3, 2);
-    Matrix id2 = Matrix.identity(2, 3);
+    Matrix id = MatrixFactory.eye(3, 2);
+    Matrix id2 = MatrixFactory.eye(2, 3);
 
-    assertEquals(new Matrix(data), id);
-    assertEquals(new Matrix(data2), id2);
+    assertEquals(MatrixFactory.fromRaw(data), id);
+    assertEquals(MatrixFactory.fromRaw(data2), id2);
   }
 
   @Test
   public void identity1() {
     double[][] data2 = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-    Matrix id2 = Matrix.identity(3, 3);
+    Matrix id2 = MatrixFactory.eye(3, 3);
 
-    assertEquals(new Matrix(data2), id2);
+    assertEquals(MatrixFactory.fromRaw(data2), id2);
   }
 
   @Test
@@ -321,8 +321,8 @@ public class MatrixTest {
   @Test
   public void setRow() {
     double[][] data = new double[][]{{1, 2}, {3, 4}};
-    Matrix mat = new Matrix(data);
-    Matrix row = new Matrix(new double[][]{{10, 10}});
+    Matrix mat = MatrixFactory.fromRaw(data);
+    Matrix row = MatrixFactory.fromRaw(new double[][]{{10, 10}});
     mat.setRow(0, row);
     Matrix rowAct = mat.getRow(0);
 
@@ -332,8 +332,8 @@ public class MatrixTest {
   @Test
   public void setColumn() {
     double[][] data = new double[][]{{1, 2}, {3, 4}};
-    Matrix mat = new Matrix(data);
-    Matrix col = new Matrix(new double[][]{{10}, {10}});
+    Matrix mat = MatrixFactory.fromRaw(data);
+    Matrix col = MatrixFactory.fromRaw(new double[][]{{10}, {10}});
     mat.setColumn(0, col);
     Matrix columnAct = mat.getColumn(0);
 

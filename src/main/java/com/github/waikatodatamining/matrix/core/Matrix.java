@@ -30,6 +30,8 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import static com.github.waikatodatamining.matrix.core.MatrixFactory.create;
+
 /**
  * Matrix abstraction to the ojAlgo's Matrix PrimitiveDenseStore implementation.
  *
@@ -37,9 +39,7 @@ import java.util.stream.IntStream;
  */
 public class Matrix {
 
-  /** Matrix Factory */
-  private final static PhysicalStore.Factory<Double, PrimitiveDenseStore> FACTORY =
-    PrimitiveDenseStore.FACTORY;
+
 
   /** Underlying data store */
   protected MatrixStore<Double> data;
@@ -59,48 +59,8 @@ public class Matrix {
    *
    * @param data Matrix store
    */
-  private Matrix(MatrixStore<Double> data) {
+  protected Matrix(MatrixStore<Double> data) {
     this.data = data;
-  }
-
-  /**
-   * Constructor for creating a new matrix wrapper from a raw 2d double array.
-   *
-   * @param data Raw data
-   */
-  public Matrix(double[][] data) {
-    this.data = FACTORY.rows(data);
-  }
-
-  /**
-   * Constructor initializing a new matrix with zeroes.
-   *
-   * @param rows    Number of rows
-   * @param columns Number of columns
-   */
-  public Matrix(int rows, int columns) {
-    data = FACTORY.makeZero(rows, columns);
-  }
-
-  /**
-   * Constructor initializing a new matrix with a given value.
-   *
-   * @param rows         Number of rows
-   * @param columns      Number of columns
-   * @param initialValue Initial matrix value for each element
-   */
-  public Matrix(int rows, int columns, double initialValue) {
-    data = FACTORY.makeFilled(rows, columns, new NullaryFunction<Number>() {
-      @Override
-      public double doubleValue() {
-	return initialValue;
-      }
-
-      @Override
-      public Number invoke() {
-	return initialValue;
-      }
-    });
   }
 
   /**
@@ -116,7 +76,7 @@ public class Matrix {
     for (int i = 0; i < rows.length; i++) {
       rowVectors[i] = data.sliceRow(rows[i]);
     }
-    MatrixStore<Double> rows1 = FACTORY.rows(rowVectors);
+    MatrixStore<Double> rows1 = MatrixFactory.FACTORY.rows(rowVectors);
 
     // Select columns
     Access1D[] columnVectors = new Access1D[columns.length];
@@ -124,7 +84,7 @@ public class Matrix {
       columnVectors[j] = rows1.sliceColumn(columns[j]);
     }
 
-    MatrixStore<Double> subMatrix = FACTORY.columns(columnVectors);
+    MatrixStore<Double> subMatrix = MatrixFactory.FACTORY.columns(columnVectors);
     return create(subMatrix);
   }
 
@@ -178,7 +138,7 @@ public class Matrix {
       .toArray();
 
     int[] allRows = IntStream.range(0, (int) eigVunsorted.countRows()).toArray();
-    Matrix eigVsorted = Matrix.create(eigVunsorted).getSubMatrix(allRows, sortedColumnIndices);
+    Matrix eigVsorted = MatrixFactory.create(eigVunsorted).getSubMatrix(allRows, sortedColumnIndices);
 
     return eigVsorted;
   }
@@ -195,7 +155,7 @@ public class Matrix {
     }
     Array1D<ComplexNumber> eigenvalues = eigenvalueDecomposition.getEigenvalues();
     eigenvalues.sortAscending();
-    return fromColumn(eigenvalues.toRawCopy1D());
+    return MatrixFactory.fromColumn(eigenvalues.toRawCopy1D());
   }
 
   /**
@@ -228,7 +188,7 @@ public class Matrix {
    */
   public Matrix sum(int axis) {
     if (axis == 0) {
-      Matrix result = new Matrix(1, numColumns());
+      Matrix result = MatrixFactory.zeros(1, numColumns());
 
       for (int i = 0; i < numColumns(); i++) {
 	result.set(0, i, data.aggregateColumn(i, Aggregator.SUM));
@@ -237,7 +197,7 @@ public class Matrix {
       return result;
     }
     else if (axis == 1) {
-      Matrix result = new Matrix(numRows(), 1);
+      Matrix result = MatrixFactory.zeros(numRows(), 1);
       for (int i = 0; i < numRows(); i++) {
 	result.set(i, 0, data.aggregateRow(i, Aggregator.SUM));
       }
@@ -572,7 +532,7 @@ public class Matrix {
    * @return Result of the addition
    */
   public Matrix add(double value) {
-    Matrix filled = new Matrix(numRows(), numColumns(), value);
+    Matrix filled = MatrixFactory.filled(numRows(), numColumns(), value);
     return add(filled);
   }
 
@@ -605,7 +565,7 @@ public class Matrix {
    * @return Result of the subtraction
    */
   public Matrix sub(double value) {
-    Matrix filled = new Matrix(numRows(), numColumns(), value);
+    Matrix filled = MatrixFactory.filled(numRows(), numColumns(), value);
     return sub(filled);
   }
 
@@ -780,7 +740,7 @@ public class Matrix {
    * @return Row at the given index
    */
   public Matrix getRow(int rowIdx) {
-    return fromRow(data.sliceRow(rowIdx));
+    return MatrixFactory.fromRow(data.sliceRow(rowIdx));
   }
 
   /**
@@ -790,7 +750,7 @@ public class Matrix {
    * @return Column at the given index
    */
   public Matrix getColumn(int columnidx) {
-    return fromColumn(data.sliceColumn(columnidx));
+    return MatrixFactory.fromColumn(data.sliceColumn(columnidx));
   }
 
   /**
@@ -879,7 +839,7 @@ public class Matrix {
   public Matrix concatAlongRows(Matrix other) {
     int numRows = numRows();
     int totalRows = numRows + other.numRows();
-    PrimitiveDenseStore result = FACTORY.makeZero(totalRows, numColumns());
+    PrimitiveDenseStore result = MatrixFactory.FACTORY.makeZero(totalRows, numColumns());
     for (int i = 0; i < totalRows; i++) {
       Access1D<Double> row;
       if (i < numRows) {
@@ -902,7 +862,7 @@ public class Matrix {
   public Matrix concatAlongColumns(Matrix other) {
     int numCols = numColumns();
     int totalCols = numCols + other.numColumns();
-    PrimitiveDenseStore result = FACTORY.makeZero(numRows(), totalCols);
+    PrimitiveDenseStore result = MatrixFactory.FACTORY.makeZero(numRows(), totalCols);
     for (int i = 0; i < totalCols; i++) {
       Access1D<Double> col;
       if (i < numCols) {
@@ -923,89 +883,6 @@ public class Matrix {
   protected void resetCache() {
     this.eigenvalueDecomposition = null;
     this.singularvalueDecomposition = null;
-  }
-
-  /**
-   * Create a matrix from raw double data.
-   *
-   * @param data Raw data
-   * @return Wrapped data
-   */
-  protected static Matrix create(double[][] data) {
-    return create(FACTORY.rows(data));
-  }
-
-  /**
-   * Create a matrix from a given matrix store.
-   *
-   * @param data Matrix store
-   * @return Wrapped matrix store
-   */
-  private static Matrix create(MatrixStore<Double> data) {
-    return new Matrix(data);
-  }
-
-  /**
-   * Create a matrix from a given vector.
-   *
-   * @param vector 1D vector
-   * @return Wrapped vector
-   */
-  private static Matrix fromRow(Access1D<Double> vector) {
-    return new Matrix(FACTORY.rows(vector));
-  }
-
-  /**
-   * Create a matrix from a given raw data vector.
-   *
-   * @param vector Raw data vector
-   * @return Wrapped raw data
-   */
-  public static Matrix fromRow(double[] vector) {
-    return new Matrix(FACTORY.rows(vector));
-  }
-
-  /**
-   * Create a matrix from a given vector.
-   *
-   * @param vector 1D vector
-   * @return Wrapped vector
-   */
-  private static Matrix fromColumn(Access1D<Double> vector) {
-    return new Matrix(FACTORY.columns(vector));
-  }
-
-  /**
-   * Create a matrix from a given raw data vector.
-   *
-   * @param vector Raw data vector
-   * @return Wrapped raw data
-   */
-  public static Matrix fromColumn(double[] vector) {
-    return new Matrix(FACTORY.columns(vector));
-  }
-
-  /**
-   * Create an n x n identity matrix.
-   *
-   * @param n Size of the matrix
-   * @return Identity matrix
-   */
-  public static Matrix identity(int n) {
-    return identity(n, n);
-  }
-
-  /**
-   * Create an identity matrix, based on the given sizes. If rows > columns, the
-   * lower rows that are out of bound will be zero. Same vice versa with
-   * columns.
-   *
-   * @param rows    Number of rows
-   * @param columns Number of columns
-   * @return Asymmetrical identity matrix
-   */
-  public static Matrix identity(int rows, int columns) {
-    return create(FACTORY.makeEye(rows, columns));
   }
 
   /**

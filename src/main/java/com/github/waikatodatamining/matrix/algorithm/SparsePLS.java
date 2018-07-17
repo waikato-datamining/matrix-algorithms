@@ -21,6 +21,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.transformation.Standardize;
 import java.util.List;
 import java.util.Set;
@@ -176,8 +177,8 @@ public class SparsePLS
     Matrix Xj = X.copy();
     Matrix yj = y.copy();
     m_A = new TreeSet<>();
-    m_Bpls = new Matrix(X.numColumns(), y.numColumns(), 0.0);
-    m_W = new Matrix(X.numColumns(), getNumComponents());
+    m_Bpls = MatrixFactory.zeros(X.numColumns(), y.numColumns());
+    m_W = MatrixFactory.zeros(X.numColumns(), getNumComponents());
 
     for (int k = 0; k < getNumComponents(); k++) {
       wk = getDirectionVector(Xj, yj, k);
@@ -190,7 +191,7 @@ public class SparsePLS
       collectIndices(wk);
 
       Matrix X_A = getColumnSubmatrixOf(X);
-      m_Bpls = new Matrix(X.numColumns(), y.numColumns(), 0.0);
+      m_Bpls = MatrixFactory.zeros(X.numColumns(), y.numColumns());
       Matrix Bpls_A = getRegressionCoefficient(X_A, y, k);
 
       // Fill m_Bpls values at non zero indices with estimated
@@ -240,7 +241,7 @@ public class SparsePLS
    * @return Submatrix of x
    */
   private Matrix getColumnSubmatrixOf(Matrix X) {
-    Matrix X_A = new Matrix(X.numRows(), m_A.size());
+    Matrix X_A = MatrixFactory.zeros(X.numRows(), m_A.size());
     int colCount = 0;
     for (Integer i : m_A) {
       Matrix col = X.getColumn(i);
@@ -257,7 +258,7 @@ public class SparsePLS
    * @return Submatrix of x
    */
   private Matrix getRowSubmatrixOf(Matrix X) {
-    Matrix X_A = new Matrix(m_A.size(), X.numColumns());
+    Matrix X_A = MatrixFactory.zeros(m_A.size(), X.numColumns());
     int rowCount = 0;
     for (Integer i : m_A) {
       Matrix row = X.getRow(i);
@@ -309,7 +310,7 @@ public class SparsePLS
     // Collect indices where valb is >= 0
     List<Integer> idxs = valb.whereVector(d -> d >= 0);
     Matrix preMul = valb.mulElementwise(ZpSign);
-    Matrix c = new Matrix(Zp.numRows(), 1);
+    Matrix c = MatrixFactory.zeros(Zp.numRows(), 1);
     for (Integer idx : idxs) {
       double val = preMul.get(idx, 0);
       c.set(idx, 0, val);
@@ -375,7 +376,7 @@ public class SparsePLS
   @Override
   protected Matrix doTransform(Matrix predictors) {
     int numComponents = getNumComponents();
-    Matrix T = new Matrix(predictors.numRows(), numComponents);
+    Matrix T = MatrixFactory.zeros(predictors.numRows(), numComponents);
     Matrix X = predictors.copy();
     for (int k = 0; k < numComponents; k++) {
       Matrix wk = m_W.getColumn(k);
@@ -411,8 +412,8 @@ public class SparsePLS
     Matrix X_A = getColumnSubmatrixOf(X);
     Matrix B_A = getRowSubmatrixOf(m_Bpls);
 
-    Matrix yMeans = Matrix.fromColumn(m_StandardizeY.getMeans());
-    Matrix yStd = Matrix.fromColumn(m_StandardizeY.getStdDevs());
+    Matrix yMeans = MatrixFactory.fromColumn(m_StandardizeY.getMeans());
+    Matrix yStd = MatrixFactory.fromColumn(m_StandardizeY.getStdDevs());
     Matrix yhat = X_A.mul(B_A).scaleByVector(yStd).addByVector(yMeans);
 
     return yhat;

@@ -140,7 +140,7 @@ public class MatrixHelper {
     Matrix result;
     int i;
 
-    result = new Matrix(m.numRows(), 1);
+    result = MatrixFactory.zeros(m.numRows(), 1);
 
     for (i = 0; i < m.numRows(); i++) {
       result.set(i, 0, m.get(i, columnIndex));
@@ -271,7 +271,7 @@ public class MatrixHelper {
 
     sep    = "" + separator;
     cells  = lines.get(0).split(sep);
-    result = new Matrix(lines.size(), cells.length);
+    result = MatrixFactory.zeros(lines.size(), cells.length);
     for (i = 0; i < lines.size(); i++) {
       cells = lines.get(i).split(sep);
       for (j = 0; j < cells.length && j < result.numColumns(); j++) {
@@ -408,7 +408,7 @@ public class MatrixHelper {
               X[i][j] = rand.nextGaussian();
           }
       }
-      return new Matrix(X);
+      return MatrixFactory.fromRaw(X);
   }
   /**
    * Generate matrix with random elements, sampled from a uniform distribution in (0, 1).
@@ -426,7 +426,7 @@ public class MatrixHelper {
               X[i][j] = rand.nextDouble();
           }
       }
-      return new Matrix(X);
+      return MatrixFactory.fromRaw(X);
   }
 
   /**
@@ -449,7 +449,7 @@ public class MatrixHelper {
       }
     }
 
-    return new Matrix(data);
+    return MatrixFactory.fromRaw(data);
   }
 
   /**

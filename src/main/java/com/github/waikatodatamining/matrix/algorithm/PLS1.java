@@ -21,6 +21,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 
 /**
@@ -140,10 +141,10 @@ public class PLS1
 
 
     // init
-    W = new Matrix(predictors.numColumns(), getNumComponents());
-    P = new Matrix(predictors.numColumns(), getNumComponents());
-    T = new Matrix(predictors.numRows(), getNumComponents());
-    b_hat = new Matrix(getNumComponents(), 1);
+    W = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
+    P = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
+    T = MatrixFactory.zeros(predictors.numRows(), getNumComponents());
+    b_hat = MatrixFactory.zeros(getNumComponents(), 1);
 
 
     for (k = 0; k < getNumComponents(); k++) {
@@ -197,13 +198,13 @@ public class PLS1
     Matrix 	x, X;
     int 	i, j;
 
-    result = new Matrix(predictors.numRows(), getNumComponents());
+    result = MatrixFactory.zeros(predictors.numRows(), getNumComponents());
 
     for (i = 0; i < predictors.numRows(); i++) {
       // work on each row
       x = MatrixHelper.rowAsVector(predictors, i);
-      X = new Matrix(1, getNumComponents());
-      T = new Matrix(1, getNumComponents());
+      X = MatrixFactory.zeros(1, getNumComponents());
+      T = MatrixFactory.zeros(1, getNumComponents());
 
       for (j = 0; j < getNumComponents(); j++) {
 	X.setColumn(j, x);
@@ -243,13 +244,13 @@ public class PLS1
     Matrix 	x, X;
     int 	i, j;
 
-    result = new Matrix(predictors.numRows(), 1);
+    result = MatrixFactory.zeros(predictors.numRows(), 1);
 
     for (i = 0; i < predictors.numRows(); i++) {
       // work on each row
       x = MatrixHelper.rowAsVector(predictors, i);
-      X = new Matrix(1, getNumComponents());
-      T = new Matrix(1, getNumComponents());
+      X = MatrixFactory.zeros(1, getNumComponents());
+      T = MatrixFactory.zeros(1, getNumComponents());
 
       for (j = 0; j < getNumComponents(); j++) {
 	X.setColumn(j, x);

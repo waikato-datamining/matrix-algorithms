@@ -1,6 +1,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.transformation.Standardize;
 
 import java.util.Random;
@@ -135,16 +136,16 @@ public class NIPALS extends AbstractMultiResponsePLS {
     int numComponents = getNumComponents();
 
     // Init matrices
-    m_XScores = new Matrix(numRows, numComponents); // T
-    m_YScores = new Matrix(numRows, numComponents); // U
+    m_XScores = MatrixFactory.zeros(numRows, numComponents); // T
+    m_YScores = MatrixFactory.zeros(numRows, numComponents); // U
 
-    m_XWeights = new Matrix(numFeatures, numComponents); // W
-    m_YWeights = new Matrix(numClasses, numComponents); // C
+    m_XWeights = MatrixFactory.zeros(numFeatures, numComponents); // W
+    m_YWeights = MatrixFactory.zeros(numClasses, numComponents); // C
 
-    m_XLoadings = new Matrix(numFeatures, numComponents); // P
-    m_YLoadings = new Matrix(numClasses, numComponents); // Q
+    m_XLoadings = MatrixFactory.zeros(numFeatures, numComponents); // P
+    m_YLoadings = MatrixFactory.zeros(numClasses, numComponents); // Q
 
-    ykLoading = new Matrix(numClasses, 1);
+    ykLoading = MatrixFactory.zeros(numClasses, 1);
 
     double eps = 1e-10;
     for (int k = 0; k < numComponents; k++) {
@@ -196,11 +197,11 @@ public class NIPALS extends AbstractMultiResponsePLS {
       m_YRotations = m_YWeights.mul((m_YLoadings.t().mul(m_YWeights)).inverse());
     }
     else {
-      m_YRotations = new Matrix(1, 1, 1.0);
+      m_YRotations = MatrixFactory.filled(1, 1, 1.0);
     }
 
     // Calculate regression coefficients
-    Matrix yStds = Matrix.fromColumn(m_StandardizeY.getStdDevs());
+    Matrix yStds = MatrixFactory.fromColumn(m_StandardizeY.getStdDevs());
     m_Coef = m_XRotations.mul(m_YLoadings.t()).scaleByVector(yStds);
     return null;
   }
@@ -217,7 +218,7 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
     Matrix yScore = Y.getColumn(0); // (y scores)
     Matrix xWeight;
-    Matrix xWeightOld = new Matrix(X.numColumns(), 1, 0);
+    Matrix xWeightOld = MatrixFactory.zeros(X.numColumns(), 1);
     Matrix yWeight;
     Matrix xScore;
 
@@ -273,7 +274,7 @@ public class NIPALS extends AbstractMultiResponsePLS {
   protected Matrix doPerformPredictions(Matrix predictors) {
     Matrix X = m_StandardizeX.transform(predictors);
 
-    Matrix yMeans = Matrix.fromColumn(m_StandardizeY.getMeans());
+    Matrix yMeans = MatrixFactory.fromColumn(m_StandardizeY.getMeans());
     Matrix Y_hat = X.mul(m_Coef).addByVector(yMeans);
     return Y_hat;
   }

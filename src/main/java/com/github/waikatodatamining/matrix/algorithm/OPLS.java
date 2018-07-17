@@ -21,6 +21,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 
 
@@ -152,9 +153,9 @@ public class OPLS
     y = response;
 
     // init
-    m_Worth = new Matrix(predictors.numColumns(), getNumComponents());
-    m_Porth = new Matrix(predictors.numColumns(), getNumComponents());
-    m_Torth = new Matrix(predictors.numRows(), getNumComponents());
+    m_Worth = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
+    m_Porth = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
+    m_Torth = MatrixFactory.zeros(predictors.numRows(), getNumComponents());
 
     w = Xtrans.mul(y).mul(invL2Squared(y)).normalized();
 
