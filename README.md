@@ -15,6 +15,7 @@ Supervised:
 * [KernelPLS](http://www.plantbreeding.wzw.tum.de/fileadmin/w00bdb/www/kraemer/icml_kernelpls.pdf)
 * [OSC](https://www.r-bloggers.com/evaluation-of-orthogonal-signal-correction-for-pls-modeling-osc-pls-and-opls/)
 * [NIPALS](http://www.statsoft.com/textbook/partial-least-squares/#NIPALS)
+* [SparsePLS](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2810828/)
 
 Planned:
 
