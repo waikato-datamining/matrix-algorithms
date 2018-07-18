@@ -53,6 +53,7 @@ public abstract class LoggingObject
    * Default implementation does nothing.
    */
   protected void initialize() {
+    getLogger();
   }
 
   /**

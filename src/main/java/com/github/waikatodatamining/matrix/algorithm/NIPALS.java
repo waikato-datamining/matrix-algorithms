@@ -6,7 +6,7 @@ import com.github.waikatodatamining.matrix.transformation.Standardize;
 
 /**
  * Nonlinear Iterative Partial Least Squares
- *
+ * <p>
  * Implementation oriented at scikit-learn's NIPALS implementation:
  * <a href="https://github.com/scikit-learn/scikit-learn/blob/ed5e127b/sklearn/cross_decomposition/pls_.py#L455">Github scikit-learn NIPALS</a>
  *
@@ -89,7 +89,13 @@ public class NIPALS extends AbstractMultiResponsePLS {
   }
 
   public void setMaxIter(int maxIter) {
-    this.m_MaxIter = maxIter;
+    if (maxIter < 0) {
+      m_Logger.warning("Maximum iterations parameter must be positive " +
+        "but was " + maxIter + ".");
+    } else {
+      this.m_MaxIter = maxIter;
+      reset();
+    }
   }
 
   public double getTol() {
@@ -97,7 +103,13 @@ public class NIPALS extends AbstractMultiResponsePLS {
   }
 
   public void setTol(double tol) {
-    this.m_Tol = tol;
+    if (tol < 0) {
+      m_Logger.warning("Tolerance parameter must be positive but " +
+        "was " + tol + ".");
+    } else {
+      this.m_Tol = tol;
+      reset();
+    }
   }
 
   @Override

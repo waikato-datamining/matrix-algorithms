@@ -77,14 +77,22 @@ public class KernelPLS extends AbstractMultiResponsePLS {
 
   public void setKernel(AbstractKernel kernel) {
     this.m_Kernel = kernel;
+    reset();
   }
+
 
   public int getMaxIter() {
     return m_MaxIter;
   }
 
   public void setMaxIter(int maxIter) {
-    this.m_MaxIter = maxIter;
+    if (maxIter < 0) {
+      m_Logger.warning("Maximum iterations parameter must be positive " +
+        "but was " + maxIter + ".");
+    } else {
+      this.m_MaxIter = maxIter;
+      reset();
+    }
   }
 
   public double getTol() {
@@ -92,7 +100,13 @@ public class KernelPLS extends AbstractMultiResponsePLS {
   }
 
   public void setTol(double tol) {
-    this.m_Tol = tol;
+    if (tol < 0) {
+      m_Logger.warning("Tolerance parameter must be positive but " +
+        "was " + tol + ".");
+    } else {
+      this.m_Tol = tol;
+      reset();
+    }
   }
 
   @Override

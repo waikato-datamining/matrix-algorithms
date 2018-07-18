@@ -62,6 +62,7 @@ public class OPLS
   /** Set the base PLS model that is fitted on the OSC cleaned data */
   public void setBasePLS(AbstractPLS basePLS) {
     m_BasePLS = basePLS;
+    reset();
   }
 
   /**

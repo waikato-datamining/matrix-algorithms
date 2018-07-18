@@ -73,20 +73,32 @@ public class SparsePLS
   /** Standardize Y */
   protected Standardize m_StandardizeY;
 
-  public double getTol() {
-    return m_Tol;
-  }
-
-  public void setTol(double tol) {
-    m_Tol = tol;
-  }
-
   public int getMaxIter() {
     return m_MaxIter;
   }
 
   public void setMaxIter(int maxIter) {
-    m_MaxIter = maxIter;
+    if (maxIter < 0) {
+      m_Logger.warning("Maximum iterations parameter must be positive " +
+        "but was " + maxIter + ".");
+    } else {
+      this.m_MaxIter = maxIter;
+      reset();
+    }
+  }
+
+  public double getTol() {
+    return m_Tol;
+  }
+
+  public void setTol(double tol) {
+    if (tol < 0) {
+      m_Logger.warning("Tolerance parameter must be positive but " +
+        "was " + tol + ".");
+    } else {
+      this.m_Tol = tol;
+      reset();
+    }
   }
 
   public double getLambda() {
@@ -94,7 +106,13 @@ public class SparsePLS
   }
 
   public void setLambda(double lambda) {
-    m_lambda = lambda;
+    if (lambda < 0){
+      m_Logger.warning("Sparseness parameter lambda must be positive " +
+        "but was " + lambda + ".");
+    } else {
+      m_lambda = lambda;
+      reset();
+    }
   }
 
   /**
@@ -105,6 +123,7 @@ public class SparsePLS
     super.reset();
     m_Bpls = null;
     m_A = null;
+    m_W = null;
     m_StandardizeX = new Standardize();
     m_StandardizeY = new Standardize();
   }
