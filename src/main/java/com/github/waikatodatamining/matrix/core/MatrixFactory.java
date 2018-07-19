@@ -6,6 +6,8 @@ import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
 
+import java.util.Random;
+
 /**
  * Factory for matrix objects.
  */
@@ -166,5 +168,106 @@ public class MatrixFactory {
    */
   public static Matrix fromColumn(double[] vector) {
     return new Matrix(FACTORY.columns(vector));
+  }
+
+  /**
+   * Generate matrix with random elements, sampled from the standard normal distribution of mean 0
+   * and variance of 1.
+   *
+   * @param m       Number of rows
+   * @param n       Number of columns
+   * @param seed    Seed for the random number generator
+   * @return        An m-by-n matrix with gaussian distributed random elements
+   */
+  public static Matrix randn(int m, int n, long seed) {
+    Random rand = new Random(seed);
+    double[][] X = new double[m][n];
+    for (int i = 0; i < m; i++) {
+      for (int j = 0; j < n; j++) {
+	X[i][j] = rand.nextGaussian();
+      }
+    }
+    return MatrixFactory.fromRaw(X);
+  }
+
+  /**
+   * Generate matrix with random elements, sampled from the standard normal
+   * distribution of mean 0
+   * and variance of 1 with the same shape as the given matrix.
+   *
+   * @param other Matrix indicating the shape
+   * @param seed Seed for the random number generator
+   * @return An matrix with gaussian distributed random elements with the shape
+   * of {@code other}.
+   */
+  public static Matrix randnLike(Matrix other, long seed){
+    return randn(other.numRows(), other.numColumns(), seed);
+  }
+
+  /**
+   * Generate matrix with random elements, sampled from the standard normal
+   * distribution of the given mean and std.
+   *
+   * @param m       Number of rows
+   * @param n       Number of columns
+   * @param seed    Seed for the random number generator
+   * @return        An m-by-n matrix with gaussian distributed random elements
+   */
+  public static Matrix randn(int m, int n, double mean, double std, long seed) {
+    Random rand = new Random(seed);
+    double[][] X = new double[m][n];
+    for (int i = 0; i < m; i++) {
+      for (int j = 0; j < n; j++) {
+	X[i][j] = rand.nextGaussian() * std + mean;
+      }
+    }
+    return MatrixFactory.fromRaw(X);
+  }
+
+  /**
+   * Generate matrix with random elements, sampled from the standard normal
+   * distribution with the given mean and std and with the same shape as
+   * the given matrix.
+   *
+   * @param other Matrix indicating the shape
+   * @param seed Seed for the random number generator
+   * @return An matrix with gaussian distributed random elements with the shape
+   * of {@code other}.
+   */
+  public static Matrix randnLike(Matrix other, double mean, double std, long seed){
+    return randn(other.numRows(), other.numColumns(), mean, std, seed);
+  }
+
+  /**
+   * Generate matrix with random elements, sampled from a uniform distribution
+   * in (0, 1).
+   *
+   * @param m       Number of rows
+   * @param n       Number of columns
+   * @param seed    Seed for the random number generator
+   * @return        An m-by-n matrix with uniformly distributed random elements
+   */
+  public static Matrix rand(int m, int n, long seed) {
+    Random rand = new Random(seed);
+    double[][] X = new double[m][n];
+    for (int i = 0; i < m; i++) {
+      for (int j = 0; j < n; j++) {
+	X[i][j] = rand.nextDouble();
+      }
+    }
+    return MatrixFactory.fromRaw(X);
+  }
+
+  /**
+   * Generate matrix with random elements, sampled from a uniform distribution
+   * in (0, 1) with the same shape as the given matrix.
+   *
+   * @param other Matrix indicating the shape
+   * @param seed Seed for the random number generator
+   * @return An matrix with uniformly distributed random elements with the shape
+   * of {@code other}.
+   */
+  public static Matrix randLike(Matrix other, long seed){
+    return rand(other.numRows(), other.numColumns(), seed);
   }
 }

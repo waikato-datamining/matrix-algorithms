@@ -86,7 +86,7 @@ public class MatrixHelper {
    * @return		the row
    */
   public static Matrix rowAsVector(Matrix data, int row) {
-    return data.getSubMatrix(row, row, 0, data.numColumns() - 1);
+    return data.getSubMatrix(row, row + 1, 0, data.numColumns());
   }
 
   /**
@@ -389,44 +389,6 @@ public class MatrixHelper {
    */
   public static String dim(Matrix m) {
     return m.numRows() + " x " + m.numColumns();
-  }
-
-  /**
-   * Generate matrix with random elements, sampled from the standard normal distribution of mean 0
-   * and variance of 1.
-   *
-   * @param m       Number of rows
-   * @param n       Number of columns
-   * @param seed    Seed for the random number generator
-   * @return        An m-by-n matrix with gaussian distributed random elements
-   */
-  public static Matrix randn(int m, int n, long seed) {
-      Random rand = new Random(seed);
-      double[][] X = new double[m][n];
-      for (int i = 0; i < m; i++) {
-          for (int j = 0; j < n; j++) {
-              X[i][j] = rand.nextGaussian();
-          }
-      }
-      return MatrixFactory.fromRaw(X);
-  }
-  /**
-   * Generate matrix with random elements, sampled from a uniform distribution in (0, 1).
-   *
-   * @param m       Number of rows
-   * @param n       Number of columns
-   * @param seed    Seed for the random number generator
-   * @return        An m-by-n matrix with uniformly distributed random elements
-   */
-  public static Matrix rand(int m, int n, long seed) {
-      Random rand = new Random(seed);
-      double[][] X = new double[m][n];
-      for (int i = 0; i < m; i++) {
-          for (int j = 0; j < n; j++) {
-              X[i][j] = rand.nextDouble();
-          }
-      }
-      return MatrixFactory.fromRaw(X);
   }
 
   /**

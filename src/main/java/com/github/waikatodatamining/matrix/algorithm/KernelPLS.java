@@ -151,7 +151,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
     for (int currentComponent = 0; currentComponent < numComponents; currentComponent++) {
       int iterations = 0;
       Matrix uOld;
-      u = MatrixHelper.randn(numRows, 1, SEED + currentComponent);
+      u = MatrixFactory.randn(numRows, 1, SEED + currentComponent);
       double iterationChange = m_Tol * 10;
 
       // Repeat 1) - 3) until convergence: either change of u is lower than m_Tol or maximum
