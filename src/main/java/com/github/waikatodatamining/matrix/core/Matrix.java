@@ -6,6 +6,7 @@ import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsExcep
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixInversionException;
 import org.ojalgo.RecoverableCondition;
 import org.ojalgo.access.Access1D;
+import org.ojalgo.access.RowView;
 import org.ojalgo.array.Array1D;
 import org.ojalgo.function.BinaryFunction;
 import org.ojalgo.function.NullaryFunction;
@@ -40,7 +41,6 @@ import static com.github.waikatodatamining.matrix.core.MatrixFactory.create;
 public class Matrix {
 
 
-
   /** Underlying data store */
   protected MatrixStore<Double> data;
 
@@ -71,35 +71,34 @@ public class Matrix {
    * @return Submatrix of the current matrix
    */
   public Matrix getSubMatrix(int[] rows, int[] columns) {
-    // Select rows
-    Access1D[] rowVectors = new Access1D[rows.length];
-    for (int i = 0; i < rows.length; i++) {
-      rowVectors[i] = data.sliceRow(rows[i]);
+    double[][] dataRaw = data.toRawCopy2D();
+    double[][] subset = new double[rows.length][columns.length];
+    int newRowIdx = 0;
+    int newColumnIdx = 0;
+    for (int row : rows) {
+      for (int column : columns) {
+	subset[newRowIdx][newColumnIdx] = dataRaw[row][column];
+	newColumnIdx++;
+      }
+      newColumnIdx = 0;
+      newRowIdx++;
     }
-    MatrixStore<Double> rows1 = MatrixFactory.FACTORY.rows(rowVectors);
 
-    // Select columns
-    Access1D[] columnVectors = new Access1D[columns.length];
-    for (int j = 0; j < columns.length; j++) {
-      columnVectors[j] = rows1.sliceColumn(columns[j]);
-    }
-
-    MatrixStore<Double> subMatrix = MatrixFactory.FACTORY.columns(columnVectors);
-    return create(subMatrix);
+    return create(subset);
   }
 
   /**
    * Get the submatrix, given by the row and column intervals.
    *
    * @param rowStart    Row interval start
-   * @param rowEnd      Row interval end
+   * @param rowEndExclusive      Row interval end exclusive
    * @param columnStart Column interval start
-   * @param columnEnd   Column interval end
+   * @param columnEndExclusive   Column interval end exclusive
    * @return Submatrix of the current matrix
    */
-  public Matrix getSubMatrix(int rowStart, int rowEnd, int columnStart, int columnEnd) {
-    int numRows = (rowEnd + 1) - rowStart;
-    int numColumns = (columnEnd + 1) - columnStart;
+  public Matrix getSubMatrix(int rowStart, int rowEndExclusive, int columnStart, int columnEndExclusive) {
+    int numRows = rowEndExclusive - rowStart;
+    int numColumns = columnEndExclusive - columnStart;
     int[] rows = new int[numRows];
     int[] columns = new int[numColumns];
 
@@ -139,8 +138,23 @@ public class Matrix {
 
     int[] allRows = IntStream.range(0, (int) eigVunsorted.countRows()).toArray();
     Matrix eigVsorted = MatrixFactory.create(eigVunsorted).getSubMatrix(allRows, sortedColumnIndices);
-
     return eigVsorted;
+  }
+
+  public Matrix getEigenvalueDecompositionV() {
+    if (eigenvalueDecomposition == null) {
+      eigenvalueDecomposition = Eigenvalue.PRIMITIVE.make(data);
+      eigenvalueDecomposition.decompose(data);
+    }
+    return MatrixFactory.create(eigenvalueDecomposition.getV());
+  }
+
+  public Matrix getEigenvalueDecompositionD() {
+    if (eigenvalueDecomposition == null) {
+      eigenvalueDecomposition = Eigenvalue.PRIMITIVE.make(data);
+      eigenvalueDecomposition.decompose(data);
+    }
+    return MatrixFactory.create(eigenvalueDecomposition.getD());
   }
 
   /**
@@ -991,7 +1005,7 @@ public class Matrix {
     Arrays.sort(rawData);
     int size = rawData.length;
     if (size % 2 == 0) {
-      return  (rawData[size / 2] + rawData[size / 2 - 1]) / 2;
+      return (rawData[size / 2] + rawData[size / 2 - 1]) / 2;
     }
     else {
       return rawData[size / 2];
@@ -1044,6 +1058,21 @@ public class Matrix {
       result = result.concat(getRow(i), 0);
     }
     return result;
+  }
+
+  /**
+   * Get the diagonal vector of this matrix.
+   *
+   * @return Diagonal vector of this matrix
+   */
+  public Matrix diag() {
+    Matrix res = MatrixFactory.zeros(Math.min(numRows(), numColumns()), 1);
+    data.loopAll((row, col) -> {
+      if (row == col) {
+	res.set((int) row, 1, get((int) row, (int) col));
+      }
+    });
+    return res;
   }
 
   @Override
