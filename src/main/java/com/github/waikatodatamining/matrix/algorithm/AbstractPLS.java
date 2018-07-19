@@ -28,7 +28,7 @@ import com.github.waikatodatamining.matrix.core.Matrix;
  * @author FracPete (fracpete at waikato dot ac dot nz)
  */
 public abstract class AbstractPLS
-  extends AbstractAlgorithm {
+  extends AbstractAlgorithm implements Filter {
 
   private static final long serialVersionUID = -1160378471265135477L;
 
@@ -37,18 +37,6 @@ public abstract class AbstractPLS
 
   /** the maximum number of components to generate */
   protected int m_NumComponents;
-
-  /** whether the algorithm has been initialized. */
-  protected boolean m_Initialized;
-
-  /**
-   * Resets the scheme.
-   */
-  @Override
-  protected void reset() {
-    super.reset();
-    m_Initialized = false;
-  }
 
   /**
    * Initializes the members.
@@ -98,14 +86,6 @@ public abstract class AbstractPLS
     return m_NumComponents;
   }
 
-  /**
-   * Returns whether the algorithm has been trained.
-   *
-   * @return		true if trained
-   */
-  public boolean isInitialized() {
-    return m_Initialized;
-  }
 
   /**
    * Returns the all the available matrices.
