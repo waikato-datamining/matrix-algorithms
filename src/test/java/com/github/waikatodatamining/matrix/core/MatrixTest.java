@@ -9,7 +9,10 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Test to assure the same
+ * Test to guarantee the same results for the transition between JAMA and ojAlgo
+ * as Matrix base library.
+ *
+ * @author Steven Lang
  */
 public class MatrixTest {
 
@@ -27,8 +30,8 @@ public class MatrixTest {
   public void init() {
     //    double[][] dataA = {{1, 2}, {3, 4}, {5, 6}};
     //    double[][] dataB = {{10, 11}, {12, 13}, {14, 15}};
-    double[][] dataA = MatrixHelper.randn(10, 20, 1).toRawCopy2D();
-    double[][] dataB = MatrixHelper.randn(10, 20, 2).toRawCopy2D();
+    double[][] dataA = MatrixFactory.randn(10, 20, 1).toRawCopy2D();
+    double[][] dataB = MatrixFactory.randn(10, 20, 2).toRawCopy2D();
 
 
     a = MatrixFactory.fromRaw(dataA);
@@ -46,7 +49,7 @@ public class MatrixTest {
 
   @Test
   public void getSubMatrix() {
-    assertMatrixEquals(ja.getMatrix(0, 0, 1, 1), a.getSubMatrix(0, 0, 1, 1));
+    assertMatrixEquals(ja.getMatrix(0, 0, 1, 1), a.getSubMatrix(0, 1, 1, 2));
   }
 
   @Test
@@ -341,7 +344,7 @@ public class MatrixTest {
   }
 
   @Test
-  public void testEigenvectors(){
+  public void testEigenvectors() {
     Matrix rangeMat = MatrixHelper.range(5, 5, 10);
     Jama.Matrix rangeMatJama = new Jama.Matrix(rangeMat.toRawCopy2D());
 
@@ -374,7 +377,7 @@ public class MatrixTest {
   /**
    * returns the given column as a vector (actually a n x 1 matrix)
    *
-   * @param m the matrix to work on
+   * @param m           the matrix to work on
    * @param columnIndex the column to return
    * @return the column as n x 1 matrix
    */
