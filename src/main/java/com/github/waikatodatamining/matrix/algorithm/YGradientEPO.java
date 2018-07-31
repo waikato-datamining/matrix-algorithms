@@ -59,7 +59,8 @@ public class YGradientEPO extends YGradientGLSW {
    */
   @Override
   protected Matrix getEigenvectorMatrix(Matrix C) {
-    Matrix V = super.getEigenvectorMatrix(C);
+    boolean sortDominance = true;
+    Matrix V = C.getEigenvectors(sortDominance);
     V.getSubMatrix(0, V.numRows(), 0,  Math.min(V.numColumns(), m_N));
     return V;
   }
