@@ -6,16 +6,12 @@ import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsExcep
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixInversionException;
 import org.ojalgo.RecoverableCondition;
 import org.ojalgo.access.Access1D;
-import org.ojalgo.access.RowView;
 import org.ojalgo.array.Array1D;
-import org.ojalgo.function.BinaryFunction;
-import org.ojalgo.function.NullaryFunction;
 import org.ojalgo.function.PrimitiveFunction;
 import org.ojalgo.function.UnaryFunction;
 import org.ojalgo.function.aggregator.Aggregator;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
 import org.ojalgo.matrix.decomposition.SingularValue;
-import org.ojalgo.matrix.store.ElementsSupplier;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
@@ -90,10 +86,10 @@ public class Matrix {
   /**
    * Get the submatrix, given by the row and column intervals.
    *
-   * @param rowStart    Row interval start
-   * @param rowEndExclusive      Row interval end exclusive
-   * @param columnStart Column interval start
-   * @param columnEndExclusive   Column interval end exclusive
+   * @param rowStart           Row interval start
+   * @param rowEndExclusive    Row interval end exclusive
+   * @param columnStart        Column interval start
+   * @param columnEndExclusive Column interval end exclusive
    * @return Submatrix of the current matrix
    */
   public Matrix getSubMatrix(int rowStart, int rowEndExclusive, int columnStart, int columnEndExclusive) {
@@ -118,42 +114,69 @@ public class Matrix {
   }
 
   /**
-   * Get the eigenvectors of this matrix.
+   * Get the eigenvectors of this matrix, sorted according to their descending eigenvalues.
+   *
+   * @param sortDominance If true, the columns are sorted according to the vectors dominances
+   * @return Eigenvectors of this matrix
+   */
+  public Matrix getEigenvectors(boolean sortDominance) {
+    makeEigenvalueDecomposition();
+    MatrixStore<Double> eigVunsorted = eigenvalueDecomposition.getV();
+
+    if (sortDominance) {
+      double[] eigVals = eigenvalueDecomposition.getEigenvalues().toRawCopy1D();
+      int[] sortedColumnIndices = IntStream
+	.range(0, eigVals.length)
+	.boxed()
+	.sorted(Comparator.comparingDouble(o -> -1 * eigVals[o])) // Multiply by -1 for descending order
+	.mapToInt(i -> i)
+	.toArray();
+      int[] allRows = IntStream.range(0, (int) eigVunsorted.countRows()).toArray();
+      Matrix eigVsorted = MatrixFactory.create(eigVunsorted).getSubMatrix(allRows, sortedColumnIndices);
+      return eigVsorted;
+    }
+    else {
+      return MatrixFactory.create(eigVunsorted);
+    }
+  }
+
+  /**
+   * Get the eigenvectors of this matrix, sorted according to their ascending eigenvalues.
    *
    * @return Eigenvectors of this matrix
    */
-  public Matrix getEigenvectors() {
-    if (eigenvalueDecomposition == null) {
-      eigenvalueDecomposition = Eigenvalue.PRIMITIVE.make(data);
-      eigenvalueDecomposition.decompose(data);
-    }
+  public Matrix getEigenvectorsSortedAscending() {
+    makeEigenvalueDecomposition();
     MatrixStore<Double> eigVunsorted = eigenvalueDecomposition.getV();
+
     double[] eigVals = eigenvalueDecomposition.getEigenvalues().toRawCopy1D();
     int[] sortedColumnIndices = IntStream
       .range(0, eigVals.length)
       .boxed()
-      .sorted(Comparator.comparingDouble(o -> eigVals[o]))
+      .sorted(Comparator.comparingDouble(o -> eigVals[o])) // Multiply by -1 for descending order
       .mapToInt(i -> i)
       .toArray();
-
     int[] allRows = IntStream.range(0, (int) eigVunsorted.countRows()).toArray();
     Matrix eigVsorted = MatrixFactory.create(eigVunsorted).getSubMatrix(allRows, sortedColumnIndices);
     return eigVsorted;
   }
 
+  /**
+   * Get the eigenvectors of this matrix.
+   *
+   * @return Eigenvectors of this matrix
+   */
+  public Matrix getEigenvectors() {
+    return getEigenvectors(false);
+  }
+
   public Matrix getEigenvalueDecompositionV() {
-    if (eigenvalueDecomposition == null) {
-      eigenvalueDecomposition = Eigenvalue.PRIMITIVE.make(data);
-      eigenvalueDecomposition.decompose(data);
-    }
+    makeEigenvalueDecomposition();
     return MatrixFactory.create(eigenvalueDecomposition.getV());
   }
 
   public Matrix getEigenvalueDecompositionD() {
-    if (eigenvalueDecomposition == null) {
-      eigenvalueDecomposition = Eigenvalue.PRIMITIVE.make(data);
-      eigenvalueDecomposition.decompose(data);
-    }
+    makeEigenvalueDecomposition();
     return MatrixFactory.create(eigenvalueDecomposition.getD());
   }
 
@@ -163,13 +186,43 @@ public class Matrix {
    * @return Eigenvalues of this matrix
    */
   public Matrix getEigenvalues() {
+    makeEigenvalueDecomposition();
+    Array1D<ComplexNumber> eigenvalues = eigenvalueDecomposition.getEigenvalues();
+    return MatrixFactory.fromColumn(eigenvalues.toRawCopy1D());
+  }
+
+  /**
+   * Get the descending sorted eigenvalues of this matrix.
+   *
+   * @return Eigenvalues of this matrix
+   */
+  public Matrix getEigenvaluesSortedDescending() {
+    makeEigenvalueDecomposition();
+    Array1D<ComplexNumber> eigenvalues = eigenvalueDecomposition.getEigenvalues();
+    eigenvalues.sortDescending();
+    return MatrixFactory.fromColumn(eigenvalues.toRawCopy1D());
+  }
+
+  /**
+   * Get the descending sorted eigenvalues of this matrix.
+   *
+   * @return Eigenvalues of this matrix
+   */
+  public Matrix getEigenvaluesSortedAscending() {
+    makeEigenvalueDecomposition();
+    Array1D<ComplexNumber> eigenvalues = eigenvalueDecomposition.getEigenvalues();
+    eigenvalues.sortAscending();
+    return MatrixFactory.fromColumn(eigenvalues.toRawCopy1D());
+  }
+
+  /**
+   * Initialize the eigenvalue decomposition.
+   */
+  protected void makeEigenvalueDecomposition() {
     if (eigenvalueDecomposition == null) {
       eigenvalueDecomposition = Eigenvalue.PRIMITIVE.make(data);
       eigenvalueDecomposition.decompose(data);
     }
-    Array1D<ComplexNumber> eigenvalues = eigenvalueDecomposition.getEigenvalues();
-    eigenvalues.sortAscending();
-    return MatrixFactory.fromColumn(eigenvalues.toRawCopy1D());
   }
 
   /**
@@ -195,13 +248,31 @@ public class Matrix {
   }
 
   /**
+   * Get the V matrix of the SVD decomposition of this matrix.
+   *
+   * @return SVD-V matrix
+   */
+  public Matrix svdS() {
+    // TODO: convert to ojAlgo SVD
+    double[][] data = this.data.toRawCopy2D();
+    return create(new Jama.Matrix(data).svd().getS().getArray());
+  }
+
+  /**
    * Compute the sum over a certain axis.
    *
    * @param axis Indicating axis index
    * @return Sum over axis
    */
   public Matrix sum(int axis) {
-    if (axis == 0) {
+    if (axis == -1) { // Sum over all
+      return create(
+	data
+	  .reduceRows(Aggregator.SUM).get()
+	  .reduceColumns(Aggregator.SUM).get()
+      );
+    }
+    else if (axis == 0) { // Sum over rows
       Matrix result = MatrixFactory.zeros(1, numColumns());
 
       for (int i = 0; i < numColumns(); i++) {
@@ -210,7 +281,7 @@ public class Matrix {
 
       return result;
     }
-    else if (axis == 1) {
+    else if (axis == 1) { // Sum over columns
       Matrix result = MatrixFactory.zeros(numRows(), 1);
       for (int i = 0; i < numRows(); i++) {
 	result.set(i, 0, data.aggregateRow(i, Aggregator.SUM));
@@ -1073,6 +1144,30 @@ public class Matrix {
       }
     });
     return res;
+  }
+
+  /**
+   * Get the mean over a certain Axis
+   *
+   * @return
+   */
+  public Matrix mean(int axis) {
+    if (axis == -1) {
+      return create(data
+	.reduceColumns(Aggregator.SUM).get()
+	.reduceRows(Aggregator.SUM).get()).div(numRows() * numColumns());
+    }
+    else if (axis == 0) {
+      return create(data
+	.reduceColumns(Aggregator.AVERAGE).get());
+    }
+    else if (axis == 1) {
+      return create(data
+	.reduceRows(Aggregator.AVERAGE).get());
+    }
+    else {
+      throw new InvalidAxisException(axis);
+    }
   }
 
   @Override

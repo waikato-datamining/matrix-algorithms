@@ -29,7 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.IntStream;
 
 /**
@@ -161,7 +160,6 @@ public class MatrixHelper {
     Matrix result;
 
     eigenvalues = m.getEigenvalues().toRawCopy1D();
-    m.getEigenvectors();
     index = Utils.maxIndex(eigenvalues);
     result = m.getEigenvectors().getColumn(index);
 

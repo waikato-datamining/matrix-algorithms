@@ -63,14 +63,18 @@ public class MatrixTest {
   public void getEigenvectors() {
     Matrix aa = a.mul(a.transpose());
     Jama.Matrix aaj = ja.times(ja.transpose());
-    assertMatrixEquals(aaj.eig().getV(), aa.getEigenvectors());
+    Matrix eigVectors = aa.getEigenvectorsSortedAscending();
+    Jama.Matrix jamaEigVectors = aaj.eig().getV();
+    assertMatrixEquals(jamaEigVectors, eigVectors);
   }
 
   @Test
   public void getEigenvalues() {
     Matrix aa = a.mul(a.transpose());
     Jama.Matrix aaj = ja.times(ja.transpose());
-    assertEquals(MatrixFactory.fromColumn(aaj.eig().getRealEigenvalues()), aa.getEigenvalues());
+    Matrix jamaEigVals = MatrixFactory.fromColumn(aaj.eig().getRealEigenvalues());
+    Matrix eigVals = aa.getEigenvaluesSortedAscending();
+    assertEquals(jamaEigVals, eigVals);
   }
 
   @Test
