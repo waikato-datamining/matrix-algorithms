@@ -103,10 +103,35 @@ public class GLSW extends AbstractAlgorithm implements Filter {
   public String doInitialize(Matrix x1, Matrix x2) {
     super.initialize();
 
-    if (x1.numRows() != x2.numRows() || x1.numColumns() != x2.numColumns()) {
-      return "Matrices x1 and x2 must have the same shape";
-    }
 
+    Matrix C = getCovarianceMatrix(x1, x2);
+
+    // SVD
+    Matrix V = getEigenvectorMatrix(C);
+    Matrix D = getWeightMatrix(C);
+
+    // Projection Matrix
+    m_G = V.mul(D.inverse()).mul(V.t());
+
+    return null;
+  }
+
+  protected Matrix getEigenvectorMatrix(Matrix C) {
+    return C.getEigenvalueDecompositionV();
+  }
+
+  protected Matrix getWeightMatrix(Matrix C) {
+    // Get eigenvalues
+    Matrix Ssquared = C.getEigenvalueDecompositionD();
+
+    // Weights
+    Matrix D = Ssquared.div(m_Alpha);
+    D = D.add(MatrixFactory.eyeLike(D));
+    D = D.sqrt();
+    return D;
+  }
+
+  protected Matrix getCovarianceMatrix(Matrix x1, Matrix x2) {
     // Center X1, X2
     Center c1 = new Center();
     Center c2 = new Center();
@@ -117,22 +142,9 @@ public class GLSW extends AbstractAlgorithm implements Filter {
     Matrix Xd = x2Centered.sub(x1Centered);
 
     // Covariance Matrix
-    Matrix C = Xd.t().mul(Xd);
-
-    // SVD
-    Matrix V = C.getEigenvalueDecompositionV();
-    Matrix S = C.getEigenvalueDecompositionD();
-
-    // Weights
-    Matrix D = S.div(m_Alpha);
-    D = D.add(MatrixFactory.eyeLike(D));
-    D = D.sqrt();
-
-    // Projection Matrix
-    m_G = V.mul(D.inverse()).mul(V.t());
-
-    return null;
+    return Xd.t().mul(Xd);
   }
+
 
   protected Matrix doTransform(Matrix predictors) {
     return predictors.mul(m_G);
@@ -158,6 +170,9 @@ public class GLSW extends AbstractAlgorithm implements Filter {
       return "No x1 matrix provided!";
     if (x2 == null)
       return "No x2 matrix provided!";
+    if (x1.numRows() != x2.numRows() || x1.numColumns() != x2.numColumns()) {
+      return "Matrices x1 and x2 must have the same shape";
+    }
     return null;
   }
 }
