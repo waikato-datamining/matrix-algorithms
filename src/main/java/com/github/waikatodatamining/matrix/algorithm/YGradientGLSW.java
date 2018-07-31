@@ -24,7 +24,7 @@ import static com.github.waikatodatamining.matrix.core.MatrixHelper.inv;
 public class YGradientGLSW extends GLSW {
 
 
-  /** Five Point Savitzky Golay Filter coefficients */
+  /** Five Point Savitzky Golay Filter coefficients (first derivative)*/
   protected static final double[] m_Coef = {2.0 / 10.0, 1.0 / 10.0, 0.0, -1.0 / 10.0, -2.0 / 10.0};
 
   private static final long serialVersionUID = 4080767826836437539L;
@@ -77,24 +77,22 @@ public class YGradientGLSW extends GLSW {
   @Override
   protected Matrix getCovarianceMatrix(Matrix X, Matrix y) {
     double[] yVals = y.toRawCopy1D();
-    int[] sortedRowIndices = IntStream
+    int[] sortedIncreasingRowIndices = IntStream
       .range(0, yVals.length)
       .boxed()
       .sorted(Comparator.comparingDouble(o -> yVals[o]))
       .mapToInt(i -> i)
       .toArray();
 
-    // Increasing/Decreasing??????
+    // Sort increasing
     int[] allCols = IntStream.range(0, X.numColumns()).toArray();
-    Matrix Xsorted = X.getSubMatrix(sortedRowIndices, allCols);
-    Matrix ysorted = y.getSubMatrix(sortedRowIndices, new int[]{0});
+    Matrix Xsorted = X.getSubMatrix(sortedIncreasingRowIndices, allCols);
+    Matrix ysorted = y.getSubMatrix(sortedIncreasingRowIndices, new int[]{0});
 
 
-    // Apply 5-Point Savitzky–Golay filter
+    // Apply 5-Point first derivative Savitzky–Golay filter
     Matrix Xsmoothed = applyFivePointSavitzkyGolayFilter(Xsorted);
     Matrix ysmoothed = applyFivePointSavitzkyGolayFilter(ysorted);
-    System.out.println("ysorted = " + ysorted);
-    System.out.println("ysmoothed = \n" + ysmoothed);
 
     double ysmoothedMean = ysmoothed.mean(-1).asDouble();
     double syd = ysmoothed.sub(ysmoothedMean).powElementwise(2).sum(-1).div(ysmoothed.numRows() - 1).asDouble();
