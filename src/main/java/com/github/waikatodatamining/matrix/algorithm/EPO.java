@@ -34,6 +34,12 @@ public class EPO extends GLSW {
     }
   }
 
+  @Override
+  protected void initialize() {
+    super.initialize();
+    m_N = 5;
+  }
+
   /**
    * Instead of calculating D from C, create an identity matrix.
    *
@@ -42,7 +48,7 @@ public class EPO extends GLSW {
    */
   @Override
   protected Matrix getWeightMatrix(Matrix C) {
-    return MatrixFactory.eyeLike(C.svdS());
+    return MatrixFactory.eye(m_N);
   }
 
   /**
@@ -55,7 +61,7 @@ public class EPO extends GLSW {
   protected Matrix getEigenvectorMatrix(Matrix C) {
     boolean sortDominance = true;
     Matrix V = C.getEigenvectors(sortDominance);
-    V.getSubMatrix(0, V.numRows(), 0, Math.min(V.numColumns(), m_N));
+    V = V.getSubMatrix(0, V.numRows(), 0, Math.min(V.numColumns(), m_N));
     return V;
   }
 }
