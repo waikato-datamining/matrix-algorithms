@@ -11,6 +11,10 @@ import com.github.waikatodatamining.matrix.core.MatrixFactory;
  * <p>
  * See also: <a href="http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29">External Parameter Orthogonalization (EPO)</a>
  *
+ * Parameters
+ * - N: Number of dominant eigenvectors to keep
+ * - alpha: Defines how strongly GLSW downweights interferences
+ *
  * @author Steven Lang
  */
 public class EPO extends GLSW {

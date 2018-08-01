@@ -10,6 +10,9 @@ import com.github.waikatodatamining.matrix.transformation.Center;
  * <p>
  * Parameter alpha controls the downweights interferences.
  *
+ * Parameters:
+ * - alpha: Defines how strongly GLSW downweights interferences
+ *
  * @author Steven Lang
  */
 public class GLSW extends AbstractAlgorithm implements Filter {

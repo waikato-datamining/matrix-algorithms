@@ -2,13 +2,10 @@ package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixFactory;
-import com.github.waikatodatamining.matrix.core.MatrixHelper;
-import com.github.waikatodatamining.matrix.transformation.Center;
 
 import java.util.Comparator;
 import java.util.stream.IntStream;
 
-import static com.github.waikatodatamining.matrix.core.MatrixHelper.inv;
 
 /**
  * Y-Gradient Generalized Least Squares Weighting.
@@ -18,6 +15,9 @@ import static com.github.waikatodatamining.matrix.core.MatrixHelper.inv;
  * <p>
  * This implementation is similar to {@link GLSW} but is based on the Y block
  * instead of a second set of X samples.
+ *
+ * Parameters:
+ * - alpha: Defines how strongly GLSW downweights interferences
  *
  * @author Steven Lang
  */
@@ -29,13 +29,9 @@ public class YGradientGLSW extends GLSW {
 
   private static final long serialVersionUID = 4080767826836437539L;
 
-  /** Savitzky Golay Filter constant h */
-  protected double m_H;
-
   @Override
   protected void initialize() {
     super.initialize();
-    m_H = 0.1;
   }
 
   private Matrix applyFivePointSavitzkyGolayFilter(Matrix matrix) {
