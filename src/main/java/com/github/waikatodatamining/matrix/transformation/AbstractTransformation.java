@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.transformation;
 
+import com.github.waikatodatamining.matrix.algorithm.Filter;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.LoggingObject;
 
@@ -29,7 +30,7 @@ import com.github.waikatodatamining.matrix.core.LoggingObject;
  * @author FracPete (fracpete at waikato dot ac dot nz)
  */
 public abstract class AbstractTransformation
-  extends LoggingObject {
+  extends LoggingObject implements Filter {
 
   private static final long serialVersionUID = 4728192847051793396L;
 

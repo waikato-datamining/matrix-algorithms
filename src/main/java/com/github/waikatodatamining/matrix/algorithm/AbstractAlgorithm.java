@@ -32,6 +32,28 @@ public abstract class AbstractAlgorithm
 
   private static final long serialVersionUID = 5147733768191663989L;
 
+  /** whether the algorithm has been initialized. */
+  protected boolean m_Initialized;
+
+  /**
+   * Returns whether the algorithm has been trained.
+   *
+   * @return		true if trained
+   */
+  public boolean isInitialized() {
+    return m_Initialized;
+  }
+
+
+  /**
+   * Resets the scheme.
+   */
+  @Override
+  protected void reset() {
+    super.reset();
+    m_Initialized = false;
+  }
+
   /**
    * For outputting some information about the algorithm.
    *
