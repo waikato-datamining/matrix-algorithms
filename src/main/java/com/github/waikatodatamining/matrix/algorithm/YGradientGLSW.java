@@ -2,6 +2,7 @@ package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixFactory;
+import com.github.waikatodatamining.matrix.transformation.SavitzkyGolayFilter;
 
 import java.util.Comparator;
 import java.util.stream.IntStream;
@@ -15,7 +16,7 @@ import java.util.stream.IntStream;
  * <p>
  * This implementation is similar to {@link GLSW} but is based on the Y block
  * instead of a second set of X samples.
- *
+ * <p>
  * Parameters:
  * - alpha: Defines how strongly GLSW downweights interferences
  *
@@ -23,51 +24,11 @@ import java.util.stream.IntStream;
  */
 public class YGradientGLSW extends GLSW {
 
-
-  /** Five Point Savitzky Golay Filter coefficients (first derivative)*/
-  protected static final double[] m_Coef = {2.0 / 10.0, 1.0 / 10.0, 0.0, -1.0 / 10.0, -2.0 / 10.0};
-
   private static final long serialVersionUID = 4080767826836437539L;
 
   @Override
   protected void initialize() {
     super.initialize();
-  }
-
-  private Matrix applyFivePointSavitzkyGolayFilter(Matrix matrix) {
-    // Extend the matrix by two rows at the begging and two rows at the end
-    Matrix firstRow = matrix.getRow(0);
-    Matrix lastRow = matrix.getRow(matrix.numRows() - 1);
-    Matrix matExtended = firstRow
-      .concatAlongRows(firstRow)
-      .concatAlongRows(matrix)
-      .concatAlongRows(lastRow)
-      .concatAlongRows(lastRow);
-
-    Matrix result = MatrixFactory.zerosLike(matExtended);
-
-    for (int i = 2; i < matExtended.numRows() - 2; i++) {
-      Matrix rowSmoothed = smoothSavitzkyGolay(i, matExtended);
-      result.setRow(i, rowSmoothed);
-    }
-
-    Matrix origSizedMatrix = result.getSubMatrix(2, result.numRows() - 2, 0, matrix.numColumns());
-    return origSizedMatrix;
-  }
-
-  protected Matrix smoothSavitzkyGolay(int i, Matrix matrix) {
-    Matrix res = MatrixFactory.zeros(1, matrix.numColumns());
-
-    int windowSize = m_Coef.length;
-    for (int m = 0; m < windowSize; m++) {
-      int coefIdx = (windowSize - 1) - m;
-      int rowIdx = i - (m - 2);
-      Matrix row = matrix.getRow(rowIdx);
-      Matrix rowScaled = row.mul(m_Coef[coefIdx]);
-      res.addi(rowScaled);
-    }
-
-    return res;
   }
 
   @Override
@@ -85,10 +46,11 @@ public class YGradientGLSW extends GLSW {
     Matrix Xsorted = X.getSubMatrix(sortedIncreasingRowIndices, allCols);
     Matrix ysorted = y.getSubMatrix(sortedIncreasingRowIndices, new int[]{0});
 
+    SavitzkyGolayFilter savGolay = new SavitzkyGolayFilter();
 
     // Apply 5-Point first derivative Savitzky–Golay filter
-    Matrix Xsmoothed = applyFivePointSavitzkyGolayFilter(Xsorted);
-    Matrix ysmoothed = applyFivePointSavitzkyGolayFilter(ysorted);
+    Matrix Xsmoothed = savGolay.transform(Xsorted);
+    Matrix ysmoothed = savGolay.transform(ysorted);
 
     double ysmoothedMean = ysmoothed.mean(-1).asDouble();
     double syd = ysmoothed.sub(ysmoothedMean).powElementwise(2).sum(-1).div(ysmoothed.numRows() - 1).asDouble();
@@ -117,6 +79,8 @@ public class YGradientGLSW extends GLSW {
       return "No x1 matrix provided!";
     if (x2 == null)
       return "No x2 matrix provided!";
+    if (x1.numRows() != x2.numRows())
+      return "Predictors and response must have the same number of rows!";
     return null;
   }
 }
