@@ -16,6 +16,8 @@ Supervised:
 * [OSC](https://www.r-bloggers.com/evaluation-of-orthogonal-signal-correction-for-pls-modeling-osc-pls-and-opls/)
 * [NIPALS](http://www.statsoft.com/textbook/partial-least-squares/#NIPALS)
 * [SparsePLS](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2810828/)
+* [GLSW](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#GLSW_Algorithm) (orthogonal signal correction)
+* [EPO](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29) (External Parameter Orthogonalization)
 
 Planned:
 
@@ -24,8 +26,6 @@ Planned:
 * [PLS2](https://web.archive.org/web/20160702070233/http://statmaster.sdu.dk/courses/ST02/module08/module.pdf)
 * [mwPLS]()
 * [biPLS](https://www.academia.edu/14468430/Sequential_application_of_backward_interval_partial_least_squares_and_genetic_algorithms_for_the_selection_of_relevant_spectral_regions)
-* [GLSW](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#GLSW_Algorithm) (orthogonal signal correction)
-* [EPO](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29) (External Parameter Orthogonalization)
 * ...
   
 ## Maven
