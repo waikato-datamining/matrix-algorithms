@@ -486,14 +486,14 @@ public class Matrix {
    * @param vector Scale input vector
    * @return Scaled matrix
    */
-  public Matrix scaleByVector(Matrix vector) {
+  public Matrix scaleByRowVector(Matrix vector) {
     if (!vector.isVector()) {
       throw new InvalidShapeException("Parameter vector was not a vector. " +
 	"Actual shape: " + vector.shapeString());
     }
 
     if (numColumns() != vector.numRows()) {
-      throw new InvalidShapeException("Second dimension of the matrix and sie of" +
+      throw new InvalidShapeException("Second dimension of the matrix and size of" +
 	"vector has to match. Matrix shape: " + shapeString() + ", vector " +
 	"shape: " + vector.shapeString());
     }
@@ -505,6 +505,37 @@ public class Matrix {
       double scalar = vector.get(j, 0);
       Matrix scaledCol = col.mul(scalar);
       result.setColumn(j, scaledCol);
+    }
+
+    return result;
+  }
+
+  /**
+   * Scale the i-th row of this matrix by the i-th element of the input
+   * vector.
+   *
+   * @param vector Scale input vector
+   * @return Scaled matrix
+   */
+  public Matrix scaleByColumnVector(Matrix vector) {
+    if (!vector.isVector()) {
+      throw new InvalidShapeException("Parameter vector was not a vector. " +
+	"Actual shape: " + vector.shapeString());
+    }
+
+    if (numRows() != vector.numRows()) {
+      throw new InvalidShapeException("First dimension of the matrix and size of" +
+	"vector has to match. Matrix shape: " + shapeString() + ", vector " +
+	"shape: " + vector.shapeString());
+    }
+
+    Matrix result = MatrixFactory.zerosLike(this);
+
+    for (int i = 0; i < numRows(); i++) {
+      Matrix row = getRow(i);
+      double scalar = vector.get(i, 0);
+      Matrix scaledRow = row.mul(scalar);
+      result.setRow(i, scaledRow);
     }
 
     return result;
@@ -1169,6 +1200,43 @@ public class Matrix {
       throw new InvalidAxisException(axis);
     }
   }
+
+  /**
+   * Reduce the rows of this matrix to their norm 1 value.
+   *
+   * @return Vector of norm 1 values of each row
+   */
+  public Matrix reduceRowsL1() {
+    return create(data.reduceRows(Aggregator.NORM1).get());
+  }
+
+  /**
+   * Reduce the columns of this matrix to their norm 1 value.
+   *
+   * @return Vector of norm 1 values of each column
+   */
+  public Matrix reduceColumnsL1() {
+    return create(data.reduceColumns(Aggregator.NORM1).get());
+  }
+
+  /**
+   * Reduce the rows of this matrix to their norm 2 value.
+   *
+   * @return Vector of norm 2 values of each row
+   */
+  public Matrix reduceRowsL2() {
+    return create(data.reduceRows(Aggregator.NORM2).get());
+  }
+
+  /**
+   * Reduce the columns of this matrix to their norm 2 value.
+   *
+   * @return Vector of norm 2 values of each column
+   */
+  public Matrix reduceColumnsL2() {
+    return create(data.reduceColumns(Aggregator.NORM2).get());
+  }
+
 
   @Override
   public String toString() {

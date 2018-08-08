@@ -441,7 +441,7 @@ public class SparsePLS
 
     Matrix yMeans = MatrixFactory.fromColumn(m_StandardizeY.getMeans());
     Matrix yStd = MatrixFactory.fromColumn(m_StandardizeY.getStdDevs());
-    Matrix yhat = X_A.mul(B_A).scaleByVector(yStd).addByVector(yMeans);
+    Matrix yhat = X_A.mul(B_A).scaleByRowVector(yStd).addByVector(yMeans);
 
     return yhat;
   }

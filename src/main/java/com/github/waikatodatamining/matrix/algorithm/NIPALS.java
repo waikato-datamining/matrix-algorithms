@@ -215,7 +215,7 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
     // Calculate regression coefficients
     Matrix yStds = MatrixFactory.fromColumn(m_StandardizeY.getStdDevs());
-    m_Coef = m_XRotations.mul(m_YLoadings.t()).scaleByVector(yStds);
+    m_Coef = m_XRotations.mul(m_YLoadings.t()).scaleByRowVector(yStds);
     return null;
   }
 
