@@ -64,7 +64,7 @@ System.out.println(MatrixHelper.toString(transformed));
 ### SIMPLS
 ```java
 import Jama.Matrix;
-import com.github.waikatodatamining.matrix.algorithm.SIMPLS;
+import com.github.waikatodatamining.matrix.algorithm.pls.SIMPLS;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 ...
 Matrix predictors = MatrixHelper.read("bolts.csv", true, ',');
