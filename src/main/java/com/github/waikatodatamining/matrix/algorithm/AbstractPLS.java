@@ -28,7 +28,7 @@ import com.github.waikatodatamining.matrix.core.Matrix;
  * @author FracPete (fracpete at waikato dot ac dot nz)
  */
 public abstract class AbstractPLS
-  extends AbstractAlgorithm implements Filter {
+  extends AbstractAlgorithm implements Filter, Estimator {
 
   private static final long serialVersionUID = -1160378471265135477L;
 
