@@ -70,10 +70,21 @@ public class PRM extends AbstractSingleResponsePLS {
     return m_NumSimplsCoefficients;
   }
 
+  /**
+   * Get maximum number of iterations.
+   *
+   * @return Maximum number of iterations
+   */
   public int getMaxIter() {
     return m_MaxIter;
   }
 
+
+  /**
+   * Set maximum number of iterations.
+   *
+   * @param maxIter Maximum number of iterations
+   */
   public void setMaxIter(int maxIter) {
     if (maxIter < 0) {
       m_Logger.warning("Maximum iterations parameter must be positive " +
@@ -85,10 +96,20 @@ public class PRM extends AbstractSingleResponsePLS {
     }
   }
 
+  /**
+   * Get iteration change threshold.
+   *
+   * @return Iteration change threshold
+   */
   public double getTol() {
     return m_Tol;
   }
 
+  /**
+   * Set iteration change threshold.
+   *
+   * @param tol Iteration change threshold
+   */
   public void setTol(double tol) {
     if (tol < 0) {
       m_Logger.warning("Tolerance parameter must be positive but " +
@@ -100,10 +121,20 @@ public class PRM extends AbstractSingleResponsePLS {
     }
   }
 
+  /**
+   * Get C tuning paramter.
+   *
+   * @return C tuning paramter
+   */
   public double getC() {
     return m_C;
   }
 
+  /**
+   * Set C tuning parameter.
+   *
+   * @param c C tuning parameter
+   */
   public void setC(double c) {
     if (Math.abs(c) < 1e-10) {
       m_Logger.warning("Parameter c must not be zero!");
@@ -282,8 +313,25 @@ public class PRM extends AbstractSingleResponsePLS {
    * @throws Exception if analysis fails
    */
   protected String doPerformInitialization(Matrix predictors, Matrix response) throws Exception {
+    Matrix X = predictors;
+    Matrix y = response;
+    Matrix U = null;
+
+    // If X: n x p and p > n, use SVD to replace X with n x n matrix
+    // See also: Remark 2 in paper
+    boolean hasMoreColumnsThanRows = X.numColumns() > X.numRows();
+    if (hasMoreColumnsThanRows){
+      Matrix Xt = X.t();
+      U = Xt.svdU();
+      Matrix V = Xt.svdV();
+      Matrix S = Xt.svdS();
+
+      // Replace X with n x n matrix
+      X = V.mul(S);
+    }
+
     // 1) Compute robust starting values for residual and leverage weights
-    initWeights(predictors, response);
+    initWeights(X, y);
 
     Matrix gammaOld;
     int numComponents = getNumComponents();
@@ -293,8 +341,8 @@ public class PRM extends AbstractSingleResponsePLS {
     // Loop until convergence of gamma
     do {
       // 2) Perform PLS (SIMPLS) on reweighted data matrices
-      Matrix Xp = getReweightedMatrix(predictors);
-      Matrix yp = getReweightedMatrix(response);
+      Matrix Xp = getReweightedMatrix(X);
+      Matrix yp = getReweightedMatrix(y);
 
       m_Simpls = new SIMPLS();
       m_Simpls.setNumCoefficients(m_NumSimplsCoefficients);
@@ -324,6 +372,12 @@ public class PRM extends AbstractSingleResponsePLS {
 
     // Get the final regression coefficients from the latest SIMPLS run
     m_FinalRegressionCoefficients = m_Simpls.getMatrix("B");
+
+    // If X has been replaced by US, the regression coefficients need to be
+    // back-transformed into beta_hat = U*beta_p
+    if (hasMoreColumnsThanRows){
+      m_FinalRegressionCoefficients = U.mul(m_FinalRegressionCoefficients);
+    }
     return null;
   }
 
