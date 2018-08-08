@@ -47,6 +47,9 @@ public class SIMPLS
   /** the B matrix (used for prediction) */
   protected Matrix m_B;
 
+  /** Q matrix to regress T (XW) on y */
+  protected Matrix m_Q;
+
   /**
    * Initializes the members.
    */
@@ -95,7 +98,8 @@ public class SIMPLS
   public String[] getMatrixNames() {
     return new String[]{
       "W",
-      "B"
+      "B",
+      "Q"
     };
   }
 
@@ -112,6 +116,8 @@ public class SIMPLS
 	return m_W;
       case "B":
 	return m_B;
+      case "Q":
+        return m_Q;
       default:
 	return null;
     }
@@ -229,6 +235,7 @@ public class SIMPLS
       slim(W);
     m_W = W;
     m_B = W.mul(Q.transpose());
+    m_Q = Q;
 
     return null;
   }
