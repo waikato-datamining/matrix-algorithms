@@ -10,6 +10,12 @@ import com.github.waikatodatamining.matrix.transformation.Standardize;
  * Implementation oriented at scikit-learn's NIPALS implementation:
  * <a href="https://github.com/scikit-learn/scikit-learn/blob/ed5e127b/sklearn/cross_decomposition/pls_.py#L455">Github scikit-learn NIPALS</a>
  *
+ * Parameters:
+ * - tol: Iterative convergence tolerance
+ * - maxIter: Maximum number of iterations
+ * - normYWeights: Flat to normalize Y weights
+ * - deflationMode: Mode for Y matrix deflation. Can be either CANONICAL or
+ * REGRESSION
  * @author Steven Lang
  */
 public class NIPALS extends AbstractMultiResponsePLS {
@@ -234,6 +240,8 @@ public class NIPALS extends AbstractMultiResponsePLS {
     Matrix xWeightOld = MatrixFactory.zeros(X.numColumns(), 1);
     Matrix yWeight;
     Matrix xScore;
+    Matrix XpInv = null;
+    Matrix YpInv = null;
 
     double eps = 1e-16;
 
@@ -241,7 +249,15 @@ public class NIPALS extends AbstractMultiResponsePLS {
     // number of iterations has been reached (m_MaxIter)
     while (true) {
       // 1) Update X weights
-      xWeight = X.t().mul(yScore).div(yScore.norm2squared());
+      if (getWeightCalculationMode() == WeightCalculationMode.CCA){
+        if (XpInv == null){
+          // sklearn uses pinv here which ojAlgo implicitly does
+          XpInv = X.inverse();
+        }
+        xWeight = XpInv.mul(yScore);
+      } else { // PLS
+        xWeight = X.t().mul(yScore).div(yScore.norm2squared());
+      }
 
       // Add eps if necessary to converge to a more acceptable solution
       if (xWeight.norm2squared() < eps) {
@@ -256,7 +272,16 @@ public class NIPALS extends AbstractMultiResponsePLS {
       xScore = X.mul(xWeight);
 
       // 3) Update Y weights
-      yWeight = Y.t().mul(xScore).div(xScore.norm2squared());
+      if (getWeightCalculationMode() == WeightCalculationMode.CCA){
+        if (YpInv == null){
+          // sklearn uses pinv here which ojAlgo implicitly does
+          YpInv = Y.inverse();
+        }
+        yWeight = YpInv.mul(xScore);
+      } else { // PLS
+        // WeightCalculationMode A: Regress each Y column on xscore
+        yWeight = Y.t().mul(xScore).div(xScore.norm2squared());
+      }
 
       // Normalize Y weights
       if (m_NormYWeights) {
@@ -385,11 +410,23 @@ public class NIPALS extends AbstractMultiResponsePLS {
     }
   }
 
+  protected WeightCalculationMode getWeightCalculationMode(){
+    return WeightCalculationMode.PLS; // Mode A in sklearn
+  }
+
   /**
    * Deflation mode Enum.
    */
   public enum DeflationMode {
     CANONICAL,
     REGRESSION
+  }
+
+  /**
+   * Mode for x/y-weight calculation
+   */
+  protected enum WeightCalculationMode {
+    PLS,
+    CCA
   }
 }

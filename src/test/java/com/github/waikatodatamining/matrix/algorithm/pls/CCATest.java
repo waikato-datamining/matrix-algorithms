@@ -20,25 +20,24 @@
 
 package com.github.waikatodatamining.matrix.algorithm.pls;
 
-import com.github.waikatodatamining.matrix.algorithm.pls.NIPALS.DeflationMode;
 import com.github.waikatodatamining.matrix.core.PreprocessingType;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Tests the NIPALS algorithm.
+ * Tests the CCA algorithm.
  *
  * @author Steven Lang
  */
-public class NIPALSTest
-  extends AbstractPLSTest<NIPALS> {
+public class CCATest
+  extends AbstractPLSTest<CCA> {
 
   /**
    * Constructs the test case. Called by subclasses.
    *
    * @param name the name of the test
    */
-  public NIPALSTest(String name) {
+  public CCATest(String name) {
     super(name);
   }
 
@@ -51,7 +50,6 @@ public class NIPALSTest
   @Override
   protected String[] getRegressionInputFiles() {
     return new String[]{
-      "bolts.csv",
       "bolts.csv",
       "bolts.csv",
       "bolts.csv",
@@ -72,7 +70,6 @@ public class NIPALSTest
       "bolts_response.csv",
       "bolts_response.csv",
       "bolts_response.csv",
-      "bolts_response.csv",
     };
   }
 
@@ -82,31 +79,25 @@ public class NIPALSTest
    * @return		the setups
    */
   @Override
-  protected NIPALS[] getRegressionSetups() {
-    NIPALS[]	result;
+  protected CCA[] getRegressionSetups() {
+    CCA[]	result;
 
-    result    = new NIPALS[5];
-    result[0] = new NIPALS();
+    result    = new CCA[4];
+    result[0] = new CCA();
     result[0].setNumComponents(3);
 
-    result[1] = new NIPALS();
+    result[1] = new CCA();
     result[1].setNumComponents(3);
     result[1].setPreprocessingType(PreprocessingType.CENTER);
 
-    result[2] = new NIPALS();
+    result[2] = new CCA();
     result[2].setNumComponents(3);
     result[2].setPreprocessingType(PreprocessingType.STANDARDIZE);
 
-    result[3] = new NIPALS();
+    result[3] = new CCA();
     result[3].setNumComponents(3);
     result[3].setTol(1e-5);
     result[3].setPreprocessingType(PreprocessingType.STANDARDIZE);
-
-    result[4] = new NIPALS();
-    result[4].setNumComponents(3);
-    result[4].setTol(1e-5);
-    result[4].setPreprocessingType(PreprocessingType.STANDARDIZE);
-    result[4].setDeflationMode(DeflationMode.CANONICAL);
 
     return result;
   }
@@ -117,7 +108,7 @@ public class NIPALSTest
    * @return		the suite
    */
   public static Test suite() {
-    return new TestSuite(NIPALSTest.class);
+    return new TestSuite(CCATest.class);
   }
 
   /**

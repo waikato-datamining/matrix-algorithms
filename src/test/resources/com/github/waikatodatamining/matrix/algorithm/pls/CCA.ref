@@ -1,0 +1,384 @@
+--> bolts-out0-transformed.csv
+col1	col2	col3
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+
+--> bolts-out0-predictions.csv
+col1
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+
+--> bolts-out0-loadings.csv
+col1	col2	col3
+0.173438	0.000000	0.000000
+0.894861	0.000000	0.000000
+0.246583	0.000000	0.000000
+-0.032220	0.000000	0.000000
+-0.129574	0.000000	0.000000
+-0.709911	0.000000	0.000000
+1.093548	0.000000	0.000000
+
+--> bolts-out1-transformed.csv
+col1	col2	col3
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+
+--> bolts-out1-predictions.csv
+col1
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+
+--> bolts-out1-loadings.csv
+col1	col2	col3
+0.173438	0.000000	0.000000
+0.894861	0.000000	0.000000
+0.246583	0.000000	0.000000
+-0.032220	0.000000	0.000000
+-0.129574	0.000000	0.000000
+-0.709911	0.000000	0.000000
+1.093548	0.000000	0.000000
+
+--> bolts-out2-transformed.csv
+col1	col2	col3
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+
+--> bolts-out2-predictions.csv
+col1
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+
+--> bolts-out2-loadings.csv
+col1	col2	col3
+0.173438	0.000000	0.000000
+0.894861	0.000000	0.000000
+0.246583	0.000000	0.000000
+-0.032220	0.000000	0.000000
+-0.129574	0.000000	0.000000
+-0.709911	0.000000	0.000000
+1.093548	0.000000	0.000000
+
+--> bolts-out3-transformed.csv
+col1	col2	col3
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+NaN	NaN	NaN
+
+--> bolts-out3-predictions.csv
+col1
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+
+--> bolts-out3-loadings.csv
+col1	col2	col3
+0.173438	0.000000	0.000000
+0.894861	0.000000	0.000000
+0.246583	0.000000	0.000000
+-0.032220	0.000000	0.000000
+-0.129574	0.000000	0.000000
+-0.709911	0.000000	0.000000
+1.093548	0.000000	0.000000
+
