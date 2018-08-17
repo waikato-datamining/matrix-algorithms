@@ -11,6 +11,7 @@ import org.ojalgo.function.PrimitiveFunction;
 import org.ojalgo.function.UnaryFunction;
 import org.ojalgo.function.aggregator.Aggregator;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
+import org.ojalgo.matrix.decomposition.QR;
 import org.ojalgo.matrix.decomposition.SingularValue;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
@@ -49,6 +50,11 @@ public class Matrix {
    * SingularValue decomposition. Get reset after {@link #data} has changed.
    */
   protected SingularValue<Double> singularvalueDecomposition;
+
+  /**
+   * QR decomposition decomposition. Get reset after {@link #data} has changed.
+   */
+  protected QR<Double> qrDecomposition;
 
   /**
    * Constructor for creating a new matrix wrapper from another matrix store.
@@ -226,6 +232,16 @@ public class Matrix {
   }
 
   /**
+   * Initialize the QR decomposition.
+   */
+  protected void makeQRDecomposition() {
+    if (qrDecomposition == null) {
+      qrDecomposition = QR.PRIMITIVE.make(data);
+      qrDecomposition.decompose(data);
+    }
+  }
+
+  /**
    * Get the U matrix of the SVD decomposition of this matrix.
    *
    * @return SVD-U matrix
@@ -397,6 +413,8 @@ public class Matrix {
 
   /**
    * Get the normalized matrix based on a specific normalization axis.
+   * Axis 0: Normalize column vectors
+   * Axis 1: Normalize row vectors
    *
    * @param axis Normalization axis
    * @return Normalized matrix
@@ -999,6 +1017,7 @@ public class Matrix {
   protected void resetCache() {
     this.eigenvalueDecomposition = null;
     this.singularvalueDecomposition = null;
+    this.qrDecomposition = null;
   }
 
   /**
@@ -1237,6 +1256,39 @@ public class Matrix {
     return create(data.reduceColumns(Aggregator.NORM2).get());
   }
 
+  /**
+   * Get the Q Matrix in the QR decomposition.
+   *
+   * @return Q matrix
+   */
+  public Matrix qrQ() {
+    makeQRDecomposition();
+    return create(qrDecomposition.getQ());
+  }
+
+  /**
+   * Get the R Matrix in the QR decomposition.
+   *
+   * @return R matrix
+   */
+  public Matrix qrR() {
+    makeQRDecomposition();
+    return create(qrDecomposition.getR());
+  }
+
+  /**
+   * Check if this matrix contains any NaN values.
+   *
+   * @return True if matrix contains NaNs else false
+   */
+  public boolean containsNaN() {
+    for (double d : data) {
+      if (Double.isNaN(d)) {
+	return true;
+      }
+    }
+    return false;
+  }
 
   @Override
   public String toString() {
