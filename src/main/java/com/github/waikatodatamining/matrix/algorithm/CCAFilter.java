@@ -7,7 +7,16 @@ import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.transformation.Center;
 
 /**
+ * Canonical Correlation Analysis Filter.
+ * <p>
  * http://www.cs.columbia.edu/~stratos/research/pca_cca.pdf
+ * <p>
+ * Parameters:
+ * - lambdaX: Ridge regularization parameter for X
+ * - lambdaY: Ridge regularization parameter for Y
+ * - kcca: Projection output dimension
+ *
+ * @author Steven Lang
  */
 public class CCAFilter extends AbstractAlgorithm implements Filter, ResponseFilter {
 
@@ -22,9 +31,6 @@ public class CCAFilter extends AbstractAlgorithm implements Filter, ResponseFilt
 
   /** Target dimension */
   protected int m_kcca;
-
-  /** Maximum number of iterations */
-  protected int m_maxIter;
 
   /** Center X */
   protected Center m_centerX;
@@ -58,30 +64,6 @@ public class CCAFilter extends AbstractAlgorithm implements Filter, ResponseFilt
     }
     else {
       m_kcca = kcca;
-      reset();
-    }
-  }
-
-  /**
-   * Get maximum number of iterations.
-   *
-   * @return Maximum number of iterations
-   */
-  public int getMaxIter() {
-    return m_maxIter;
-  }
-
-  /**
-   * Set maximum number of iterations. Must be > 0.
-   *
-   * @param maxIter Maximum number of iterations
-   */
-  public void setMaxIter(int maxIter) {
-    if (maxIter < 1) {
-      m_Logger.warning("Maximum number of iterations must be > 0 but was " + maxIter + ".");
-    }
-    else {
-      m_maxIter = maxIter;
       reset();
     }
   }
@@ -236,6 +218,13 @@ public class CCAFilter extends AbstractAlgorithm implements Filter, ResponseFilt
   }
 
 
+  /**
+   * Compute A^(-1/2) = (A^(-1))^(1/2) on a matrix A, where A^(1/2) = M with
+   * A = MM.
+   *
+   * @param A Input matrix
+   * @return A^(-1/2)
+   */
   protected Matrix powMinusHalf(Matrix A) {
     Matrix eigValsDesc = A.getEigenvaluesSortedDescending();
     Matrix eigVecsDesc = A.getEigenvectors(true);
@@ -265,8 +254,8 @@ public class CCAFilter extends AbstractAlgorithm implements Filter, ResponseFilt
    * Transforms the predictors data.
    *
    * @param predictors the input data
-   * @throws Exception if analysis fails
    * @return the transformed data
+   * @throws Exception if analysis fails
    */
   protected Matrix doTransform(Matrix predictors) throws Exception {
     predictors = m_centerX.transform(predictors);
@@ -277,8 +266,8 @@ public class CCAFilter extends AbstractAlgorithm implements Filter, ResponseFilt
    * Transforms the response data.
    *
    * @param response the input data
-   * @throws Exception if analysis fails
    * @return the transformed data
+   * @throws Exception if analysis fails
    */
   protected Matrix doTransformResponse(Matrix response) throws Exception {
     response = m_centerY.transform(response);
