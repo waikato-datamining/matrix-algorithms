@@ -7,6 +7,7 @@ import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
 
 import java.util.Random;
+import java.util.stream.IntStream;
 
 /**
  * Factory for matrix objects.
@@ -269,5 +270,43 @@ public class MatrixFactory {
    */
   public static Matrix randLike(Matrix other, long seed){
     return rand(other.numRows(), other.numColumns(), seed);
+  }
+
+  /**
+   * Produce diagonal matrix with given values.
+   * @param vector Diagonal values
+   * @return Diagonal matrix
+   */
+  public static Matrix diag(Matrix vector){
+    int n = vector.numRows();
+    Matrix res = zeros(n, n);
+    for (int i = 0; i < n; i++) {
+      res.set(i, i, vector.get(i, 0));
+    }
+
+    return res;
+  }
+
+
+  /**
+   * Create a range matrix.
+   *
+   * @param rows Number of rows
+   * @param columns Number of columns
+   * @param start Start value
+   * @return Range matrix of given size
+   */
+  public static Matrix range(int rows, int columns, int start){
+    double[] doubles = IntStream.range(start, rows*columns + start).mapToDouble(value -> value).toArray();
+
+    double[][] data = new double[rows][columns];
+    int idx = 0;
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < columns; j++) {
+        data[i][j] = doubles[idx++];
+      }
+    }
+
+    return fromRaw(data);
   }
 }
