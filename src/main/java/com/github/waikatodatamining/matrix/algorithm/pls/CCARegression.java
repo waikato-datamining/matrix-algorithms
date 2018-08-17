@@ -5,6 +5,9 @@ package com.github.waikatodatamining.matrix.algorithm.pls;
  *
  * <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.16">A Survey of Partial Least Squares (PLS) Methods, with Emphasis on the Two-Block Case (2000)</a>
  *
+ * Implementation according to sklearns CCA decomposition:
+ * <a href="http://scikit-learn.org/stable/modules/generated/sklearn.cross_decomposition.CCA.html">sklearn.cross_decomposition.CCA</a>
+ *
  * Parameters: See also {@link NIPALS}.
  * - tol: Iterative convergence tolerance
  * - maxIter: Maximum number of iterations
@@ -12,7 +15,7 @@ package com.github.waikatodatamining.matrix.algorithm.pls;
  *
  * @author Steven Lang
  */
-public class CCA extends NIPALS {
+public class CCARegression extends NIPALS {
 
   private static final long serialVersionUID = -5265196640192613371L;
 
@@ -29,7 +32,7 @@ public class CCA extends NIPALS {
   @Override
   public void setDeflationMode(DeflationMode deflationMode) {
     if (deflationMode != DeflationMode.CANONICAL){
-      m_Logger.warning("CCA only allows CANONICAL deflation mode.");
+      m_Logger.warning("CCARegression only allows CANONICAL deflation mode.");
     }
   }
 }

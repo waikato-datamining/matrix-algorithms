@@ -25,19 +25,19 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
- * Tests the CCA algorithm.
+ * Tests the CCARegression algorithm.
  *
  * @author Steven Lang
  */
-public class CCATest
-  extends AbstractPLSTest<CCA> {
+public class CCARegressionTest
+  extends AbstractPLSTest<CCARegression> {
 
   /**
    * Constructs the test case. Called by subclasses.
    *
    * @param name the name of the test
    */
-  public CCATest(String name) {
+  public CCARegressionTest(String name) {
     super(name);
   }
 
@@ -79,22 +79,22 @@ public class CCATest
    * @return		the setups
    */
   @Override
-  protected CCA[] getRegressionSetups() {
-    CCA[]	result;
+  protected CCARegression[] getRegressionSetups() {
+    CCARegression[]	result;
 
-    result    = new CCA[4];
-    result[0] = new CCA();
+    result    = new CCARegression[4];
+    result[0] = new CCARegression();
     result[0].setNumComponents(3);
 
-    result[1] = new CCA();
+    result[1] = new CCARegression();
     result[1].setNumComponents(3);
     result[1].setPreprocessingType(PreprocessingType.CENTER);
 
-    result[2] = new CCA();
+    result[2] = new CCARegression();
     result[2].setNumComponents(3);
     result[2].setPreprocessingType(PreprocessingType.STANDARDIZE);
 
-    result[3] = new CCA();
+    result[3] = new CCARegression();
     result[3].setNumComponents(3);
     result[3].setTol(1e-5);
     result[3].setPreprocessingType(PreprocessingType.STANDARDIZE);
@@ -108,7 +108,7 @@ public class CCATest
    * @return		the suite
    */
   public static Test suite() {
-    return new TestSuite(CCATest.class);
+    return new TestSuite(CCARegressionTest.class);
   }
 
   /**
