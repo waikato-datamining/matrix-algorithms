@@ -18,6 +18,7 @@ Supervised:
 * [SparsePLS](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2810828/)
 * [GLSW](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#GLSW_Algorithm) (orthogonal signal correction)
 * [EPO](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29) (External Parameter Orthogonalization)
+* [CCA](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.16)
 
 Planned:
 
