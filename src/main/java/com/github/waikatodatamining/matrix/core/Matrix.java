@@ -11,6 +11,7 @@ import org.ojalgo.function.PrimitiveFunction;
 import org.ojalgo.function.UnaryFunction;
 import org.ojalgo.function.aggregator.Aggregator;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
+import org.ojalgo.matrix.decomposition.QR;
 import org.ojalgo.matrix.decomposition.SingularValue;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
@@ -49,6 +50,11 @@ public class Matrix {
    * SingularValue decomposition. Get reset after {@link #data} has changed.
    */
   protected SingularValue<Double> singularvalueDecomposition;
+
+  /**
+   * QR decomposition decomposition. Get reset after {@link #data} has changed.
+   */
+  protected QR<Double> qrDecomposition;
 
   /**
    * Constructor for creating a new matrix wrapper from another matrix store.
@@ -111,6 +117,27 @@ public class Matrix {
     }
 
     return getSubMatrix(rows, columns);
+  }
+
+  /**
+   * Get the submatrix, given by the row intervals.
+   *
+   * @param rowStart           Row interval start
+   * @param rowEndExclusive    Row interval end exclusive
+   * @return Submatrix of the current matrix
+   */
+  public Matrix getRows(int rowStart, int rowEndExclusive){
+    return getSubMatrix(rowStart, rowEndExclusive, 0, numColumns());
+  }
+  /**
+   * Get the submatrix, given by the column intervals.
+   *
+   * @param columnStart           Column interval start
+   * @param columnEndExclusive    Column interval end exclusive
+   * @return Submatrix of the current matrix
+   */
+  public Matrix getColumns(int columnStart, int columnEndExclusive){
+    return getSubMatrix(0, numRows(), columnStart, columnEndExclusive);
   }
 
   /**
@@ -226,6 +253,16 @@ public class Matrix {
   }
 
   /**
+   * Initialize the QR decomposition.
+   */
+  protected void makeQRDecomposition() {
+    if (qrDecomposition == null) {
+      qrDecomposition = QR.PRIMITIVE.make(data);
+      qrDecomposition.decompose(data);
+    }
+  }
+
+  /**
    * Get the U matrix of the SVD decomposition of this matrix.
    *
    * @return SVD-U matrix
@@ -332,7 +369,7 @@ public class Matrix {
     // Check for matching shapes
     if (numColumns() != other.numRows()) {
       throw new InvalidShapeException("Invalid matrix multiplication. Shapes " +
-	"do not match.");
+	this.shapeString() + " and " + other.shapeString() + " do not match.");
     }
     return create(data.multiply(other.data));
   }
@@ -397,6 +434,8 @@ public class Matrix {
 
   /**
    * Get the normalized matrix based on a specific normalization axis.
+   * Axis 0: Normalize column vectors
+   * Axis 1: Normalize row vectors
    *
    * @param axis Normalization axis
    * @return Normalized matrix
@@ -486,14 +525,14 @@ public class Matrix {
    * @param vector Scale input vector
    * @return Scaled matrix
    */
-  public Matrix scaleByVector(Matrix vector) {
+  public Matrix scaleByRowVector(Matrix vector) {
     if (!vector.isVector()) {
       throw new InvalidShapeException("Parameter vector was not a vector. " +
 	"Actual shape: " + vector.shapeString());
     }
 
     if (numColumns() != vector.numRows()) {
-      throw new InvalidShapeException("Second dimension of the matrix and sie of" +
+      throw new InvalidShapeException("Second dimension of the matrix and size of" +
 	"vector has to match. Matrix shape: " + shapeString() + ", vector " +
 	"shape: " + vector.shapeString());
     }
@@ -505,6 +544,37 @@ public class Matrix {
       double scalar = vector.get(j, 0);
       Matrix scaledCol = col.mul(scalar);
       result.setColumn(j, scaledCol);
+    }
+
+    return result;
+  }
+
+  /**
+   * Scale the i-th row of this matrix by the i-th element of the input
+   * vector.
+   *
+   * @param vector Scale input vector
+   * @return Scaled matrix
+   */
+  public Matrix scaleByColumnVector(Matrix vector) {
+    if (!vector.isVector()) {
+      throw new InvalidShapeException("Parameter vector was not a vector. " +
+	"Actual shape: " + vector.shapeString());
+    }
+
+    if (numRows() != vector.numRows()) {
+      throw new InvalidShapeException("First dimension of the matrix and size of" +
+	"vector has to match. Matrix shape: " + shapeString() + ", vector " +
+	"shape: " + vector.shapeString());
+    }
+
+    Matrix result = MatrixFactory.zerosLike(this);
+
+    for (int i = 0; i < numRows(); i++) {
+      Matrix row = getRow(i);
+      double scalar = vector.get(i, 0);
+      Matrix scaledRow = row.mul(scalar);
+      result.setRow(i, scaledRow);
     }
 
     return result;
@@ -968,6 +1038,7 @@ public class Matrix {
   protected void resetCache() {
     this.eigenvalueDecomposition = null;
     this.singularvalueDecomposition = null;
+    this.qrDecomposition = null;
   }
 
   /**
@@ -1168,6 +1239,76 @@ public class Matrix {
     else {
       throw new InvalidAxisException(axis);
     }
+  }
+
+  /**
+   * Reduce the rows of this matrix to their norm 1 value.
+   *
+   * @return Vector of norm 1 values of each row
+   */
+  public Matrix reduceRowsL1() {
+    return create(data.reduceRows(Aggregator.NORM1).get());
+  }
+
+  /**
+   * Reduce the columns of this matrix to their norm 1 value.
+   *
+   * @return Vector of norm 1 values of each column
+   */
+  public Matrix reduceColumnsL1() {
+    return create(data.reduceColumns(Aggregator.NORM1).get());
+  }
+
+  /**
+   * Reduce the rows of this matrix to their norm 2 value.
+   *
+   * @return Vector of norm 2 values of each row
+   */
+  public Matrix reduceRowsL2() {
+    return create(data.reduceRows(Aggregator.NORM2).get());
+  }
+
+  /**
+   * Reduce the columns of this matrix to their norm 2 value.
+   *
+   * @return Vector of norm 2 values of each column
+   */
+  public Matrix reduceColumnsL2() {
+    return create(data.reduceColumns(Aggregator.NORM2).get());
+  }
+
+  /**
+   * Get the Q Matrix in the QR decomposition.
+   *
+   * @return Q matrix
+   */
+  public Matrix qrQ() {
+    makeQRDecomposition();
+    return create(qrDecomposition.getQ());
+  }
+
+  /**
+   * Get the R Matrix in the QR decomposition.
+   *
+   * @return R matrix
+   */
+  public Matrix qrR() {
+    makeQRDecomposition();
+    return create(qrDecomposition.getR());
+  }
+
+  /**
+   * Check if this matrix contains any NaN values.
+   *
+   * @return True if matrix contains NaNs else false
+   */
+  public boolean containsNaN() {
+    for (double d : data) {
+      if (Double.isNaN(d)) {
+	return true;
+      }
+    }
+    return false;
   }
 
   @Override

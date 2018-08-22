@@ -21,6 +21,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import Jama.EigenvalueDecomposition;
+import com.github.waikatodatamining.matrix.algorithm.api.Filter;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.Utils;
@@ -41,7 +42,7 @@ import java.util.List;
  * @author FracPete (fracpete at waikato dot ac dot nz)
  */
 public class PCA
-  extends AbstractAlgorithm {
+  extends AbstractAlgorithm implements Filter {
 
   private static final long serialVersionUID = 7150143741822676345L;
 

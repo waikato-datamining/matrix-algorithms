@@ -396,20 +396,11 @@ public class MatrixHelper {
    * @param columns Number of columns
    * @param start Start value
    * @return Range matrix of given size
+   * @deprecated Moved to {@link MatrixFactory}
    */
+  @Deprecated
   public static Matrix range(int rows, int columns, int start){
-    double[] doubles = IntStream.range(start, rows*columns + start).mapToDouble(value -> value).toArray();
-
-    double[][] data = new double[rows][columns];
-
-    for (int i = 0; i < rows; i++) {
-      for (int j = 0; j < columns; j++) {
-        int idx = i + j * columns;
-        data[i][j] = doubles[idx];
-      }
-    }
-
-    return MatrixFactory.fromRaw(data);
+    return MatrixFactory.range(rows, columns, start);
   }
 
   /**
