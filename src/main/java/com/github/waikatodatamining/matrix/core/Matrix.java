@@ -120,6 +120,27 @@ public class Matrix {
   }
 
   /**
+   * Get the submatrix, given by the row intervals.
+   *
+   * @param rowStart           Row interval start
+   * @param rowEndExclusive    Row interval end exclusive
+   * @return Submatrix of the current matrix
+   */
+  public Matrix getRows(int rowStart, int rowEndExclusive){
+    return getSubMatrix(rowStart, rowEndExclusive, 0, numColumns());
+  }
+  /**
+   * Get the submatrix, given by the column intervals.
+   *
+   * @param columnStart           Column interval start
+   * @param columnEndExclusive    Column interval end exclusive
+   * @return Submatrix of the current matrix
+   */
+  public Matrix getColumns(int columnStart, int columnEndExclusive){
+    return getSubMatrix(0, numRows(), columnStart, columnEndExclusive);
+  }
+
+  /**
    * Get the eigenvectors of this matrix, sorted according to their descending eigenvalues.
    *
    * @param sortDominance If true, the columns are sorted according to the vectors dominances
@@ -348,7 +369,7 @@ public class Matrix {
     // Check for matching shapes
     if (numColumns() != other.numRows()) {
       throw new InvalidShapeException("Invalid matrix multiplication. Shapes " +
-	"do not match.");
+	this.shapeString() + " and " + other.shapeString() + " do not match.");
     }
     return create(data.multiply(other.data));
   }
