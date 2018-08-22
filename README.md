@@ -6,19 +6,22 @@ Java library of 2-dimensional matrix algorithms.
 
 Unsupervised:
 
-* [PCA](https://web.archive.org/web/20160630035830/http://statmaster.sdu.dk:80/courses/ST02/module05/module.pdf)
+* [Principal Component Analysis (PCA)](https://web.archive.org/web/20160630035830/http://statmaster.sdu.dk:80/courses/ST02/module05/module.pdf)
+* [Generalized Least Squares Weighting (GLSW)](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#GLSW_Algorithm)
+* [External Parameter Orthogonalization (EPO)](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29) 
 
 Supervised:
 
-* [PLS1](https://web.archive.org/web/20081001154431/http://statmaster.sdu.dk:80/courses/ST02/module07/module.pdf)
-* [SIMPLS](http://www.statsoft.com/textbook/partial-least-squares/#SIMPLS)
-* [KernelPLS](http://www.plantbreeding.wzw.tum.de/fileadmin/w00bdb/www/kraemer/icml_kernelpls.pdf)
-* [OSC](https://www.r-bloggers.com/evaluation-of-orthogonal-signal-correction-for-pls-modeling-osc-pls-and-opls/)
-* [NIPALS](http://www.statsoft.com/textbook/partial-least-squares/#NIPALS)
-* [SparsePLS](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2810828/)
-* [GLSW](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#GLSW_Algorithm) (orthogonal signal correction)
-* [EPO](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29) (External Parameter Orthogonalization)
-* [CCA](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.16)
+* [Partial Least Squares (PLS1)](https://web.archive.org/web/20081001154431/http://statmaster.sdu.dk:80/courses/ST02/module07/module.pdf)
+* [Simple PLS (SIMPLS)](http://www.statsoft.com/textbook/partial-least-squares/#SIMPLS)
+* [Kernel PLS (KernelPLS)](http://www.plantbreeding.wzw.tum.de/fileadmin/w00bdb/www/kraemer/icml_kernelpls.pdf)
+* [Orthogonal Signal Correction (OPLS)](https://www.r-bloggers.com/evaluation-of-orthogonal-signal-correction-for-pls-modeling-osc-pls-and-opls/)
+* [Nonlinear Iterative PLS (NIPALS)](http://www.statsoft.com/textbook/partial-least-squares/#NIPALS)
+* [Sprase PLS (SparsePLS)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2810828/)
+* [Y Gradient based Generalized Least Squares Weighting (YGradientGLSW)](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#GLSW_Algorithm)
+* [Y Gradient based External Parameter Orthogonalization (YGradientEPO)](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29)
+* [Canonical Correlation Analysis (CCA)](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.16)
+* [Domain Invariant PLS (DIPLS)](https://pubs.acs.org/doi/10.1021/acs.analchem.8b00498)
 
 Planned:
 
@@ -37,7 +40,7 @@ Add the following dependency to your `pom.xml`:
     <dependency>
       <groupId>nz.ac.waikato.cms.adams</groupId>
       <artifactId>matrix-algorithms</artifactId>
-      <version>0.0.2</version>
+      <version>0.0.9</version>
     </dependency>
 ```
 ## Examples
