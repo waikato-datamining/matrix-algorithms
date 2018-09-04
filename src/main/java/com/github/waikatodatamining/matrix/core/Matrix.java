@@ -122,22 +122,21 @@ public class Matrix {
   /**
    * Get the submatrix, given by the row intervals.
    *
-   * @param rowStart        Row interval start
-   * @param rowEndExclusive Row interval end exclusive
+   * @param rowStart           Row interval start
+   * @param rowEndExclusive    Row interval end exclusive
    * @return Submatrix of the current matrix
    */
-  public Matrix getRows(int rowStart, int rowEndExclusive) {
+  public Matrix getRows(int rowStart, int rowEndExclusive){
     return getSubMatrix(rowStart, rowEndExclusive, 0, numColumns());
   }
-
   /**
    * Get the submatrix, given by the column intervals.
    *
-   * @param columnStart        Column interval start
-   * @param columnEndExclusive Column interval end exclusive
+   * @param columnStart           Column interval start
+   * @param columnEndExclusive    Column interval end exclusive
    * @return Submatrix of the current matrix
    */
-  public Matrix getColumns(int columnStart, int columnEndExclusive) {
+  public Matrix getColumns(int columnStart, int columnEndExclusive){
     return getSubMatrix(0, numRows(), columnStart, columnEndExclusive);
   }
 
@@ -254,16 +253,6 @@ public class Matrix {
   }
 
   /**
-   * Initialize the singular value decomposition.
-   */
-  protected void makeSingularValueDecomposition() {
-    if (singularvalueDecomposition == null) {
-      singularvalueDecomposition = SingularValue.PRIMITIVE.make(data);
-      singularvalueDecomposition.decompose(data);
-    }
-  }
-
-  /**
    * Initialize the QR decomposition.
    */
   protected void makeQRDecomposition() {
@@ -279,8 +268,9 @@ public class Matrix {
    * @return SVD-U matrix
    */
   public Matrix svdU() {
-    makeSingularValueDecomposition();
-    return create(singularvalueDecomposition.getQ1());
+    // TODO: convert to ojAlgo SVD
+    double[][] data = this.data.toRawCopy2D();
+    return create(new Jama.Matrix(data).svd().getU().getArray());
   }
 
   /**
@@ -289,8 +279,9 @@ public class Matrix {
    * @return SVD-V matrix
    */
   public Matrix svdV() {
-    makeSingularValueDecomposition();
-    return create(singularvalueDecomposition.getQ2());
+    // TODO: convert to ojAlgo SVD
+    double[][] data = this.data.toRawCopy2D();
+    return create(new Jama.Matrix(data).svd().getV().getArray());
   }
 
   /**
@@ -299,18 +290,9 @@ public class Matrix {
    * @return SVD-V matrix
    */
   public Matrix svdS() {
-    makeSingularValueDecomposition();
-    return create(singularvalueDecomposition.getD());
-  }
-
-  /**
-   * Get the singular values of this matrix.
-   *
-   * @return SVD-V matrix
-   */
-  public Matrix getSingularValues() {
-    makeSingularValueDecomposition();
-    return create(new double[][]{singularvalueDecomposition.getSingularValues().toRawCopy1D()});
+    // TODO: convert to ojAlgo SVD
+    double[][] data = this.data.toRawCopy2D();
+    return create(new Jama.Matrix(data).svd().getS().getArray());
   }
 
   /**
@@ -566,7 +548,7 @@ public class Matrix {
 	"Actual shape: " + vector.shapeString());
     }
 
-    if (numColumns() != vector.numColumns()) {
+    if (numColumns() != vector.numRows()) {
       throw new InvalidShapeException("Second dimension of the matrix and size of" +
 	"vector has to match. Matrix shape: " + shapeString() + ", vector " +
 	"shape: " + vector.shapeString());
