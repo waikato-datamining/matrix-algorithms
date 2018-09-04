@@ -384,10 +384,27 @@ public class Matrix {
    * @return Matrix multiplication result
    */
   public Matrix mul(Matrix other) {
+    // Check if this is a vector
+    if (this.isVector()) {
+      if (this.isRowVector()) {
+	// Check for matching shapes
+	if (this.numColumns() != other.numRows()) {
+	  MatrixHelper.throwInvalidShapes(this, other);
+	}
+	return create(this.data.multiply(other.data));
+      }
+      else if (this.isColumnVector()) {
+	// Check for matching shapes
+	if (this.numRows() != other.numRows()) {
+	  MatrixHelper.throwInvalidShapes(this, other);
+	}
+	return create(this.data.transpose().multiply(other.data));
+      }
+    }
+
     // Check for matching shapes
-    if (numColumns() != other.numRows()) {
-      throw new InvalidShapeException("Invalid matrix multiplication. Shapes " +
-	this.shapeString() + " and " + other.shapeString() + " do not match.");
+    if (this.numColumns() != other.numRows()) {
+      MatrixHelper.throwInvalidShapes(this, other);
     }
     return create(data.multiply(other.data));
   }
@@ -1229,22 +1246,34 @@ public class Matrix {
     Matrix res = MatrixFactory.zeros(Math.min(numRows(), numColumns()), 1);
     data.loopAll((row, col) -> {
       if (row == col) {
-	res.set((int) row, 1, get((int) row, (int) col));
+	res.set((int) row, 0, get((int) row, (int) col));
       }
     });
     return res;
   }
 
   /**
-   * Get the mean over a certain Axis
+   * Get the mean over all datapoints.
+   * <p>
+   * Equivalent to Matrix.mean(-1)
    *
-   * @return
+   * @return Mean value of the matrix
+   */
+  public double mean() {
+    return create(data
+      .reduceColumns(Aggregator.SUM).get()
+      .reduceRows(Aggregator.SUM).get()).div(numRows() * numColumns()).asDouble();
+
+  }
+
+  /**
+   * Get the mean over a certain Axis.
+   *
+   * @return Mean over a certain axis
    */
   public Matrix mean(int axis) {
     if (axis == -1) {
-      return create(data
-	.reduceColumns(Aggregator.SUM).get()
-	.reduceRows(Aggregator.SUM).get()).div(numRows() * numColumns());
+      return MatrixFactory.filled(1, 1, mean());
     }
     else if (axis == 0) {
       return create(data
