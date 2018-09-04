@@ -548,7 +548,7 @@ public class Matrix {
 	"Actual shape: " + vector.shapeString());
     }
 
-    if (numColumns() != vector.numRows()) {
+    if (numColumns() != vector.numColumns()) {
       throw new InvalidShapeException("Second dimension of the matrix and size of" +
 	"vector has to match. Matrix shape: " + shapeString() + ", vector " +
 	"shape: " + vector.shapeString());
