@@ -330,7 +330,7 @@ public class SparsePLS
     Matrix Zp = X.t().mul(yj);
     //    Zp.divi(Zp.norm2()); // Reference paper uses l2 norm
     double znorm = Zp.abs().median(); // R package spls uses median norm
-    Zp.divi(znorm);
+    Zp = Zp.div(znorm);
     Matrix ZpSign = Zp.sign();
     Matrix valb = Zp.abs().sub(m_lambda * Zp.abs().max());
 
@@ -411,7 +411,7 @@ public class SparsePLS
       T.setColumn(k, tk);
 
       Matrix pk = X.t().mul(tk);
-      X.subi(tk.mul(pk.t()));
+      X = X.sub(tk.mul(pk.t()));
     }
 
     return T;

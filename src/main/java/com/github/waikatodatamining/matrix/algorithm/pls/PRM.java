@@ -283,7 +283,7 @@ public class PRM extends AbstractSingleResponsePLS {
 
     // Get estimate of residual scale
     double sigma = medianAbsoluteDeviation(residuals);
-    residuals.divi(sigma);
+    residuals = residuals.div(sigma);
 
     // Calculate weights
     for (int i = 0; i < n; i++) {
@@ -423,7 +423,7 @@ public class PRM extends AbstractSingleResponsePLS {
     while (iteration < m_MaxIter) {
       Matrix dists = cdist(X, guess);
 
-      dists = dists.modifyEach(value -> {
+      dists = dists.applyElementwise(value -> {
 	if (Math.abs(value) < 1e-10) {
 	  return 1.0 / 0.1; // Fix zero distances
 	}
