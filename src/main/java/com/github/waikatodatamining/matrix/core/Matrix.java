@@ -123,21 +123,22 @@ public class Matrix {
   /**
    * Get the submatrix, given by the row intervals.
    *
-   * @param rowStart           Row interval start
-   * @param rowEndExclusive    Row interval end exclusive
+   * @param rowStart        Row interval start
+   * @param rowEndExclusive Row interval end exclusive
    * @return Submatrix of the current matrix
    */
-  public Matrix getRows(int rowStart, int rowEndExclusive){
+  public Matrix getRows(int rowStart, int rowEndExclusive) {
     return getSubMatrix(rowStart, rowEndExclusive, 0, numColumns());
   }
+
   /**
    * Get the submatrix, given by the column intervals.
    *
-   * @param columnStart           Column interval start
-   * @param columnEndExclusive    Column interval end exclusive
+   * @param columnStart        Column interval start
+   * @param columnEndExclusive Column interval end exclusive
    * @return Submatrix of the current matrix
    */
-  public Matrix getColumns(int columnStart, int columnEndExclusive){
+  public Matrix getColumns(int columnStart, int columnEndExclusive) {
     return getSubMatrix(0, numRows(), columnStart, columnEndExclusive);
   }
 
@@ -353,6 +354,17 @@ public class Matrix {
   }
 
   /**
+   * Compute the sum of all matrix elements.
+   *
+   * @return Sum
+   */
+  public double sum() {
+    return create(data
+	.reduceRows(Aggregator.SUM).get()
+	.reduceColumns(Aggregator.SUM).get()).asDouble();
+  }
+
+  /**
    * Calculate the l1-norm of this matrix.
    *
    * @return L1 norm
@@ -387,22 +399,6 @@ public class Matrix {
    * @return Matrix multiplication result
    */
   public Matrix mul(Matrix other) {
-    // Check for a = bX where b is a column vector
-    if(this.isColumnVector() && !other.isVector()){
-      if(this.numRows() != other.numRows()){
-        MatrixHelper.throwInvalidShapes(this, other);
-      }
-      return create(this.data.transpose().multiply(other.data)).transpose();
-    }
-
-    // Check for a = bX where b is a row vector
-    if(this.isRowVector() && !other.isVector()){
-      if(this.numColumns() != other.numRows()){
-        MatrixHelper.throwInvalidShapes(this, other);
-      }
-      return create(this.data.multiply(other.data)).transpose();
-    }
-
     // Check for matching shapes
     if (this.numColumns() != other.numRows()) {
       MatrixHelper.throwInvalidShapes(this, other);
@@ -513,7 +509,6 @@ public class Matrix {
   }
 
 
-
   /**
    * Multiply each element of this matrix with a the element at the same index
    * in the other matrix.
@@ -523,7 +518,7 @@ public class Matrix {
    * index in the other matrix
    */
   public Matrix mulElementwise(Matrix other) {
-    if(!sameShapeAs(other)){
+    if (!sameShapeAs(other)) {
       MatrixHelper.throwInvalidShapes(this, other);
     }
     return create(data.operateOnMatching(PrimitiveFunction.MULTIPLY, other.data).get());
