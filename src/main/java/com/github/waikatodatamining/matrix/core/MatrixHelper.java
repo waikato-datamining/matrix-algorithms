@@ -20,6 +20,8 @@
 
 package com.github.waikatodatamining.matrix.core;
 
+import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
+import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsException;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import org.ojalgo.matrix.store.PhysicalStore;
@@ -414,5 +416,16 @@ public class MatrixHelper {
    */
   public static Matrix inv(Matrix x) {
     return x.inverse();
+  }
+
+  /**
+   * Throw invalid shape exception
+   * @param m1
+   * @param m2
+   * @throws InvalidShapeException
+   */
+  public static void throwInvalidShapes(Matrix m1, Matrix m2)throws InvalidShapeException {
+    throw new InvalidShapeException("Invalid matrix multiplication. Shapes " +
+      m1.shapeString() + " and " + m2.shapeString() + " do not match.");
   }
 }

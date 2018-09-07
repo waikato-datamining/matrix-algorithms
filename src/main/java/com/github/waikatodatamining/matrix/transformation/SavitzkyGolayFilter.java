@@ -88,7 +88,7 @@ public class SavitzkyGolayFilter extends AbstractTransformation {
       int rowIdx = i - (m - 2);
       Matrix row = matrix.getRow(rowIdx);
       Matrix rowScaled = row.mul(m_Coef[coefIdx]);
-      res.addi(rowScaled);
+      res = res.add(rowScaled);
     }
 
     return res;

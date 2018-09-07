@@ -184,17 +184,17 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
       // Deflate X
       xkLoading = X.t().mul(xkScore).div(xkScore.norm2squared());
-      X.subi(xkScore.mul(xkLoading.t()));
+      X = X.sub(xkScore.mul(xkLoading.t()));
 
       // Deflate Y
       switch (m_deflationMode) {
 	case CANONICAL:
 	  ykLoading = Y.t().mul(ykScore).div(ykScore.norm2squared());
-	  Y.subi(ykScore.mul(ykLoading.t()));
+	  Y = Y.sub(ykScore.mul(ykLoading.t()));
 	  break;
 	case REGRESSION:
 	  ykLoading = Y.t().mul(xkScore).div(xkScore.norm2squared());
-	  Y.subi(xkScore.mul(ykLoading.t()));
+	  Y = Y.sub(xkScore.mul(ykLoading.t()));
 	  break;
       }
 
@@ -261,11 +261,11 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
       // Add eps if necessary to converge to a more acceptable solution
       if (xWeight.norm2squared() < eps) {
-	xWeight.addi(eps);
+	xWeight = xWeight.add(eps);
       }
 
       // Normalize
-      xWeight.divi(Math.sqrt(xWeight.norm2squared()) + eps);
+      xWeight = xWeight.div(Math.sqrt(xWeight.norm2squared()) + eps);
 
 
       // 2) Calculate latent X scores
@@ -285,7 +285,7 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
       // Normalize Y weights
       if (m_NormYWeights) {
-	yWeight.divi(Math.sqrt(yWeight.norm2squared()) + eps);
+	yWeight = yWeight.div(Math.sqrt(yWeight.norm2squared()) + eps);
       }
 
       // 4) Calculate ykScores

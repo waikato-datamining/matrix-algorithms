@@ -1,5 +1,6 @@
 package com.github.waikatodatamining.matrix.core;
 
+import Jama.SingularValueDecomposition;
 import com.github.waikatodatamining.matrix.core.exceptions.InvalidAxisException;
 import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsException;
@@ -12,7 +13,6 @@ import org.ojalgo.function.UnaryFunction;
 import org.ojalgo.function.aggregator.Aggregator;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
 import org.ojalgo.matrix.decomposition.QR;
-import org.ojalgo.matrix.decomposition.SingularValue;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
@@ -29,6 +29,7 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static com.github.waikatodatamining.matrix.core.MatrixFactory.create;
+import static com.github.waikatodatamining.matrix.core.MatrixFactory.fromColumn;
 
 /**
  * Matrix abstraction to the ojAlgo's Matrix PrimitiveDenseStore implementation.
@@ -49,7 +50,7 @@ public class Matrix {
   /**
    * SingularValue decomposition. Get reset after {@link #data} has changed.
    */
-  protected SingularValue<Double> singularvalueDecomposition;
+  protected SingularValueDecomposition singularvalueDecomposition;
 
   /**
    * QR decomposition decomposition. Get reset after {@link #data} has changed.
@@ -122,21 +123,22 @@ public class Matrix {
   /**
    * Get the submatrix, given by the row intervals.
    *
-   * @param rowStart           Row interval start
-   * @param rowEndExclusive    Row interval end exclusive
+   * @param rowStart        Row interval start
+   * @param rowEndExclusive Row interval end exclusive
    * @return Submatrix of the current matrix
    */
-  public Matrix getRows(int rowStart, int rowEndExclusive){
+  public Matrix getRows(int rowStart, int rowEndExclusive) {
     return getSubMatrix(rowStart, rowEndExclusive, 0, numColumns());
   }
+
   /**
    * Get the submatrix, given by the column intervals.
    *
-   * @param columnStart           Column interval start
-   * @param columnEndExclusive    Column interval end exclusive
+   * @param columnStart        Column interval start
+   * @param columnEndExclusive Column interval end exclusive
    * @return Submatrix of the current matrix
    */
-  public Matrix getColumns(int columnStart, int columnEndExclusive){
+  public Matrix getColumns(int columnStart, int columnEndExclusive) {
     return getSubMatrix(0, numRows(), columnStart, columnEndExclusive);
   }
 
@@ -243,6 +245,15 @@ public class Matrix {
   }
 
   /**
+   * Initialize the singular value decomposition.
+   */
+  protected void makeSingularValueDecomposition() {
+    if (singularvalueDecomposition == null) {
+      singularvalueDecomposition = new SingularValueDecomposition(new Jama.Matrix(data.toRawCopy2D()));
+    }
+  }
+
+  /**
    * Initialize the eigenvalue decomposition.
    */
   protected void makeEigenvalueDecomposition() {
@@ -269,8 +280,8 @@ public class Matrix {
    */
   public Matrix svdU() {
     // TODO: convert to ojAlgo SVD
-    double[][] data = this.data.toRawCopy2D();
-    return create(new Jama.Matrix(data).svd().getU().getArray());
+    makeSingularValueDecomposition();
+    return create(singularvalueDecomposition.getU().getArray());
   }
 
   /**
@@ -280,19 +291,30 @@ public class Matrix {
    */
   public Matrix svdV() {
     // TODO: convert to ojAlgo SVD
-    double[][] data = this.data.toRawCopy2D();
-    return create(new Jama.Matrix(data).svd().getV().getArray());
+    makeSingularValueDecomposition();
+    return create(singularvalueDecomposition.getV().getArray());
   }
 
   /**
-   * Get the V matrix of the SVD decomposition of this matrix.
+   * Get the S matrix of the SVD decomposition of this matrix.
    *
-   * @return SVD-V matrix
+   * @return SVD-S matrix
    */
   public Matrix svdS() {
     // TODO: convert to ojAlgo SVD
-    double[][] data = this.data.toRawCopy2D();
-    return create(new Jama.Matrix(data).svd().getS().getArray());
+    makeSingularValueDecomposition();
+    return create(singularvalueDecomposition.getS().getArray());
+  }
+
+  /**
+   * Get the S matrix of the SVD decomposition of this matrix.
+   *
+   * @return SVD-S matrix
+   */
+  public Matrix getSingularValues() {
+    // TODO: convert to ojAlgo SVD
+    makeSingularValueDecomposition();
+    return fromColumn(singularvalueDecomposition.getSingularValues());
   }
 
   /**
@@ -332,6 +354,17 @@ public class Matrix {
   }
 
   /**
+   * Compute the sum of all matrix elements.
+   *
+   * @return Sum
+   */
+  public double sum() {
+    return create(data
+	.reduceRows(Aggregator.SUM).get()
+	.reduceColumns(Aggregator.SUM).get()).asDouble();
+  }
+
+  /**
    * Calculate the l1-norm of this matrix.
    *
    * @return L1 norm
@@ -367,29 +400,10 @@ public class Matrix {
    */
   public Matrix mul(Matrix other) {
     // Check for matching shapes
-    if (numColumns() != other.numRows()) {
-      throw new InvalidShapeException("Invalid matrix multiplication. Shapes " +
-	this.shapeString() + " and " + other.shapeString() + " do not match.");
+    if (this.numColumns() != other.numRows()) {
+      MatrixHelper.throwInvalidShapes(this, other);
     }
     return create(data.multiply(other.data));
-  }
-
-  /**
-   * Read data from another matrix and assign it to itself.
-   *
-   * @param other Other matrix to read the data from
-   */
-  public void assign(Matrix other) {
-    other.data.supplyTo(physical());
-  }
-
-  /**
-   * Check if the underlying matrix store is physical and with that mutable.
-   *
-   * @return True if {@link Matrix#data} is instance of {@link PhysicalStore}
-   */
-  protected boolean isPhysicalStore() {
-    return data instanceof PhysicalStore;
   }
 
   /**
@@ -494,17 +508,6 @@ public class Matrix {
     return create(data.multiply(scalar));
   }
 
-  /**
-   * Multiply each element of this matrix with a scalar in place.
-   *
-   * @param scalar Scalar value
-   * @return This matrix with each element multiplied by the given scalar
-   */
-  public Matrix muli(double scalar) {
-    physical().modifyAll(PrimitiveUnaryFunctions.mul(scalar));
-    return this;
-  }
-
 
   /**
    * Multiply each element of this matrix with a the element at the same index
@@ -515,6 +518,9 @@ public class Matrix {
    * index in the other matrix
    */
   public Matrix mulElementwise(Matrix other) {
+    if (!sameShapeAs(other)) {
+      MatrixHelper.throwInvalidShapes(this, other);
+    }
     return create(data.operateOnMatching(PrimitiveFunction.MULTIPLY, other.data).get());
   }
 
@@ -637,17 +643,6 @@ public class Matrix {
     return create(data.multiply(1.0 / scalar));
   }
 
-  /**
-   * Divide each element of this matrix by a scalar in place.
-   *
-   * @param scalar Scalar value
-   * @return This matrix with each element divided by the given scalar
-   */
-
-  public Matrix divi(double scalar) {
-    physical().modifyAll(PrimitiveUnaryFunctions.div(scalar));
-    return this;
-  }
 
   /**
    * Subtract the given matrix from this matrix.
@@ -692,28 +687,6 @@ public class Matrix {
   }
 
   /**
-   * Add the given scalar inplace to each element of this matrix.
-   *
-   * @param value Scalar value
-   * @return This matrix
-   */
-  public Matrix addi(double value) {
-    physical().modifyAll(PrimitiveUnaryFunctions.add(value));
-    return this;
-  }
-
-  /**
-   * Add the given matrix inplace to this matrix.
-   *
-   * @param other Matrix to add
-   * @return This matrix
-   */
-  public Matrix addi(Matrix other) {
-    physical().modifyMatching(PrimitiveFunction.ADD, other.data);
-    return this;
-  }
-
-  /**
    * Subtract the given scalar from each element of this matrix.
    *
    * @param value Scalar value
@@ -725,29 +698,6 @@ public class Matrix {
   }
 
   /**
-   * Subtract the given scalar in place from each element of this matrix.
-   *
-   * @param value Scalar value
-   * @return This matrix
-   */
-  public Matrix subi(double value) {
-    physical().modifyAll(PrimitiveUnaryFunctions.sub(value));
-    return this;
-  }
-
-
-  /**
-   * Add the given matrix inplace to this matrix.
-   *
-   * @param other Matrix to add
-   * @return This matrix
-   */
-  public Matrix subi(Matrix other) {
-    physical().modifyMatching(PrimitiveFunction.SUBTRACT, other.data);
-    return this;
-  }
-
-  /**
    * Apply elementwise power.
    *
    * @param exponent Exponent
@@ -755,21 +705,6 @@ public class Matrix {
    */
   public Matrix powElementwise(double exponent) {
     return create(data.operateOnAll(PrimitiveFunction.POW, exponent).get());
-  }
-
-  /**
-   * Apply elementwise power.
-   *
-   * @param exponent Exponent
-   * @return Matrix with elementwise powered elements
-   */
-  public Matrix powiElementwise(double exponent) {
-    physical().modifyAll(PrimitiveUnaryFunctions.pow(exponent));
-    return this;
-  }
-
-  protected PhysicalStore<Double> physical() {
-    return (PhysicalStore<Double>) data;
   }
 
   /**
@@ -837,6 +772,7 @@ public class Matrix {
    * @param value  Scalar
    */
   public void set(int row, int column, double value) {
+    resetCache();
     if (data instanceof PhysicalStore) {
       ((PhysicalStore<Double>) data).set(row, column, value);
     }
@@ -845,7 +781,6 @@ public class Matrix {
       copy.set(row, column, value);
       data = copy;
     }
-    resetCache();
   }
 
   /**
@@ -857,6 +792,7 @@ public class Matrix {
    * @param row    Row
    */
   public void setRow(int rowIdx, Matrix row) {
+    resetCache();
     if (data instanceof PhysicalStore) {
       ((PhysicalStore<Double>) data).fillRow(rowIdx, row.data);
     }
@@ -865,7 +801,6 @@ public class Matrix {
       copy.fillRow(rowIdx, row.data);
       data = copy;
     }
-    resetCache();
   }
 
   /**
@@ -877,6 +812,7 @@ public class Matrix {
    * @param column    Row
    */
   public void setColumn(int columnIdx, Matrix column) {
+    resetCache();
     if (data instanceof PhysicalStore) {
       ((PhysicalStore<Double>) data).fillColumn(columnIdx, column.data);
     }
@@ -885,7 +821,6 @@ public class Matrix {
       copy.fillColumn(columnIdx, column.data);
       data = copy;
     }
-    resetCache();
   }
 
   /**
@@ -1064,7 +999,7 @@ public class Matrix {
    *
    * @param body Function body
    */
-  public Matrix modifyEach(Function<Double, Double> body) {
+  public Matrix applyElementwise(Function<Double, Double> body) {
     return create(data.operateOnAll(new UnaryFunction<Double>() {
       @Override
       public double invoke(double arg) {
@@ -1090,7 +1025,7 @@ public class Matrix {
 	"bound must be below upper bound");
     }
 
-    return modifyEach(value -> StrictMath.min(upperBound, StrictMath.max(lowerBound, value)));
+    return applyElementwise(value -> StrictMath.min(upperBound, StrictMath.max(lowerBound, value)));
   }
 
   /**
@@ -1115,14 +1050,14 @@ public class Matrix {
    * Apply the signum function to each matrix element.
    */
   public Matrix sign() {
-    return modifyEach(StrictMath::signum);
+    return applyElementwise(StrictMath::signum);
   }
 
   /**
    * Take the absolute of each element.
    */
   public Matrix abs() {
-    return modifyEach(StrictMath::abs);
+    return applyElementwise(StrictMath::abs);
   }
 
   /**
@@ -1211,22 +1146,34 @@ public class Matrix {
     Matrix res = MatrixFactory.zeros(Math.min(numRows(), numColumns()), 1);
     data.loopAll((row, col) -> {
       if (row == col) {
-	res.set((int) row, 1, get((int) row, (int) col));
+	res.set((int) row, 0, get((int) row, (int) col));
       }
     });
     return res;
   }
 
   /**
-   * Get the mean over a certain Axis
+   * Get the mean over all datapoints.
+   * <p>
+   * Equivalent to Matrix.mean(-1)
    *
-   * @return
+   * @return Mean value of the matrix
+   */
+  public double mean() {
+    return create(data
+      .reduceColumns(Aggregator.SUM).get()
+      .reduceRows(Aggregator.SUM).get()).div(numRows() * numColumns()).asDouble();
+
+  }
+
+  /**
+   * Get the mean over a certain Axis.
+   *
+   * @return Mean over a certain axis
    */
   public Matrix mean(int axis) {
     if (axis == -1) {
-      return create(data
-	.reduceColumns(Aggregator.SUM).get()
-	.reduceRows(Aggregator.SUM).get()).div(numRows() * numColumns());
+      return MatrixFactory.filled(1, 1, mean());
     }
     else if (axis == 0) {
       return create(data
