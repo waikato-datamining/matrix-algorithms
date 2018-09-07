@@ -59,7 +59,7 @@ public class LogCosH implements NegEntropyApproximationFunction {
     Matrix ones = filled(1, gx.numColumns(), 1.0);
     for (int i = 0; i < gx.numRows(); i++) {
       Matrix gxi = gx.getRow(i);
-      double g_xi = ones.sub(gxi.powElementwise(2)).mul(m_alpha).mean(-1).asDouble();
+      double g_xi = ones.sub(gxi.powElementwise(2)).mul(m_alpha).mean();
       g_x.set(i, 0, g_xi);
     }
     return new Tuple<>(gx, g_x);
