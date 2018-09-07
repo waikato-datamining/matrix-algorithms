@@ -248,15 +248,17 @@ public class FastICA extends AbstractAlgorithm implements Filter {
     Matrix unmixing = null;
     Matrix X1;
 
+    int minNP = Math.min(n, p);
+
     if (!m_whiten) {
-      m_numComponents = Math.min(n, p);
+      m_numComponents = minNP;
       m_Logger.warning("Ignoring numComponents when $whiten=false");
     }
 
-    if (m_numComponents > Math.min(n, p)) {
+    if (m_numComponents > minNP) {
       m_Logger.warning("numComponents is too large and will be set to " +
-	m_numComponents);
-      m_numComponents = Math.min(n, p);
+        minNP);
+      m_numComponents = minNP;
     }
 
     // WHiten data
@@ -264,7 +266,7 @@ public class FastICA extends AbstractAlgorithm implements Filter {
       X = m_center.transform(X.t()).t();
       Matrix U = X.svdU();
       Matrix d = X.getSingularValues();
-      int k = Math.min(n, p); // rank k
+      int k = minNP; // rank k
       d = d.getRows(0, k); // Only get non zero singular values
       Matrix dInvElements = d.applyElementwise(a -> 1.0 / a);
       Matrix tmp = U.scaleByRowVector(dInvElements).transpose();
@@ -282,7 +284,7 @@ public class FastICA extends AbstractAlgorithm implements Filter {
 
     // Use deflation algorithm
     if (Algorithm.DEFLATION.equals(m_algorithm)) {
-      unmixing = deflation(X1,Winit);
+      unmixing = deflation(X1, Winit);
     } // Use parallel algorithm
     else if (Algorithm.PARALLEL.equals(m_algorithm)) {
       unmixing = parallel(X1, Winit);
@@ -315,9 +317,9 @@ public class FastICA extends AbstractAlgorithm implements Filter {
       Matrix w = Winit.getRow(j).t().copy();
       w = w.div(w.powElementwise(2).sum(-1).sqrt().asDouble());
       for (int i = 0; i < m_maxIter; i++) {
-        Tuple<Matrix, Matrix> res = m_fun.apply(w.t().mul(X));
+	Tuple<Matrix, Matrix> res = m_fun.apply(w.t().mul(X).t());
 
-        Matrix gwtx = res.getFirst();
+	Matrix gwtx = res.getFirst();
 	Matrix g_wtx = res.getSecond();
 
 	Matrix w1 = X.scaleByRowVector(gwtx).mean(1).sub(w.mul(g_wtx.mean()));
@@ -342,7 +344,7 @@ public class FastICA extends AbstractAlgorithm implements Filter {
   /**
    * Parallel FastICA.
    *
-   * @param X Input
+   * @param X     Input
    * @param Winit Initial Weight matrix
    * @return Weight
    */
@@ -383,13 +385,13 @@ public class FastICA extends AbstractAlgorithm implements Filter {
     }
     Matrix Wp = W.getRows(0, j);
 
-    if (j == 1){
+    if (j == 1) {
       Matrix s = w.t().mul(Wp.t()).mul(Wp).t();
       return w.sub(s);
     }
 
 
-    Matrix sub = w.mul(Wp.t()).mul(Wp);
+    Matrix sub = w.t().mul(Wp.t()).mul(Wp).t();
     return w.sub(sub);
   }
 
