@@ -360,8 +360,8 @@ public class Matrix {
    */
   public double sum() {
     return create(data
-	.reduceRows(Aggregator.SUM).get()
-	.reduceColumns(Aggregator.SUM).get()).asDouble();
+      .reduceRows(Aggregator.SUM).get()
+      .reduceColumns(Aggregator.SUM).get()).asDouble();
   }
 
   /**
@@ -1256,6 +1256,52 @@ public class Matrix {
       }
     }
     return false;
+  }
+
+  /**
+   * Check if any value in this matrix meets the given constraint.
+   *
+   * @param function Function to check each value against.
+   * @return True if any function return value is true
+   */
+  public boolean any(Function<Double, Boolean> function) {
+    for (Double datum : this.data) {
+      if (function.apply(datum)) {
+	return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Check if all values in this matrix meet the given constraint.
+   *
+   * @param function Function to check each value against.
+   * @return True if all function return values are true
+   */
+  public boolean all(Function<Double, Boolean> function) {
+    for (Double datum : this.data) {
+      if (!function.apply(datum)) {
+	return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Return list of indices that match the function.
+   *
+   * @param function Double->Boolean function
+   * @return List of indices that match the function
+   */
+  public List<Tuple<Integer, Integer>> which(Function<Double, Boolean> function) {
+    List<Tuple<Integer, Integer>> tuples = new ArrayList<>();
+    data.loopAll((row, col) -> {
+      if (function.apply(get((int) row, (int) col))) {
+	tuples.add(new Tuple<>((int) row, (int) col));
+      }
+    });
+    return tuples;
   }
 
   @Override
