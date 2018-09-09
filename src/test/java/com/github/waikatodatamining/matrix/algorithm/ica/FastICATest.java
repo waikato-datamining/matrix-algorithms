@@ -20,31 +20,26 @@ public class FastICATest extends AbstractRegressionTest<FastICA> {
   @TestRegression
   public void parallel() {
     m_subject.setAlgorithm(Algorithm.PARALLEL);
-    runRegression();
   }
 
   @TestRegression
   public void whiteFalse() {
     m_subject.setWhiten(false);
-    runRegression();
   }
 
   @TestRegression
   public void logcosh() {
     m_subject.setFun(new LogCosH());
-    runRegression();
   }
 
   @TestRegression
   public void cube() {
     m_subject.setFun(new Cube());
-    runRegression();
   }
 
   @TestRegression
   public void exp() {
     m_subject.setFun(new Exponential());
-    runRegression();
   }
 
   @Override

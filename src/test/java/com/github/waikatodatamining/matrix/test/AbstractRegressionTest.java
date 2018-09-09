@@ -79,7 +79,7 @@ public abstract class AbstractRegressionTest<T> {
   /**
    * Run the set-up algorithm.
    */
-  protected void runRegression() {
+  private void runRegression() {
     try {
       setupRegressions(m_subject, m_inputData);
     }
