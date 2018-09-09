@@ -1,247 +1,127 @@
-/*
- *   This program is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-/*
- * AbstractPLSTest.java
- * Copyright (C) 2018 University of Waikato, Hamilton, NZ
- */
-
 package com.github.waikatodatamining.matrix.algorithm.pls;
 
-import com.github.waikatodatamining.matrix.algorithm.AbstractAlgorithmTest;
-import com.github.waikatodatamining.matrix.algorithm.pls.AbstractPLS;
 import com.github.waikatodatamining.matrix.core.Matrix;
-import com.github.waikatodatamining.matrix.core.MatrixHelper;
-import com.github.waikatodatamining.matrix.test.TmpFile;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.github.waikatodatamining.matrix.test.AbstractRegressionTest;
+import com.github.waikatodatamining.matrix.test.misc.Tags;
+import com.github.waikatodatamining.matrix.test.misc.TestDataset;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
- * Ancestor for PLS algorithm tests.
+ * Abstract PLS Regression Test implementation.
  *
- * @author FracPete (fracpete at waikato dot ac dot nz)
+ * @param <T> AbstractPLS type
+ * @author Steven Lang
  */
-public abstract class AbstractPLSTest<T extends AbstractPLS>
-  extends AbstractAlgorithmTest<T> {
+public abstract class AbstractPLSTest<T extends AbstractPLS> extends AbstractRegressionTest<T> {
 
-  public enum MatrixType {
-    TRANSFORMED,
-    PREDICTIONS,
-    LOADINGS,
-  }
+  @Test
+  public void checkTransformedNumComponents() throws Exception {
+    Matrix X = m_inputData[0];
+    Matrix Y = m_inputData[1];
 
-  /**
-   * Constructs the test case. Called by subclasses.
-   *
-   * @param name the name of the test
-   */
-  public AbstractPLSTest(String name) {
-    super(name);
-  }
+    for (int i = 1; i < 5; i++) {
+      m_subject.setNumComponents(i);
+      m_subject.initialize(X, Y);
+      Matrix transform = m_subject.transform(X);
+      Assertions.assertEquals(i, transform.numColumns());
 
-  /**
-   * Returns the filenames (without path) of the response data files to use
-   * in the regression test.
-   *
-   * @return		the filenames
-   */
-  protected abstract String[] getRegressionResponseFiles();
-
-  /**
-   * Processes the input data and returns the processed data.
-   *
-   * @param scheme	the scheme to process the data with
-   * @param input	the input data
-   * @param response	the response data
-   * @return		the processed data
-   */
-  protected String initialize(T scheme, Matrix input, Matrix response) {
-    try {
-      return scheme.initialize(input, response);
-    }
-    catch (Exception e) {
-      fail("Failed to initialize: " + stackTraceToString(e));
-      return null;
+      // Reset
+      m_subject = instantiateSubject();
     }
   }
 
-  /**
-   * Dummy.
-   *
-   * @param data	the data to work on
-   * @param scheme	the scheme to process the data with
-   * @return		the processed data
-   */
-  protected Matrix process(Matrix data, T scheme) {
-    if (!scheme.isInitialized())
-      fail("Algorithm is not initialized!");
-    try {
-      return scheme.transform(data);
+  /** Merge two tags with / if second tag is not empty */
+  private static String mergeIfNotEmpty(String tag1, String tag2) {
+    return tag1 + ("".equals(tag2) ? "" : "/" + tag2);
+  }
+
+  @Override
+  protected void setupRegressions(AbstractPLS subject, Matrix[] inputData) throws Exception {
+    // Extract data
+    Matrix X = inputData[0];
+    Matrix y = inputData[1];
+
+    // Initialize pls
+    String results = subject.initialize(X, y);
+    if (results != null) {
+      Assertions.fail("Algorithm#initialize failed with result: " + results);
     }
-    catch (Exception e) {
-      fail("Failed to perform prediction: " + stackTraceToString(e));
-      return null;
+    
+    addDefaultPlsMatrices(subject, X);
+  }
+
+  /** Adds default PLS matrices, that is predictions, transformations, loadings and model parameter matrices */
+  protected void addDefaultPlsMatrices(AbstractPLS algorithm, Matrix x, String subTag) throws Exception {
+    // Add differences parameter and output matrices as regression check
+    addPredictions(algorithm, x, subTag);
+    addTransformation(algorithm, x, subTag);
+    addLoadings(algorithm, subTag);
+    addMatrices(algorithm, subTag);
+  }
+
+  /** Add transformation to the regression group */
+  protected void addTransformation(AbstractPLS algorithm, Matrix x, String subTag) throws Exception {
+    addRegression(mergeIfNotEmpty(subTag, Tags.TRANSFORM), algorithm.transform(x));
+  }
+
+  /** Add predictions to the regression group */
+  protected void addPredictions(AbstractPLS algorithm, Matrix x, String subTag) throws Exception {
+    // Add predictions
+    if (algorithm.canPredict()) {
+      Matrix preds = algorithm.predict(x);
+      addRegression(mergeIfNotEmpty(subTag, Tags.PREDICTIONS), preds);
     }
   }
 
-  /**
-   * Processes the input data and returns the predictions.
-   *
-   * @param data	the data to work on
-   * @param scheme	the scheme to process the data with
-   * @return		the transformed data and predictions
-   */
-  protected Matrix predict(Matrix data, T scheme) {
-    if (!scheme.isInitialized())
-      fail("Algorithm is not initialized!");
-    try {
-      return scheme.predict(data);
-    }
-    catch (Exception e) {
-      fail("Failed to perform prediction: " + stackTraceToString(e));
-      return null;
+  /** Add loadings to the regression group */
+  protected void addLoadings(AbstractPLS algorithm, String subTag) {
+    // Add loadings
+    if (algorithm.hasLoadings()) {
+      addRegression(mergeIfNotEmpty(subTag, Tags.LOADINGS), algorithm.getLoadings());
     }
   }
 
-  /**
-   * Saves the matrix to the specified file.
-   *
-   * @param data	the data to save
-   * @param filename	the file to save to
-   * @return		true if successful
-   */
-  protected boolean save(Matrix[] data, String filename) {
-    try {
-      MatrixHelper.write(data[0].concat(data[1], 1), m_TestHelper.getTmpLocationFromResource(filename), true, '\t', 6);
-      return true;
-    }
-    catch (Exception e) {
-      return false;
+  /** Add model matrices to the regression group */
+  protected void addMatrices(AbstractPLS algorithm, String subTag) {
+    // Add matrices
+    for (String matrixName : algorithm.getMatrixNames()) {
+      String tag = Tags.MATRIX + "-" + matrixName;
+      addRegression(mergeIfNotEmpty(subTag, tag), algorithm.getMatrix(matrixName));
     }
   }
 
-  /**
-   * Creates an output filename based on the input filename.
-   *
-   * @param input	the input filename (no path)
-   * @param no		the number of the test
-   * @param type	the matrix type
-   * @return		the generated output filename (no path)
-   */
-  protected String createOutputFilename(String input, int no, MatrixType type) {
-    String	result;
-    int		index;
-    String	ext;
-
-    ext = "-out" + no + "-" + type.toString().toLowerCase();
-
-    index = input.lastIndexOf('.');
-    if (index == -1) {
-      result = input + ext;
-    }
-    else {
-      result  = input.substring(0, index);
-      result += ext;
-      result += input.substring(index);
-    }
-
-    return result;
+  /** Adds default PLS matrices, that is predictions, transformations, loadings and model parameter matrices */
+  protected void addDefaultPlsMatrices(AbstractPLS algorithm, Matrix x) throws Exception {
+    // Add differences parameter and output matrices as regression check
+    addDefaultPlsMatrices(algorithm, x, "");
   }
 
-  /**
-   * Compares the processed data against previously saved output data.
-   */
-  public void testRegression() {
-    Matrix 		dataInput;
-    Matrix 		dataResponse;
-    Matrix 		transformed;
-    Matrix 		predicted;
-    Matrix		loadings;
-    boolean		ok;
-    String		regression;
-    int			i;
-    String		msg;
-    String[]		input;
-    String[]		response;
-    T[]			setups;
-    List<String> 	output;
-    String		outputCurr;
-    TmpFile[]		outputFiles;
-    int[]		ignored;
+  /** Add transformation to the regression group */
+  protected void addTransformation(AbstractPLS algorithm, Matrix x) throws Exception {
+    addTransformation(algorithm, x, "");
+  }
 
-    if (m_NoRegressionTest)
-      return;
+  /** Add predictions to the regression group */
+  protected void addPredictions(AbstractPLS algorithm, Matrix x) throws Exception {
+    addPredictions(algorithm, x, "");
+  }
 
-    input    = getRegressionInputFiles();
-    response = getRegressionResponseFiles();
-    output   = new ArrayList<>();
-    setups   = getRegressionSetups();
-    ignored  = getRegressionIgnoredLineIndices();
-    assertEquals("Number of input files and reponse files differ!", input.length, response.length);
-    assertEquals("Number of input files and setups differ!", input.length, setups.length);
+  /** Add loadings to the regression group */
+  protected void addLoadings(AbstractPLS algorithm) {
+    addLoadings(algorithm, "");
+  }
 
-    // process data
-    for (i = 0; i < input.length; i++) {
-      dataInput = load(input[i]);
-      assertNotNull("Could not load input data for regression test from " + input[i], dataInput);
+  /** Add model matrices to the regression group */
+  protected void addMatrices(AbstractPLS algorithm) {
+    addMatrices(algorithm, "");
+  }
 
-      dataResponse = load(response[i]);
-      assertNotNull("Could not load response data for regression test from " + response[i], dataResponse);
-
-      msg = initialize(setups[i], dataInput, dataResponse);
-      assertNull("Failed to initialize with data?", msg);
-
-      transformed = process(dataInput, setups[i]);
-      assertNotNull("Failed to transform data?", transformed);
-
-      outputCurr = createOutputFilename(input[i], i, MatrixType.TRANSFORMED);
-      output.add(outputCurr);
-      ok        = save(transformed, outputCurr);
-      assertTrue("Failed to save regression data (transformed)?", ok);
-
-      if (setups[i].canPredict()) {
-	predicted = predict(dataInput, setups[i]);
-	assertNotNull("Failed to predict?", predicted);
-
-	outputCurr = createOutputFilename(input[i], i, MatrixType.PREDICTIONS);
-	output.add(outputCurr);
-	ok        = save(predicted, outputCurr);
-	assertTrue("Failed to save regression data (predicted)?", ok);
-      }
-
-      loadings = setups[i].getLoadings();
-      if (loadings != null) {
-	outputCurr = createOutputFilename(input[i], i, MatrixType.LOADINGS);
-	output.add(outputCurr);
-	ok = save(loadings, outputCurr);
-	assertTrue("Failed to save regression data (loadings)?", ok);
-      }
-    }
-
-    // test regression
-    outputFiles = new TmpFile[output.size()];
-    for (i = 0; i < output.size(); i++){
-      outputFiles[i] = new TmpFile(output.get(i));
-    }
-    regression = m_Regression.compare(outputFiles, ignored);
-
-    // remove output, clean up scheme
-    for (i = 0; i < output.size(); i++) {
-      m_TestHelper.deleteFileFromTmp(output.get(i));
-    }
-    assertNull("Output differs:\n" + regression, regression);
+  @Override
+  protected TestDataset[] getDatasets() {
+    return new TestDataset[]{
+      TestDataset.BOLTS,
+      TestDataset.BOLTS_RESPONSE
+    };
   }
 }

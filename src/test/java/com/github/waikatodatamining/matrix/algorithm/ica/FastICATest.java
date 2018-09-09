@@ -1,93 +1,78 @@
 package com.github.waikatodatamining.matrix.algorithm.ica;
 
-import com.github.waikatodatamining.matrix.algorithm.AbstractAlgorithmTest;
 import com.github.waikatodatamining.matrix.algorithm.ica.FastICA.Algorithm;
 import com.github.waikatodatamining.matrix.algorithm.ica.approxfun.Cube;
 import com.github.waikatodatamining.matrix.algorithm.ica.approxfun.Exponential;
 import com.github.waikatodatamining.matrix.algorithm.ica.approxfun.LogCosH;
 import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.test.AbstractRegressionTest;
+import com.github.waikatodatamining.matrix.test.misc.TestDataset;
+import com.github.waikatodatamining.matrix.test.misc.TestRegression;
+import org.junit.Assert;
 
-public class FastICATest extends AbstractAlgorithmTest<FastICA> {
+public class FastICATest extends AbstractRegressionTest<FastICA> {
 
-  /**
-   * Constructs the test case. Called by subclasses.
-   *
-   * @param name the name of the test
-   */
-  public FastICATest(String name) {
-    super(name);
+  @TestRegression
+  public void deflation() {
+    m_subject.setAlgorithm(Algorithm.DEFLATION);
+  }
+
+  @TestRegression
+  public void parallel() {
+    m_subject.setAlgorithm(Algorithm.PARALLEL);
+    runRegression();
+  }
+
+  @TestRegression
+  public void whiteFalse() {
+    m_subject.setWhiten(false);
+    runRegression();
+  }
+
+  @TestRegression
+  public void logcosh() {
+    m_subject.setFun(new LogCosH());
+    runRegression();
+  }
+
+  @TestRegression
+  public void cube() {
+    m_subject.setFun(new Cube());
+    runRegression();
+  }
+
+  @TestRegression
+  public void exp() {
+    m_subject.setFun(new Exponential());
+    runRegression();
   }
 
   @Override
-  protected Matrix process(Matrix data, FastICA scheme) {
+  protected void setupRegressions(FastICA subject, Matrix[] inputData) {
+    Matrix X = inputData[0];
+
     try {
-      return scheme.transform(data);
+      Matrix transform = subject.transform(X);
+      addRegression("transform", transform);
+      addRegression("components", subject.getComponents());
+      addRegression("mixing", subject.getMixing());
+      addRegression("sources", subject.getSources());
     }
     catch (Exception e) {
-      fail("Failed to transform data: " + stackTraceToString(e));
-      return null;
+      e.printStackTrace();
+      Assert.fail("Exception during transform.");
     }
   }
 
   @Override
-  protected String[] getRegressionInputFiles() {
-    return new String[]{
-      "bolts.csv",
-      "bolts.csv",
-      "bolts.csv",
-      "bolts.csv",
-      "bolts.csv",
+  protected TestDataset[] getDatasets() {
+    return new TestDataset[]{
+      TestDataset.BOLTS
     };
   }
 
   @Override
-  protected FastICA[] getRegressionSetups() {
-    FastICA[]	result;
-
-    result    = new FastICA[5];
-    result[0] = new FastICA();
-    result[0].setAlgorithm(Algorithm.DEFLATION);
-    result[0].setFun(new LogCosH());
-    result[0].setWhiten(true);
-    result[0].setNumComponents(2);
-
-    result[1] = new FastICA();
-    result[1].setAlgorithm(Algorithm.PARALLEL);
-    result[1].setFun(new LogCosH());
-    result[1].setWhiten(true);
-    result[1].setNumComponents(2);
-
-    result[2] = new FastICA();
-    result[2].setAlgorithm(Algorithm.PARALLEL);
-    result[2].setFun(new LogCosH());
-    result[2].setWhiten(true);
-    result[2].setNumComponents(2);
-
-    result[2] = new FastICA();
-    result[2].setAlgorithm(Algorithm.DEFLATION);
-    result[2].setFun(new Exponential());
-    result[2].setWhiten(true);
-    result[2].setNumComponents(2);
-
-    result[3] = new FastICA();
-    result[3].setAlgorithm(Algorithm.DEFLATION);
-    result[3].setFun(new Cube());
-    result[3].setWhiten(true);
-    result[3].setNumComponents(2);
-
-    result[4] = new FastICA();
-    result[4].setAlgorithm(Algorithm.DEFLATION);
-    result[4].setFun(new LogCosH());
-    result[4].setWhiten(false);
-    result[4].setNumComponents(2);
-
-    result[4] = new FastICA();
-    result[4].setAlgorithm(Algorithm.PARALLEL);
-    result[4].setFun(new LogCosH());
-    result[4].setWhiten(false);
-    result[4].setNumComponents(2);
-
-
-    return result;
+  protected FastICA instantiateSubject() {
+    return new FastICA();
   }
 }

@@ -1,110 +1,54 @@
-/*
- *   This program is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-/*
- * PCATest.java
- * Copyright (C) 2018 University of Waikato, Hamilton, NZ
- */
-
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import com.github.waikatodatamining.matrix.test.AbstractRegressionTest;
+import com.github.waikatodatamining.matrix.test.misc.Tags;
+import com.github.waikatodatamining.matrix.test.misc.TestDataset;
+import com.github.waikatodatamining.matrix.test.misc.TestRegression;
 
 /**
- * Tests the PCA algorithm.
+ * Test the PCA class.
  *
- * @author FracPete (fracpete at waikato dot ac dot nz)
+ * @author Steven Lang
  */
-public class PCATest
-  extends AbstractAlgorithmTest<PCA> {
+public class PCATest extends AbstractRegressionTest<PCA> {
 
-  /**
-   * Constructs the test case. Called by subclasses.
-   *
-   * @param name the name of the test
-   */
-  public PCATest(String name) {
-    super(name);
+  @TestRegression
+  public void center() {
+    m_subject.setCenter(true);
   }
 
-  /**
-   * Processes the input data and returns the processed data.
-   *
-   * @param data	the data to work on
-   * @param scheme	the scheme to process the data with
-   * @return		the processed data
-   */
-  @Override
-  protected Matrix process(Matrix data, PCA scheme) {
-    try {
-      return scheme.transform(data);
-    }
-    catch (Exception e) {
-      fail("Failed to transform data: " + stackTraceToString(e));
-      return null;
-    }
+  @TestRegression
+  public void maxCols3() {
+    m_subject.setMaxColumns(3);
   }
 
-  /**
-   * Returns the filenames (without path) of the input data files to use
-   * in the regression test.
-   *
-   * @return		the filenames
-   */
+
   @Override
-  protected String[] getRegressionInputFiles() {
-    return new String[]{
-      "bolts.csv",
-      "bolts.csv",
+  protected void setupRegressions(PCA subject, Matrix[] inputData) throws Exception {
+    // Get input
+    Matrix X = inputData[0];
+
+    // Get matrices
+    Matrix transformed = subject.transform(X);
+    Matrix loadings = subject.getLoadings();
+    Matrix scores = subject.getScores();
+
+    // Add regressions
+    addRegression(Tags.TRANSFORM, transformed);
+    addRegression(Tags.LOADINGS, loadings);
+    addRegression(Tags.SCORES, scores);
+  }
+
+  @Override
+  protected TestDataset[] getDatasets() {
+    return new TestDataset[]{
+      TestDataset.BOLTS
     };
   }
 
-  /**
-   * Returns the setups to use in the regression test.
-   *
-   * @return		the setups
-   */
   @Override
-  protected PCA[] getRegressionSetups() {
-    PCA[]	result;
-
-    result    = new PCA[2];
-    result[0] = new PCA();
-    result[1] = new PCA();
-    result[1].setCenter(true);
-
-    return result;
-  }
-
-  /**
-   * Returns the test suite.
-   *
-   * @return		the suite
-   */
-  public static Test suite() {
-    return new TestSuite(PCATest.class);
-  }
-
-  /**
-   * Runs the test from commandline.
-   *
-   * @param args	ignored
-   */
-  public static void main(String[] args) {
-    runTest(suite());
+  protected PCA instantiateSubject() {
+    return new PCA();
   }
 }

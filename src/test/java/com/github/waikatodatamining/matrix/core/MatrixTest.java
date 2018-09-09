@@ -2,11 +2,12 @@ package com.github.waikatodatamining.matrix.core;
 
 import Jama.EigenvalueDecomposition;
 import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * Test to guarantee the same results for the transition between JAMA and ojAlgo
@@ -26,7 +27,84 @@ public class MatrixTest {
 
   protected Jama.Matrix jb;
 
-  @Before
+  public static void assertMatrixEquals(Jama.Matrix jx, Matrix x) {
+    assertEquals(x, MatrixFactory.fromRaw(jx.getArray()));
+  }
+
+  /**
+   * Calculate the l2 vector norm.
+   * This is faster than using {@link Matrix#norm2()} since it uses SVD
+   * decomposition to get the largest eigenvalue.
+   *
+   * @param v Input vector
+   * @return L2 norm of the input vector
+   */
+  public static double l2VectorNorm(Jama.Matrix v) {
+    double sum = 0.0;
+    int columns = v.getColumnDimension();
+    int rows = v.getRowDimension();
+    if (rows == 1) {
+      for (int col = 0; col < columns; col++) {
+	double val = v.get(0, col);
+	sum += val * val;
+      }
+    }
+    else if (columns == 1) {
+      for (int row = 0; row < rows; row++) {
+	double val = v.get(row, 0);
+	sum += val * val;
+      }
+    }
+    else {
+      // Not a vector
+      throw new InvalidShapeException("MatrixHelper.l2VectorNorm() can only " +
+	"be applied on row or column vectors.");
+    }
+
+    return StrictMath.sqrt(sum);
+  }
+
+  /**
+   * determines the dominant eigenvector for the given matrix and returns it
+   *
+   * @param m the matrix to determine the dominant eigenvector for
+   * @return the dominant eigenvector
+   */
+  public static Jama.Matrix getDominantEigenVectorJama(Jama.Matrix m) {
+    EigenvalueDecomposition eigendecomp;
+    double[] eigenvalues;
+    int index;
+    Jama.Matrix result;
+
+    eigendecomp = m.eig();
+    eigenvalues = eigendecomp.getRealEigenvalues();
+    index = Utils.maxIndex(eigenvalues);
+    result = columnAsVector(eigendecomp.getV(), index);
+
+    return result;
+  }
+
+  /**
+   * returns the given column as a vector (actually a n x 1 matrix)
+   *
+   * @param m           the matrix to work on
+   * @param columnIndex the column to return
+   * @return the column as n x 1 matrix
+   */
+  public static Jama.Matrix columnAsVector(Jama.Matrix m, int columnIndex) {
+    Jama.Matrix result;
+    int i;
+
+    result = new Jama.Matrix(m.getRowDimension(), 1);
+
+    for (i = 0; i < m.getRowDimension(); i++) {
+      result.set(i, 0, m.get(i, columnIndex));
+    }
+
+    return result;
+  }
+
+  @BeforeEach
   public void init() {
     //    double[][] dataA = {{1, 2}, {3, 4}, {5, 6}};
     //    double[][] dataB = {{10, 11}, {12, 13}, {14, 15}};
@@ -41,10 +119,6 @@ public class MatrixTest {
 
     assertMatrixEquals(ja, a);
     assertMatrixEquals(jb, b);
-  }
-
-  public static void assertMatrixEquals(Jama.Matrix jx, Matrix x) {
-    assertEquals(x, MatrixFactory.fromRaw(jx.getArray()));
   }
 
   @Test
@@ -168,7 +242,6 @@ public class MatrixTest {
     assertMatrixEquals(ja, a);
   }
 
-
   @Test
   public void getRow() {
     Matrix row = a.getRow(0);
@@ -248,7 +321,6 @@ public class MatrixTest {
     assertEquals(colConcat, MatrixFactory.fromRaw(dataWithCol));
   }
 
-
   @Test
   public void fromRow() {
     double[] row = {1, 2, 3};
@@ -292,39 +364,6 @@ public class MatrixTest {
     assertEquals(oldL2Norm, newL2Norm, PRECISION);
   }
 
-  /**
-   * Calculate the l2 vector norm.
-   * This is faster than using {@link Matrix#norm2()} since it uses SVD
-   * decomposition to get the largest eigenvalue.
-   *
-   * @param v Input vector
-   * @return L2 norm of the input vector
-   */
-  public static double l2VectorNorm(Jama.Matrix v) {
-    double sum = 0.0;
-    int columns = v.getColumnDimension();
-    int rows = v.getRowDimension();
-    if (rows == 1) {
-      for (int col = 0; col < columns; col++) {
-	double val = v.get(0, col);
-	sum += val * val;
-      }
-    }
-    else if (columns == 1) {
-      for (int row = 0; row < rows; row++) {
-	double val = v.get(row, 0);
-	sum += val * val;
-      }
-    }
-    else {
-      // Not a vector
-      throw new InvalidShapeException("MatrixHelper.l2VectorNorm() can only " +
-	"be applied on row or column vectors.");
-    }
-
-    return StrictMath.sqrt(sum);
-  }
-
   @Test
   public void setRow() {
     double[][] data = new double[][]{{1, 2}, {3, 4}};
@@ -356,45 +395,5 @@ public class MatrixTest {
     Jama.Matrix dominantEigenVectorJama = getDominantEigenVectorJama(rangeMatJama);
 
     assertMatrixEquals(dominantEigenVectorJama, dominantEigenVector);
-  }
-
-  /**
-   * determines the dominant eigenvector for the given matrix and returns it
-   *
-   * @param m the matrix to determine the dominant eigenvector for
-   * @return the dominant eigenvector
-   */
-  public static Jama.Matrix getDominantEigenVectorJama(Jama.Matrix m) {
-    EigenvalueDecomposition eigendecomp;
-    double[] eigenvalues;
-    int index;
-    Jama.Matrix result;
-
-    eigendecomp = m.eig();
-    eigenvalues = eigendecomp.getRealEigenvalues();
-    index = Utils.maxIndex(eigenvalues);
-    result = columnAsVector(eigendecomp.getV(), index);
-
-    return result;
-  }
-
-  /**
-   * returns the given column as a vector (actually a n x 1 matrix)
-   *
-   * @param m           the matrix to work on
-   * @param columnIndex the column to return
-   * @return the column as n x 1 matrix
-   */
-  public static Jama.Matrix columnAsVector(Jama.Matrix m, int columnIndex) {
-    Jama.Matrix result;
-    int i;
-
-    result = new Jama.Matrix(m.getRowDimension(), 1);
-
-    for (i = 0; i < m.getRowDimension(); i++) {
-      result.set(i, 0, m.get(i, columnIndex));
-    }
-
-    return result;
   }
 }

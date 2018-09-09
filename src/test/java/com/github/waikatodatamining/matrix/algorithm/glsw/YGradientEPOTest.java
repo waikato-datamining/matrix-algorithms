@@ -1,23 +1,16 @@
 package com.github.waikatodatamining.matrix.algorithm.glsw;
 
 /**
- * External Parameter Orthogonalization (EPO) Test.
+ * Testcase for the YGradientEPO algorithm.
  *
  * @author Steven Lang
  */
-public class YGradientEPOTest extends YGradientGLSWTest {
+public class YGradientEPOTest<T extends YGradientEPO> extends YGradientGLSWTest<T> {
 
-  /**
-   * Constructs the test case. Called by subclasses.
-   *
-   * @param name the name of the test
-   */
-  public YGradientEPOTest(String name) {
-    super(name);
-  }
 
   @Override
-  protected YGradientGLSW[] getRegressionSetups() {
-    return new YGradientEPO[]{new YGradientEPO()};
+  protected T instantiateSubject() {
+    return (T) new YGradientEPO();
   }
+
 }

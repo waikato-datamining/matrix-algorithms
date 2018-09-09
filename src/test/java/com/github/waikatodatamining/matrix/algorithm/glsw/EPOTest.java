@@ -1,23 +1,34 @@
 package com.github.waikatodatamining.matrix.algorithm.glsw;
 
+import com.github.waikatodatamining.matrix.test.misc.TestDataset;
+import com.github.waikatodatamining.matrix.test.misc.TestRegression;
+
 /**
- * External Parameter Orthogonalization (EPO) Test.
+ * Testcase for the EPO algorithm.
  *
  * @author Steven Lang
  */
-public class EPOTest extends GLSWTest {
+public class EPOTest extends GLSWTest<EPO> {
 
-  /**
-   * Constructs the test case. Called by subclasses.
-   *
-   * @param name the name of the test
-   */
-  public EPOTest(String name) {
-    super(name);
+  @TestRegression
+  public void n1() {
+    m_subject.setN(1);
+  }
+
+  @TestRegression
+  public void n3() {
+    m_subject.setN(3);
   }
 
   @Override
-  protected GLSW[] getRegressionSetups() {
-    return new EPO[]{new EPO()};
+  protected TestDataset[] getDatasets() {
+    return new TestDataset[]{
+      TestDataset.BOLTS
+    };
+  }
+
+  @Override
+  protected EPO instantiateSubject() {
+    return new EPO();
   }
 }
