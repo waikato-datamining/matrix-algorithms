@@ -70,7 +70,7 @@ public class PLS1
   @Override
   public String[] getMatrixNames() {
     return new String[]{
-      "r_hat",
+      "RegVector",
       "P",
       "W",
       "b_hat"
