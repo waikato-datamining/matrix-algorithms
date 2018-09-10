@@ -149,7 +149,7 @@ public class PLS1
 
     for (k = 0; k < getNumComponents(); k++) {
       // 1. step: wj
-      wk = Xk.transpose().mul(y).normalized();
+      wk = calculateWeights(Xk, y);
       W.setColumn(k, wk);
 
       // 2. step: tj
@@ -182,6 +182,17 @@ public class PLS1
 
 
     return null;
+  }
+
+  /**
+   * Calculate the weight w_k in the PLS iterations.
+   *
+   * @param xk X matrix at step k
+   * @param y y matrix
+   * @return Weights at step k
+   */
+  protected Matrix calculateWeights(Matrix xk, Matrix y) {
+    return xk.transpose().mul(y).normalized();
   }
 
   /**
