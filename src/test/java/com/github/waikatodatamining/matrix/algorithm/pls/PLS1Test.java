@@ -5,10 +5,10 @@ package com.github.waikatodatamining.matrix.algorithm.pls;
  *
  * @author Steven Lang
  */
-public class PLS1Test extends AbstractPLSTest<PLS1> {
+public class PLS1Test<T extends PLS1> extends AbstractPLSTest<T> {
 
   @Override
-  protected PLS1 instantiateSubject() {
-    return new PLS1();
+  protected T instantiateSubject() {
+    return (T) new PLS1();
   }
 }
