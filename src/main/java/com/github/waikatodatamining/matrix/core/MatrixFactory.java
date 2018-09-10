@@ -1,10 +1,10 @@
 package com.github.waikatodatamining.matrix.core;
 
-import org.ojalgo.access.Access1D;
 import org.ojalgo.function.NullaryFunction;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
+import org.ojalgo.structure.Access1D;
 
 import java.util.Random;
 import java.util.stream.IntStream;
@@ -152,6 +152,16 @@ public class MatrixFactory {
   }
 
   /**
+   * Create a matrix from a given raw data vector.
+   *
+   * @param vectors  Multiple 1D vectors
+   * @return Wrapped raw data
+   */
+  public static Matrix fromRows(Access1D<Double>... vectors) {
+    return new Matrix(FACTORY.rows(vectors));
+  }
+
+  /**
    * Create a matrix from a given vector.
    *
    * @param vector 1D vector
@@ -159,6 +169,16 @@ public class MatrixFactory {
    */
   protected static Matrix fromColumn(Access1D<Double> vector) {
     return new Matrix(FACTORY.columns(vector));
+  }
+
+  /**
+   * Create a matrix from a given vector.
+   *
+   * @param vectors Multiple 1D vectors
+   * @return Wrapped vector
+   */
+  protected static Matrix fromColumns(Access1D<Double>... vectors) {
+    return new Matrix(FACTORY.columns(vectors));
   }
 
   /**
