@@ -21,7 +21,6 @@
 package com.github.waikatodatamining.matrix.core;
 
 import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
-import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsException;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import org.ojalgo.matrix.store.PhysicalStore;
@@ -29,9 +28,10 @@ import org.ojalgo.matrix.store.PhysicalStore;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.IntStream;
 
 /**
  * Additional matrix operations.
@@ -281,6 +281,19 @@ public class MatrixHelper {
    * @return		the lines
    */
   protected static List<String> toLines(Matrix data, boolean header, char separator, int numDec) {
+    return  toLines(data, header, separator, numDec, false);
+  }
+
+  /**
+   * Turns the matrix into a list of strings.
+   *
+   * @param data	the matrix to output
+   * @param header	whether to add a fake header
+   * @param separator	the column separator to use
+   * @param numDec 	the number of decimals after the decimal point, -1 for default
+   * @return		the lines
+   */
+  protected static List<String> toLines(Matrix data, boolean header, char separator, int numDec, boolean scientific) {
     List<String>  	result;
     StringBuilder	line;
     int			i;
@@ -292,25 +305,64 @@ public class MatrixHelper {
       for (j = 0; j < data.numColumns(); j++) {
 	if (j > 0)
 	  line.append(separator);
-	line.append("col" + (j+1));
+	line.append("col").append(j + 1);
       }
       result.add(line.toString());
     }
+
+    dataToString(data, separator, numDec, result, scientific);
+
+    return result;
+  }
+
+  private static void dataToString(Matrix data, char separator, int numDec, List<String> result, boolean scientific) {
+    int i;
+    StringBuilder line;
+    int j;
+    String numDecHashs;
+    DecimalFormat formatter;
+
+    char[] repeat = new char[numDec];
+    Arrays.fill(repeat, '#');
+    numDecHashs = new String(repeat);
+    formatter = new DecimalFormat("0." + numDecHashs + "E0");
 
     for (i = 0; i < data.numRows(); i++) {
       line = new StringBuilder();
       for (j = 0; j < data.numColumns(); j++) {
 	if (j > 0)
 	  line.append(separator);
-	if (numDec == -1)
-	  line.append(Double.toString(data.get(i, j)));
-	else
-	  line.append(Utils.doubleToStringFixed(data.get(i, j), numDec));
+
+        if (scientific) {
+          line.append(formatter.format(data.get(i, j)));
+        }
+        else if (numDec == -1) {
+          line.append(Double.toString(data.get(i, j)));
+        }
+        else {
+          line.append(Utils.doubleToStringFixed(data.get(i, j), numDec));
+        }
       }
       result.add(line.toString());
     }
+  }
 
-    return result;
+  /**
+   * Writes the matrix to the specified file.
+   *
+   * @param data	the matrix to output
+   * @param filename	the file to write to
+   * @param header	whether to add a fake header
+   * @param separator	the column separator to use
+   * @param numDec 	the number of decimals after the decimal point, -1 for default
+   * @param scientific  whether to enforce scientific mode on all values
+   * @throws Exception	if failed to write
+   */
+  public static void write(Matrix data, String filename, boolean header, char separator, int numDec, boolean scientific) throws Exception {
+    Files.write(
+      new File(filename).toPath(),
+      toLines(data, header, separator, numDec, scientific),
+      StandardOpenOption.WRITE,StandardOpenOption.CREATE);
   }
 
   /**
@@ -326,7 +378,7 @@ public class MatrixHelper {
   public static void write(Matrix data, String filename, boolean header, char separator, int numDec) throws Exception {
     Files.write(
       new File(filename).toPath(),
-      toLines(data, header, separator, numDec),
+      toLines(data, header, separator, numDec, false),
       StandardOpenOption.WRITE,StandardOpenOption.CREATE);
   }
 

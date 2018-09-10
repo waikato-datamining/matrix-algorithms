@@ -44,7 +44,7 @@ public class MatrixRegression extends AbstractRegression<Matrix> {
 
   @Override
   protected void writeExpected(String path, Matrix expected) throws Exception {
-    MatrixHelper.write(expected, path, false, ',', 10);
+    MatrixHelper.write(expected, path, false, ',', 100, true);
   }
 
   @Override
