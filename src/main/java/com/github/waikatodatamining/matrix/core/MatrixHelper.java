@@ -150,23 +150,6 @@ public class MatrixHelper {
     return result;
   }
 
-  /**
-   * determines the dominant eigenvector for the given matrix and returns it
-   *
-   * @param m the matrix to determine the dominant eigenvector for
-   * @return the dominant eigenvector
-   */
-  public static Matrix getDominantEigenVector(Matrix m) {
-    double[] eigenvalues;
-    int index;
-    Matrix result;
-
-    eigenvalues = m.getEigenvalues().toRawCopy1D();
-    index = Utils.maxIndex(eigenvalues);
-    result = m.getEigenvectors().getColumn(index);
-
-    return result;
-  }
 
   /**
    * Get the euclidean distance matrix between the two matrices, that is

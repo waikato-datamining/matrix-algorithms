@@ -200,7 +200,7 @@ public class SIMPLS
     for (h = 0; h < getNumComponents(); h++) {
       // 1. qh as dominant EigenVector of Ah'*Ah
       A_trans = A.transpose();
-      q = MatrixHelper.getDominantEigenVector(A_trans.mul(A));
+      q = A_trans.mul(A).getDominantEigenvector();
 
       // 2. wh=Ah*qh, ch=wh'*Mh*wh, wh=wh/sqrt(ch), store wh in W as column
       w = A.mul(q);

@@ -391,7 +391,7 @@ public class MatrixTest {
     Matrix rangeMat = MatrixHelper.range(5, 5, 10);
     Jama.Matrix rangeMatJama = new Jama.Matrix(rangeMat.toRawCopy2D());
 
-    Matrix dominantEigenVector = MatrixHelper.getDominantEigenVector(rangeMat);
+    Matrix dominantEigenVector = rangeMat.getDominantEigenvector();
     Jama.Matrix dominantEigenVectorJama = getDominantEigenVectorJama(rangeMatJama);
 
     assertMatrixEquals(dominantEigenVectorJama, dominantEigenVector);

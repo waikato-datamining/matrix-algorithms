@@ -6,33 +6,37 @@ import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsException;
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixInversionException;
 import org.ojalgo.RecoverableCondition;
-import org.ojalgo.access.Access1D;
 import org.ojalgo.array.Array1D;
 import org.ojalgo.function.PrimitiveFunction;
 import org.ojalgo.function.UnaryFunction;
 import org.ojalgo.function.aggregator.Aggregator;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
+import org.ojalgo.matrix.decomposition.Eigenvalue.Eigenpair;
 import org.ojalgo.matrix.decomposition.QR;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
 import org.ojalgo.matrix.task.InverterTask;
 import org.ojalgo.scalar.ComplexNumber;
+import org.ojalgo.structure.Access1D;
 import org.ojalgo.type.context.NumberContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.github.waikatodatamining.matrix.core.MatrixFactory.create;
 import static com.github.waikatodatamining.matrix.core.MatrixFactory.fromColumn;
 
 /**
- * Matrix abstraction to the ojAlgo's Matrix PrimitiveDenseStore implementation.
+ * Matrix abstraction to the ojAlgo's Matrix PrimitiveDenseStore
+ * implementation.
  *
  * @author Steven Lang
  */
@@ -143,9 +147,11 @@ public class Matrix {
   }
 
   /**
-   * Get the eigenvectors of this matrix, sorted according to their descending eigenvalues.
+   * Get the eigenvectors of this matrix, sorted according to their descending
+   * eigenvalues.
    *
-   * @param sortDominance If true, the columns are sorted according to the vectors dominances
+   * @param sortDominance If true, the columns are sorted according to the
+   *                      vectors dominances
    * @return Eigenvectors of this matrix
    */
   public Matrix getEigenvectors(boolean sortDominance) {
@@ -153,16 +159,17 @@ public class Matrix {
     MatrixStore<Double> eigVunsorted = eigenvalueDecomposition.getV();
 
     if (sortDominance) {
-      double[] eigVals = eigenvalueDecomposition.getEigenvalues().toRawCopy1D();
-      int[] sortedColumnIndices = IntStream
-	.range(0, eigVals.length)
-	.boxed()
-	.sorted(Comparator.comparingDouble(o -> -1 * eigVals[o])) // Multiply by -1 for descending order
-	.mapToInt(i -> i)
-	.toArray();
-      int[] allRows = IntStream.range(0, (int) eigVunsorted.countRows()).toArray();
-      Matrix eigVsorted = MatrixFactory.create(eigVunsorted).getSubMatrix(allRows, sortedColumnIndices);
-      return eigVsorted;
+      // Get eigenpairs
+      List<Eigenpair> eigenpairs = IntStream
+	.range(0, eigenvalueDecomposition.getEigenvalues().size())
+	.mapToObj(i -> eigenvalueDecomposition.getEigenpair(i))
+	.sorted(Eigenpair::compareTo)
+	.collect(Collectors.toList());
+
+      // Sort descending
+
+      Access1D[] access1DS = eigenpairs.stream().map(eigenpair -> eigenpair.vector).toArray(Access1D[]::new);
+      return MatrixFactory.fromColumns(access1DS);
     }
     else {
       return MatrixFactory.create(eigVunsorted);
@@ -170,24 +177,51 @@ public class Matrix {
   }
 
   /**
-   * Get the eigenvectors of this matrix, sorted according to their ascending eigenvalues.
+   * Get the eigenvectors of this matrix, sorted according to their ascending
+   * eigenvalues.
    *
    * @return Eigenvectors of this matrix
    */
   public Matrix getEigenvectorsSortedAscending() {
     makeEigenvalueDecomposition();
-    MatrixStore<Double> eigVunsorted = eigenvalueDecomposition.getV();
+    // Get eigenpairs
+    List<Eigenpair> eigenpairs = IntStream
+      .range(0, eigenvalueDecomposition.getEigenvalues().size())
+      .mapToObj(i -> eigenvalueDecomposition.getEigenpair(i))
+      .sorted(Comparator.reverseOrder())
+      .collect(Collectors.toList());
 
-    double[] eigVals = eigenvalueDecomposition.getEigenvalues().toRawCopy1D();
-    int[] sortedColumnIndices = IntStream
-      .range(0, eigVals.length)
-      .boxed()
-      .sorted(Comparator.comparingDouble(o -> eigVals[o])) // Multiply by -1 for descending order
-      .mapToInt(i -> i)
-      .toArray();
-    int[] allRows = IntStream.range(0, (int) eigVunsorted.countRows()).toArray();
-    Matrix eigVsorted = MatrixFactory.create(eigVunsorted).getSubMatrix(allRows, sortedColumnIndices);
-    return eigVsorted;
+    Access1D[] access1DS = eigenpairs.stream().map(eigenpair -> eigenpair.vector).toArray(Access1D[]::new);
+    return MatrixFactory.fromColumns(access1DS);
+  }
+
+  /**
+   * Get the eigenvectors of this matrix, sorted according to their ascending
+   * eigenvalues.
+   *
+   * @return Eigenvectors of this matrix
+   */
+  public Matrix getEigenvectorsSortedDescending() {
+    makeEigenvalueDecomposition();
+    // Get eigenpairs
+    List<Eigenpair> eigenpairs = IntStream
+      .range(0, eigenvalueDecomposition.getEigenvalues().size())
+      .mapToObj(i -> eigenvalueDecomposition.getEigenpair(i))
+      .sorted(Comparator.naturalOrder())
+      .collect(Collectors.toList());
+
+
+    Access1D[] access1DS = eigenpairs.stream().map(eigenpair -> eigenpair.vector).toArray(Access1D[]::new);
+    return MatrixFactory.fromColumns(access1DS);
+  }
+
+  /**
+   * Get the dominant eigenvector with the largest eigenvalue.
+   *
+   * @return Eigenvector with the largest eigenvalue
+   */
+  public Matrix getDominantEigenvector() {
+    return getEigenvectorsSortedDescending().getColumn(0);
   }
 
   /**
@@ -419,9 +453,8 @@ public class Matrix {
 
   /**
    * Compute the vector dot product. Equivalent to x.transpose().mul(y) but
-   * faster as transposition is skipped.
-   * Both vectors (this and other) have to be in the
-   * shape [1 x n] to skip the explicit transposition.
+   * faster as transposition is skipped. Both vectors (this and other) have to
+   * be in the shape [1 x n] to skip the explicit transposition.
    *
    * @param other Other vector
    * @return Vector dot product
@@ -447,9 +480,8 @@ public class Matrix {
   }
 
   /**
-   * Get the normalized matrix based on a specific normalization axis.
-   * Axis 0: Normalize column vectors
-   * Axis 1: Normalize row vectors
+   * Get the normalized matrix based on a specific normalization axis. Axis 0:
+   * Normalize column vectors Axis 1: Normalize row vectors
    *
    * @param axis Normalization axis
    * @return Normalized matrix
@@ -481,8 +513,8 @@ public class Matrix {
   /**
    * Check if this matrix is a vector.
    *
-   * @return True if either {@link Matrix#numRows()} equals 1 or
-   * {@link Matrix#numColumns()} equals 1
+   * @return True if either {@link Matrix#numRows()} equals 1 or {@link
+   * Matrix#numColumns()} equals 1
    */
   private boolean isVector() {
     return data.isVector();
@@ -556,8 +588,7 @@ public class Matrix {
   }
 
   /**
-   * Scale the i-th row of this matrix by the i-th element of the input
-   * vector.
+   * Scale the i-th row of this matrix by the i-th element of the input vector.
    *
    * @param vector Scale input vector
    * @return Scaled matrix
@@ -588,8 +619,8 @@ public class Matrix {
 
 
   /**
-   * Add the i-th element of the input vector each element of the i-th
-   * column of this matrix.
+   * Add the i-th element of the input vector each element of the i-th column of
+   * this matrix.
    *
    * @param vector Add input vector
    * @return Matrix
@@ -804,9 +835,10 @@ public class Matrix {
   }
 
   /**
-   * Set a column in this matrix. If this matrix is a physical store, the operation
-   * will be inplace, else the operation first creates a copy which will be
-   * modified and replaces the current matrix store (more memory intensive).
+   * Set a column in this matrix. If this matrix is a physical store, the
+   * operation will be inplace, else the operation first creates a copy which
+   * will be modified and replaces the current matrix store (more memory
+   * intensive).
    *
    * @param columnIdx Row index
    * @param column    Row
@@ -967,8 +999,8 @@ public class Matrix {
   }
 
   /**
-   * Reset matrix cache, that is different decompositions that can be cached
-   * the matrix has been modified.
+   * Reset matrix cache, that is different decompositions that can be cached the
+   * matrix has been modified.
    */
   protected void resetCache() {
     this.eigenvalueDecomposition = null;
