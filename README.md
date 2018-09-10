@@ -9,6 +9,7 @@ Unsupervised:
 * [Principal Component Analysis (PCA)](https://web.archive.org/web/20160630035830/http://statmaster.sdu.dk:80/courses/ST02/module05/module.pdf)
 * [Generalized Least Squares Weighting (GLSW)](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#GLSW_Algorithm)
 * [External Parameter Orthogonalization (EPO)](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29) 
+* [Independent Component Analysis (FastICA)](https://www.cs.helsinki.fi/u/ahyvarin/papers/bookfinal_ICA.pdf)
 
 Supervised:
 
@@ -22,6 +23,7 @@ Supervised:
 * [Y Gradient based External Parameter Orthogonalization (YGradientEPO)](http://wiki.eigenvector.com/index.php?title=Advanced_Preprocessing:_Multivariate_Filtering#External_Parameter_Orthogonalization_.28EPO.29)
 * [Canonical Correlation Analysis (CCA)](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.16)
 * [Domain Invariant PLS (DIPLS)](https://pubs.acs.org/doi/10.1021/acs.analchem.8b00498)
+* [Variance Constrained PLS](http://or.nsfc.gov.cn/bitstream/00001903-5/485833/1/1000013952154.pdf)
 
 Planned:
 
@@ -40,7 +42,7 @@ Add the following dependency to your `pom.xml`:
     <dependency>
       <groupId>nz.ac.waikato.cms.adams</groupId>
       <artifactId>matrix-algorithms</artifactId>
-      <version>0.0.9</version>
+      <version>0.0.11</version>
     </dependency>
 ```
 ## Examples
