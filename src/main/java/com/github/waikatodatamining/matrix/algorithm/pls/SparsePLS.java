@@ -410,7 +410,7 @@ public class SparsePLS
       Matrix tk = X.mul(wk);
       T.setColumn(k, tk);
 
-      Matrix pk = X.t().mul(tk);
+      Matrix pk = X.t().mul(tk).div(tk.norm2squared());
       X = X.sub(tk.mul(pk.t()));
     }
 
