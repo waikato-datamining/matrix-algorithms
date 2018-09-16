@@ -1336,6 +1336,15 @@ public class Matrix {
     return tuples;
   }
 
+  /**
+   * Compute the trace of this matrix.
+   *
+   * @return Trace of this matrix
+   */
+  public double trace(){
+    return diag().sum();
+  }
+
   @Override
   public String toString() {
     return MatrixHelper.toString(this, false, ',', 3);
