@@ -3,12 +3,14 @@ package com.github.waikatodatamining.matrix.algorithm.ica.approxfun;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.Tuple;
 
+import java.io.Serializable;
+
 /**
  * Cubic Negative Entropy Approximation Function.
  *
  * @author Steven Lang
  */
-public class Cube implements NegEntropyApproximationFunction {
+public class Cube implements NegEntropyApproximationFunction, Serializable {
 
   @Override
   public Tuple<Matrix, Matrix> apply(Matrix x) {

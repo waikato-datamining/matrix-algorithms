@@ -1,5 +1,6 @@
 package com.github.waikatodatamining.matrix.core;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -10,7 +11,9 @@ import java.util.Objects;
  * @param <B> Type of second element
  * @author Steven Lang
  */
-public class Tuple<A, B> {
+public class Tuple<A extends Serializable, B extends Serializable> implements Serializable {
+
+  private static final long serialVersionUID = -8808002793420622670L;
 
   /** First element */
   protected A first;
