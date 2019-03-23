@@ -1,6 +1,5 @@
 package com.github.waikatodatamining.matrix.core;
 
-import Jama.SingularValueDecomposition;
 import com.github.waikatodatamining.matrix.core.exceptions.InvalidAxisException;
 import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsException;
@@ -13,6 +12,7 @@ import org.ojalgo.function.aggregator.Aggregator;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
 import org.ojalgo.matrix.decomposition.Eigenvalue.Eigenpair;
 import org.ojalgo.matrix.decomposition.QR;
+import org.ojalgo.matrix.decomposition.SingularValue;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
 import org.ojalgo.matrix.store.PrimitiveDenseStore;
@@ -54,7 +54,7 @@ public class Matrix {
   /**
    * SingularValue decomposition. Get reset after {@link #data} has changed.
    */
-  protected SingularValueDecomposition singularvalueDecomposition;
+  protected SingularValue<Double> singularvalueDecomposition;
 
   /**
    * QR decomposition decomposition. Get reset after {@link #data} has changed.
@@ -203,16 +203,21 @@ public class Matrix {
    */
   public Matrix getEigenvectorsSortedDescending() {
     makeEigenvalueDecomposition();
-    // Get eigenpairs
-    List<Eigenpair> eigenpairs = IntStream
-      .range(0, eigenvalueDecomposition.getEigenvalues().size())
-      .mapToObj(i -> eigenvalueDecomposition.getEigenpair(i))
-      .sorted(Comparator.naturalOrder())
-      .collect(Collectors.toList());
+    
+    if (eigenvalueDecomposition.isOrdered()) {
+      return MatrixFactory.create(eigenvalueDecomposition.getV());
+    } else {
+        
+      // Get eigenpairs
+      Access1D[] access1DS = IntStream
+        .range(0, eigenvalueDecomposition.getEigenvalues().size())
+        .mapToObj(i -> eigenvalueDecomposition.getEigenpair(i))
+        .sorted(Comparator.naturalOrder())
+        .map(eigenpair -> eigenpair
+        .vector).toArray(Access1D[]::new);
 
-
-    Access1D[] access1DS = eigenpairs.stream().map(eigenpair -> eigenpair.vector).toArray(Access1D[]::new);
-    return MatrixFactory.fromColumns(access1DS);
+      return MatrixFactory.fromColumns(access1DS);
+    }
   }
 
   /**
@@ -262,7 +267,9 @@ public class Matrix {
   public Matrix getEigenvaluesSortedDescending() {
     makeEigenvalueDecomposition();
     Array1D<ComplexNumber> eigenvalues = eigenvalueDecomposition.getEigenvalues();
-    eigenvalues.sortDescending();
+    if (!eigenvalueDecomposition.isOrdered()) {
+      eigenvalues.sortDescending();
+    }
     return MatrixFactory.fromColumn(eigenvalues.toRawCopy1D());
   }
 
@@ -283,7 +290,8 @@ public class Matrix {
    */
   protected void makeSingularValueDecomposition() {
     if (singularvalueDecomposition == null) {
-      singularvalueDecomposition = new SingularValueDecomposition(new Jama.Matrix(data.toRawCopy2D()));
+      singularvalueDecomposition = SingularValue.PRIMITIVE.make(data);
+      singularvalueDecomposition.decompose(data);
     }
   }
 
@@ -313,9 +321,8 @@ public class Matrix {
    * @return SVD-U matrix
    */
   public Matrix svdU() {
-    // TODO: convert to ojAlgo SVD
     makeSingularValueDecomposition();
-    return create(singularvalueDecomposition.getU().getArray());
+    return create(singularvalueDecomposition.getQ1());
   }
 
   /**
@@ -324,9 +331,8 @@ public class Matrix {
    * @return SVD-V matrix
    */
   public Matrix svdV() {
-    // TODO: convert to ojAlgo SVD
     makeSingularValueDecomposition();
-    return create(singularvalueDecomposition.getV().getArray());
+    return create(singularvalueDecomposition.getQ2());
   }
 
   /**
@@ -335,9 +341,8 @@ public class Matrix {
    * @return SVD-S matrix
    */
   public Matrix svdS() {
-    // TODO: convert to ojAlgo SVD
     makeSingularValueDecomposition();
-    return create(singularvalueDecomposition.getS().getArray());
+    return create(singularvalueDecomposition.getD());
   }
 
   /**
@@ -346,7 +351,6 @@ public class Matrix {
    * @return SVD-S matrix
    */
   public Matrix getSingularValues() {
-    // TODO: convert to ojAlgo SVD
     makeSingularValueDecomposition();
     return fromColumn(singularvalueDecomposition.getSingularValues());
   }
@@ -792,7 +796,7 @@ public class Matrix {
    * @return Scalar at the given position
    */
   public double get(int row, int column) {
-    return data.get(row, column);
+    return data.doubleValue(row, column);
   }
 
   /**
@@ -1032,17 +1036,8 @@ public class Matrix {
    * @param body Function body
    */
   public Matrix applyElementwise(Function<Double, Double> body) {
-    return create(data.operateOnAll(new UnaryFunction<Double>() {
-      @Override
-      public double invoke(double arg) {
-	return body.apply(arg);
-      }
-
-      @Override
-      public Double invoke(Double arg) {
-	return body.apply(arg);
-      }
-    }).get());
+    PrimitiveFunction.Unary modifier = arg -> body.apply(arg);
+    return create(data.operateOnAll(modifier).get());
   }
 
   /**
@@ -1098,10 +1093,7 @@ public class Matrix {
    * @return Max value
    */
   public double max() {
-    return data
-      .reduceColumns(Aggregator.MAXIMUM).get()
-      .reduceRows(Aggregator.MAXIMUM).get()
-      .get(0, 0);
+    return data.aggregateAll(Aggregator.MAXIMUM);
   }
 
   /**
