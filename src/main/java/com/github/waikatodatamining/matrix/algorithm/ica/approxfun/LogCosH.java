@@ -3,6 +3,8 @@ package com.github.waikatodatamining.matrix.algorithm.ica.approxfun;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.Tuple;
 
+import java.io.Serializable;
+
 import static com.github.waikatodatamining.matrix.core.MatrixFactory.filled;
 import static com.github.waikatodatamining.matrix.core.MatrixFactory.zeros;
 
@@ -11,7 +13,7 @@ import static com.github.waikatodatamining.matrix.core.MatrixFactory.zeros;
  *
  * @author Steven Lang
  */
-public class LogCosH implements NegEntropyApproximationFunction {
+public class LogCosH implements NegEntropyApproximationFunction, Serializable {
 
   /** Alpha variable for logCosH */
   protected double m_alpha;
