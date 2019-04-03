@@ -53,7 +53,7 @@ public class YGradientGLSW extends GLSW {
     Matrix ysmoothed = savGolay.transform(ysorted);
 
     double ysmoothedMean = ysmoothed.mean(-1).asDouble();
-    double syd = ysmoothed.sub(ysmoothedMean).powElementwise(2).sum(-1).div(ysmoothed.numRows() - 1).asDouble();
+    double syd = ysmoothed.sub(ysmoothedMean).powElementwise(2).sum(-1).div(ysmoothed.numRows() - 1).sqrt().asDouble();
 
     // Reweighting matrix
     Matrix W = MatrixFactory.zeros(y.numRows(), y.numRows());
