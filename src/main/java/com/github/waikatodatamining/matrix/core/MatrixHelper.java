@@ -98,12 +98,28 @@ public class MatrixHelper {
    * @return		the mean
    */
   public static double mean(Matrix data, int col) {
+    return mean(data, col,true);
+  }
+
+  /**
+   * Calculates the mean for the specified row or column.
+   *
+   * @param data	the matrix to work on
+   * @param index	the row or column to calculate the mean for
+   * @param column      whether to calculate a row or column mean
+   * @return		the mean
+   */
+  public static double mean(Matrix data, int index, boolean column) {
     double	result;
     int		i;
 
     result = 0.0;
-    for (i = 0; i < data.numRows(); i++)
-      result += data.get(i, col) / data.numRows();
+    if (column)
+      for (i = 0; i < data.numRows(); i++)
+        result += data.get(i, index) / data.numRows();
+    else
+      for (i = 0; i < data.numColumns(); i++)
+        result += data.get(index, i) / data.numColumns();
 
     return result;
   }
@@ -116,15 +132,34 @@ public class MatrixHelper {
    * @return		the stdev
    */
   public static double stdev(Matrix data, int col) {
+    return stdev(data, col, true);
+  }
+
+  /**
+   * Calculates the standard deviation (sample) for the specified row
+   * or column.
+   *
+   * @param data	the matrix to work on
+   * @param index       the row or column to calculate the stdev for
+   * @param column      whether to calculate a row or column stdev
+   * @return		the stdev
+   */
+  public static double stdev(Matrix data, int index, boolean column) {
     double	result;
     double	mean;
     int		i;
 
-    mean   = mean(data, col);
+    mean   = mean(data, index, column);
     result = 0.0;
-    for (i = 0; i < data.numRows(); i++)
-      result += Math.pow(data.get(i, col) - mean, 2);;
-    result /= (data.numRows() - 1);
+    if (column) {
+      for (i = 0; i < data.numRows(); i++)
+        result += Math.pow(data.get(i, index) - mean, 2);
+      result /= (data.numRows() - 1);
+    } else {
+      for (i = 0; i < data.numColumns(); i++)
+        result += Math.pow(data.get(index, i) - mean, 2);
+      result /= (data.numColumns() - 1);
+    }
     result = Math.sqrt(result);
 
     return result;
