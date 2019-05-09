@@ -498,4 +498,24 @@ public class MatrixHelper {
     throw new InvalidShapeException("Invalid matrix multiplication. Shapes " +
       m1.shapeString() + " and " + m2.shapeString() + " do not match.");
   }
+
+  /**
+   * Concatenates several matrices together at once, in the order given.
+   * @param axis      The axis to concatenate along.
+   * @param matrices  The matrices to concatenate.
+   * @return          The resulting concatenated matrix.
+   */
+  public static Matrix multiConcat(int axis, Matrix... matrices) {
+    if (matrices == null || matrices.length == 0)
+      return null;
+    else if (matrices.length == 1)
+      return matrices[0].copy();
+
+    Matrix result = matrices[0];
+
+    for (int i = 1; i < matrices.length; i++)
+      result = result.concat(matrices[i], axis);
+
+    return result;
+  }
 }
