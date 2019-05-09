@@ -241,6 +241,60 @@ public class Utils {
   }
 
   /**
+   * Calculates the slope and intercept between the two arrays.
+   *
+   * @param x		the first array, representing the X values
+   * @param y		the second array, representing the Y values
+   * @return		intercept/slope
+   */
+  public static double[] linearRegression(double[] x, double[] y) {
+    int n = x.length;
+    double[] xTimesy = new double[n];
+    for (int i = 0; i < n; i++)
+      xTimesy[i] = x[i] * y[i];
+
+    double a = (sum(y) * sumOfSquares(x) - sum(x) * sum(xTimesy))
+               / (n * sumOfSquares(x) - Math.pow(sum(x), 2.0));
+
+    double b = (n * sum(xTimesy) - sum(x) * sum(y))
+               / (n * sumOfSquares(x) - Math.pow(sum(x), 2.0));
+
+    return new double[] { a, b };
+  }
+
+  /**
+   * Returns sum of the squares of all the elements in the array.
+   *
+   * @param doubles	the array to work on
+   * @return		the sum
+   */
+  public static double sumOfSquares(double[] doubles) {
+    double sum = 0.0;
+
+    for (double d : doubles)
+      sum += d * d;
+
+    return sum;
+  }
+
+  /**
+   * Turns the Number array into one consisting of primitive doubles.
+   *
+   * @param array	the array to convert
+   * @return		the converted array
+   */
+  public static double[] toDoubleArray(Number[] array) {
+    double[]	result;
+    int		i;
+
+    result = new double[array.length];
+    for (i = 0; i < array.length; i++)
+      result[i] = array[i].doubleValue();
+
+    return result;
+  }
+
+  /**
    * Returns index of maximum element in a given array of doubles. First maximum
    * is returned.
    *
