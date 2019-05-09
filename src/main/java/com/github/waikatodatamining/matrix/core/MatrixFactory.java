@@ -329,4 +329,18 @@ public class MatrixFactory {
 
     return fromRaw(data);
   }
+
+  public static Matrix createSpectrum(double[] waveNumbers, double[] amplitudes) {
+    if (waveNumbers.length != amplitudes.length)
+      throw new IllegalArgumentException("Must have equal number of amplitudes and wave-numbers");
+
+    double[][] raw = new double[waveNumbers.length][2];
+
+    for (int i = 0; i < waveNumbers.length; i++) {
+      raw[i][0] = waveNumbers[i];
+      raw[i][1] = amplitudes[i];
+    }
+
+    return fromRaw(raw);
+  }
 }
