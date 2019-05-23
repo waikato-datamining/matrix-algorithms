@@ -27,7 +27,7 @@ import com.github.waikatodatamining.matrix.transformation.Center;
 import com.github.waikatodatamining.matrix.transformation.Standardize;
 
 /**
- * Ancestor for PLS algorithms that work on a single response variable.
+ * Ancestor for PLS algorithms that work on multiple response variables.
  *
  * @author FracPete (fracpete at waikato dot ac dot nz)
  */
