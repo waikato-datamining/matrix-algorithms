@@ -63,7 +63,7 @@ public class PLS1
   }
 
   /**
-   * Returns the all the available matrices.
+   * Returns the names of all the available matrices.
    *
    * @return		the names of the matrices
    */
@@ -267,7 +267,7 @@ public class PLS1
 	X.setColumn(j, x);
 	// 1. step: tj = xj * wj
 	t = x.mul(m_W.getColumn(j));
-	T.setRow(j, t);
+	T.setColumn(j, t);
 	// 2. step: xj+1 = xj - tj*pj^T (tj is 1x1 matrix!)
 	x = x.sub(m_P.getColumn(j).transpose().mul(t.asDouble()));
       }
