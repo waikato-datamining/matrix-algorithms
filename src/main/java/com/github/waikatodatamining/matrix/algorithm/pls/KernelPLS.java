@@ -180,7 +180,7 @@ public class KernelPLS extends AbstractMultiResponsePLS {
       Y = Y.sub(t.mul(q.transpose()));
       Matrix p = m_K_deflated.transpose().mul(w).div(w.transpose().mul(w).asDouble());
 
-      // Store u,t,c,p
+      // Store u,t,q,p
       m_T.setColumn(currentComponent, t);
       m_U.setColumn(currentComponent, u);
       m_Q.setColumn(currentComponent, q);

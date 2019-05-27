@@ -22,7 +22,7 @@ public abstract class AbstractKernel implements Serializable {
      *
      * @param x First vector
      * @param y Second vector
-     * @return Dot product of the given vector in the kernel space
+     * @return Dot product of the given vectors in the kernel space
      */
     public abstract double applyVector(Matrix x, Matrix y);
 
