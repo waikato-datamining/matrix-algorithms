@@ -152,7 +152,7 @@ public class SIMPLS
     double[][] B = in.toRawCopy2D();
 
     for (int i = 0; i < in.numColumns(); i++) {
-      Matrix l = in.getSubMatrix(0, in.numRows(), i, i + 1);
+      Matrix l = in.getColumn(i);
       double[] ld = l.toRawCopy1D();
       for (int t = 0; t < ld.length; t++) {
 	ld[t] = Math.abs(ld[t]);
