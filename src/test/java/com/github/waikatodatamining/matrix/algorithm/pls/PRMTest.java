@@ -2,14 +2,14 @@ package com.github.waikatodatamining.matrix.algorithm.pls;
 
 
 /**
- * Testcase for the PLS1 algorithm.
+ * Testcase for the PRM algorithm.
  *
  * @author Steven Lang
  */
-public class PRMTest extends AbstractPLSTest<PLS1> {
+public class PRMTest extends AbstractPLSTest<PRM> {
 
   @Override
-  protected PLS1 instantiateSubject() {
-    return new PLS1();
+  protected PRM instantiateSubject() {
+    return new PRM();
   }
 }
