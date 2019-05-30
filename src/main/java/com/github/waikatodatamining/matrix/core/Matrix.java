@@ -1365,4 +1365,14 @@ public class Matrix implements Serializable {
   public String shapeString() {
     return "[" + numRows() + " x " + numColumns() + "]";
   }
+
+  public Matrix pseudoInverse() {
+    InverterTask<Double> task = SingularValue.PRIMITIVE.make(data);
+    try {
+      return create(task.invert(data));
+    }
+    catch (RecoverableCondition recoverableCondition) {
+      throw new MatrixInversionException("", recoverableCondition);
+    }
+  }
 }

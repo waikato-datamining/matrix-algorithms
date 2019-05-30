@@ -168,6 +168,11 @@ public class NIPALS extends AbstractMultiResponsePLS {
 
     double eps = 1e-10;
     for (int k = 0; k < numComponents; k++) {
+      if (Y.transpose().mul(Y).all(e -> e < eps)) {
+        m_Logger.warning("Y residual constant at iteration " + k);
+        break;
+      }
+
       NipalsLoopResult res = nipalsLoop(X, Y);
       xkWeight = res.xWeights;
       ykWeight = res.yWeights;
@@ -187,7 +192,7 @@ public class NIPALS extends AbstractMultiResponsePLS {
       X = X.sub(xkScore.mul(xkLoading.t()));
 
       // Deflate Y
-      switch (m_deflationMode) {
+      switch (getDeflationMode()) {
 	case CANONICAL:
 	  ykLoading = Y.t().mul(ykScore).div(ykScore.norm2squared());
 	  Y = Y.sub(ykScore.mul(ykLoading.t()));
@@ -211,9 +216,9 @@ public class NIPALS extends AbstractMultiResponsePLS {
     }
 
     m_X = X;
-    m_XRotations = m_XWeights.mul((m_XLoadings.t().mul(m_XWeights)).inverse());
+    m_XRotations = m_XWeights.mul((m_XLoadings.t().mul(m_XWeights)).pseudoInverse());
     if (Y.numColumns() > 1) {
-      m_YRotations = m_YWeights.mul((m_YLoadings.t().mul(m_YWeights)).inverse());
+      m_YRotations = m_YWeights.mul((m_YLoadings.t().mul(m_YWeights)).pseudoInverse());
     }
     else {
       m_YRotations = MatrixFactory.filled(1, 1, 1.0);
@@ -302,6 +307,7 @@ public class NIPALS extends AbstractMultiResponsePLS {
       }
 
       // Update stopping conditions
+      xWeightOld = xWeight;
       iterations++;
     }
 
@@ -370,8 +376,6 @@ public class NIPALS extends AbstractMultiResponsePLS {
     m_YWeights = null;
     m_Coef = null;
     m_X = null;
-    m_NormYWeights = false;
-    m_deflationMode = DeflationMode.REGRESSION;
     m_XRotations = null;
     m_YRotations = null;
     m_StandardizeX = new Standardize();
