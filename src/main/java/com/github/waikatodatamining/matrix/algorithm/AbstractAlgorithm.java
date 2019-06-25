@@ -21,6 +21,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import com.github.waikatodatamining.matrix.core.LoggingObject;
+import com.github.waikatodatamining.matrix.core.Matrix;
 
 /**
  * Ancestor for algorithms.
@@ -53,6 +54,14 @@ public abstract class AbstractAlgorithm
     super.reset();
     m_Initialized = false;
   }
+
+  /**
+   * Implements transformation on a set of predictor data.
+   *
+   * @param predictors  Predictor values.
+   * @return            Predicted values.
+   */
+  public abstract Matrix transform(Matrix predictors) throws Exception;
 
   /**
    * For outputting some information about the algorithm.
