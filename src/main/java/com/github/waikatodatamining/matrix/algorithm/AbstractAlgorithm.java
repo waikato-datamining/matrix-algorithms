@@ -56,14 +56,6 @@ public abstract class AbstractAlgorithm
   }
 
   /**
-   * Implements transformation on a set of predictor data.
-   *
-   * @param predictors  Predictor values.
-   * @return            Predicted values.
-   */
-  public abstract Matrix transform(Matrix predictors) throws Exception;
-
-  /**
    * For outputting some information about the algorithm.
    *
    * @return		the information
