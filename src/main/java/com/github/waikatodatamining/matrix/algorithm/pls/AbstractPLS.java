@@ -22,7 +22,7 @@ package com.github.waikatodatamining.matrix.algorithm.pls;
 
 import com.github.waikatodatamining.matrix.algorithm.AbstractAlgorithm;
 import com.github.waikatodatamining.matrix.algorithm.api.Estimator;
-import com.github.waikatodatamining.matrix.algorithm.api.Filter;
+import com.github.waikatodatamining.matrix.algorithm.api.SupervisedFilter;
 import com.github.waikatodatamining.matrix.core.PreprocessingType;
 import com.github.waikatodatamining.matrix.core.Matrix;
 
@@ -32,7 +32,7 @@ import com.github.waikatodatamining.matrix.core.Matrix;
  * @author FracPete (fracpete at waikato dot ac dot nz)
  */
 public abstract class AbstractPLS
-  extends AbstractAlgorithm implements Filter, Estimator {
+  extends AbstractAlgorithm implements SupervisedFilter, Estimator {
 
   private static final long serialVersionUID = -1160378471265135477L;
 

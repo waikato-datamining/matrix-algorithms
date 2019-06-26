@@ -1,7 +1,7 @@
 package com.github.waikatodatamining.matrix.algorithm.glsw;
 
 import com.github.waikatodatamining.matrix.algorithm.AbstractAlgorithm;
-import com.github.waikatodatamining.matrix.algorithm.api.Filter;
+import com.github.waikatodatamining.matrix.algorithm.api.SupervisedFilter;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.transformation.Center;
@@ -17,7 +17,7 @@ import com.github.waikatodatamining.matrix.transformation.Center;
  *
  * @author Steven Lang
  */
-public class GLSW extends AbstractAlgorithm implements Filter {
+public class GLSW extends AbstractAlgorithm implements SupervisedFilter {
 
   private static final long serialVersionUID = -7474573037658789063L;
 

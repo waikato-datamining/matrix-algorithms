@@ -1,6 +1,6 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
-import com.github.waikatodatamining.matrix.algorithm.api.Filter;
+import com.github.waikatodatamining.matrix.algorithm.api.SupervisedFilter;
 import com.github.waikatodatamining.matrix.algorithm.api.ResponseFilter;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixFactory;
@@ -18,7 +18,7 @@ import com.github.waikatodatamining.matrix.transformation.Center;
  *
  * @author Steven Lang
  */
-public class CCAFilter extends AbstractAlgorithm implements Filter, ResponseFilter {
+public class CCAFilter extends AbstractAlgorithm implements SupervisedFilter, ResponseFilter {
 
   private static final long serialVersionUID = 5252111378504552170L;
 
