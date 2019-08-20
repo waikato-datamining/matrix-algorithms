@@ -21,8 +21,8 @@
 package com.github.waikatodatamining.matrix.algorithm.pls;
 
 import com.github.waikatodatamining.matrix.algorithm.AbstractAlgorithm;
-import com.github.waikatodatamining.matrix.algorithm.api.Estimator;
-import com.github.waikatodatamining.matrix.algorithm.api.SupervisedFilter;
+import com.github.waikatodatamining.matrix.core.api.Estimator;
+import com.github.waikatodatamining.matrix.core.api.SupervisedFilter;
 import com.github.waikatodatamining.matrix.core.PreprocessingType;
 import com.github.waikatodatamining.matrix.core.Matrix;
 

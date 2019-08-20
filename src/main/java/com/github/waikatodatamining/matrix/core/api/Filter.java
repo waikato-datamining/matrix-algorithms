@@ -1,4 +1,4 @@
-package com.github.waikatodatamining.matrix.algorithm.api;
+package com.github.waikatodatamining.matrix.core.api;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
 

@@ -21,7 +21,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
 import Jama.EigenvalueDecomposition;
-import com.github.waikatodatamining.matrix.algorithm.api.Filter;
+import com.github.waikatodatamining.matrix.core.api.Filter;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.Utils;

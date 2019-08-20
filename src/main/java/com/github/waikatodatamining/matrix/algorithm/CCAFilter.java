@@ -1,7 +1,7 @@
 package com.github.waikatodatamining.matrix.algorithm;
 
-import com.github.waikatodatamining.matrix.algorithm.api.SupervisedFilter;
-import com.github.waikatodatamining.matrix.algorithm.api.ResponseFilter;
+import com.github.waikatodatamining.matrix.core.api.SupervisedFilter;
+import com.github.waikatodatamining.matrix.core.api.ResponseFilter;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixFactory;
 import com.github.waikatodatamining.matrix.transformation.Center;

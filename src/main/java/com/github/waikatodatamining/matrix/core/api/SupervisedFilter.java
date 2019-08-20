@@ -18,7 +18,7 @@
  * Copyright (C) 2019 University of Waikato, Hamilton, NZ
  */
 
-package com.github.waikatodatamining.matrix.algorithm.api;
+package com.github.waikatodatamining.matrix.core.api;
 
 import com.github.waikatodatamining.matrix.core.Matrix;
 

@@ -20,7 +20,7 @@
 
 package com.github.waikatodatamining.matrix.filter;
 
-import com.github.waikatodatamining.matrix.algorithm.api.Filter;
+import com.github.waikatodatamining.matrix.core.api.Filter;
 import com.github.waikatodatamining.matrix.core.LoggingObject;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixFactory;

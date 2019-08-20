@@ -1,7 +1,7 @@
 package com.github.waikatodatamining.matrix.algorithm.ica;
 
 import com.github.waikatodatamining.matrix.algorithm.AbstractAlgorithm;
-import com.github.waikatodatamining.matrix.algorithm.api.Filter;
+import com.github.waikatodatamining.matrix.core.api.Filter;
 import com.github.waikatodatamining.matrix.algorithm.ica.approxfun.LogCosH;
 import com.github.waikatodatamining.matrix.algorithm.ica.approxfun.NegEntropyApproximationFunction;
 import com.github.waikatodatamining.matrix.core.Matrix;
