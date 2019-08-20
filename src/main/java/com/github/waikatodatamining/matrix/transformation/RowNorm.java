@@ -70,8 +70,6 @@ public class RowNorm extends AbstractTransformation {
       getLogger().info("Means: " + Utils.arrayToString(m_Means));
       getLogger().info("StdDevs: " + Utils.arrayToString(m_StdDevs));
     }
-
-    m_Configured = true;
   }
 
   /**

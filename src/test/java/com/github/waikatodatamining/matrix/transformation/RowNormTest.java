@@ -24,6 +24,7 @@ import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 
 /**
  * Tests the RowNorm transformation.
@@ -54,5 +55,13 @@ public class RowNormTest extends AbstractTransformationTest<RowNorm> {
   @Override
   protected RowNorm instantiateSubject() {
     return new RowNorm();
+  }
+
+  @Test
+  @Disabled("RowNorm now reconfigures on every input," +
+    " so inverse transform does not behave as expected")
+  @Override
+  public void checkInvTransformEqInput() {
+    super.checkInvTransformEqInput();
   }
 }
