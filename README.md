@@ -42,7 +42,7 @@ Add the following dependency to your `pom.xml`:
     <dependency>
       <groupId>nz.ac.waikato.cms.adams</groupId>
       <artifactId>matrix-algorithms</artifactId>
-      <version>0.0.11</version>
+      <version>0.0.13</version>
     </dependency>
 ```
 ## Examples

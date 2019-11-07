@@ -21,9 +21,9 @@ import org.ojalgo.scalar.ComplexNumber;
 import org.ojalgo.structure.Access1D;
 import org.ojalgo.type.context.NumberContext;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -40,8 +40,9 @@ import static com.github.waikatodatamining.matrix.core.MatrixFactory.fromColumn;
  *
  * @author Steven Lang
  */
-public class Matrix {
+public class Matrix implements Serializable {
 
+  private static final long serialVersionUID = -4756923165691071163L;
 
   /** Underlying data store */
   protected MatrixStore<Double> data;
@@ -1326,6 +1327,15 @@ public class Matrix {
       }
     });
     return tuples;
+  }
+
+  /**
+   * Compute the trace of this matrix.
+   *
+   * @return Trace of this matrix
+   */
+  public double trace(){
+    return diag().sum();
   }
 
   @Override

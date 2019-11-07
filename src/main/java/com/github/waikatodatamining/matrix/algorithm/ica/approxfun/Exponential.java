@@ -3,6 +3,8 @@ package com.github.waikatodatamining.matrix.algorithm.ica.approxfun;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.Tuple;
 
+import java.io.Serializable;
+
 import static com.github.waikatodatamining.matrix.core.MatrixFactory.filledLike;
 
 /**
@@ -10,7 +12,7 @@ import static com.github.waikatodatamining.matrix.core.MatrixFactory.filledLike;
  *
  * @author Steven Lang
  */
-public class Exponential implements NegEntropyApproximationFunction {
+public class Exponential implements NegEntropyApproximationFunction, Serializable {
 
   @Override
   public Tuple<Matrix, Matrix> apply(Matrix x) {

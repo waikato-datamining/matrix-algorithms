@@ -127,7 +127,7 @@ public class GLSW extends AbstractAlgorithm implements Filter {
 
   protected Matrix getWeightMatrix(Matrix C) {
     // Get eigenvalues
-    Matrix Ssquared = C.getEigenvalueDecompositionD();
+    Matrix Ssquared = C.svdS().powElementwise(2);
 
     // Weights
     Matrix D = Ssquared.div(m_Alpha);

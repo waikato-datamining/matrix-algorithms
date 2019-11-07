@@ -1,10 +1,11 @@
 package com.github.waikatodatamining.matrix.core;
 
 import Jama.EigenvalueDecomposition;
+import Jama.SingularValueDecomposition;
 import com.github.waikatodatamining.matrix.core.exceptions.InvalidShapeException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
+import org.ojalgo.matrix.decomposition.SingularValue;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -152,12 +153,21 @@ public class MatrixTest {
   }
 
   @Test
-  public void svdU() {
+  public void singularValues(){
+    // ojAlgo
+    SingularValue<Double> svdOjAlgo = SingularValue.PRIMITIVE.make(a.data);
+    svdOjAlgo.decompose(a.data);
+    double[] singularValuesOjAlog = svdOjAlgo.getSingularValues().toRawCopy1D();
 
-  }
+    // Jama
+    SingularValueDecomposition svdJama = new SingularValueDecomposition(new Jama.Matrix(a.toRawCopy2D()));
+    double[] singularValuesJama = svdJama.getSingularValues();
 
-  @Test
-  public void svdV() {
+    // Only compare first 10 singular values which are non zero.
+    // Jama includes further zero values while ojAlgo does not.
+    for (int i = 0; i < 10; i++) {
+      assertEquals(singularValuesJama[i], singularValuesOjAlog[i], PRECISION);
+    }
   }
 
   @Test
