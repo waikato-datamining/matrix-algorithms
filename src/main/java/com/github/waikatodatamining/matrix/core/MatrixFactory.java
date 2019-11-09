@@ -3,7 +3,7 @@ package com.github.waikatodatamining.matrix.core;
 import org.ojalgo.function.NullaryFunction;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
-import org.ojalgo.matrix.store.PrimitiveDenseStore;
+import org.ojalgo.matrix.store.Primitive64Store;
 import org.ojalgo.structure.Access1D;
 
 import java.util.Random;
@@ -15,8 +15,7 @@ import java.util.stream.IntStream;
 public class MatrixFactory {
 
   /** Matrix Factory */
-  protected final static PhysicalStore.Factory<Double, PrimitiveDenseStore> FACTORY =
-    PrimitiveDenseStore.FACTORY;
+  protected final static PhysicalStore.Factory<Double, Primitive64Store> FACTORY = Primitive64Store.FACTORY;
 
   /**
    * Create a matrix from a given matrix store.
@@ -104,14 +103,14 @@ public class MatrixFactory {
    * @param initialValue Initial matrix value for each element
    */
   public static Matrix filled(int rows, int columns, double initialValue) {
-    PrimitiveDenseStore data = FACTORY.makeFilled(rows, columns, new NullaryFunction<Number>() {
+        Primitive64Store data = FACTORY.makeFilled(rows, columns, new NullaryFunction<Double>() {
       @Override
       public double doubleValue() {
 	return initialValue;
       }
 
       @Override
-      public Number invoke() {
+            public Double invoke() {
 	return initialValue;
       }
     });

@@ -15,10 +15,12 @@ import org.ojalgo.matrix.decomposition.QR;
 import org.ojalgo.matrix.decomposition.SingularValue;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
-import org.ojalgo.matrix.store.PrimitiveDenseStore;
+import org.ojalgo.matrix.store.Primitive64Store;
 import org.ojalgo.matrix.task.InverterTask;
 import org.ojalgo.scalar.ComplexNumber;
 import org.ojalgo.structure.Access1D;
+import org.ojalgo.structure.Access1D.ElementView;
+import org.ojalgo.structure.ElementView2D;
 import org.ojalgo.type.context.NumberContext;
 
 import java.io.Serializable;
@@ -27,6 +29,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.DoublePredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -35,7 +38,7 @@ import static com.github.waikatodatamining.matrix.core.MatrixFactory.create;
 import static com.github.waikatodatamining.matrix.core.MatrixFactory.fromColumn;
 
 /**
- * Matrix abstraction to the ojAlgo's Matrix PrimitiveDenseStore
+ * Matrix abstraction to the ojAlgo's Matrix Primitive64Store
  * implementation.
  *
  * @author Steven Lang
@@ -966,7 +969,7 @@ public class Matrix implements Serializable {
   public Matrix concatAlongRows(Matrix other) {
     int numRows = numRows();
     int totalRows = numRows + other.numRows();
-    PrimitiveDenseStore result = MatrixFactory.FACTORY.makeZero(totalRows, numColumns());
+    Primitive64Store result = MatrixFactory.FACTORY.makeZero(totalRows, numColumns());
     for (int i = 0; i < totalRows; i++) {
       Access1D<Double> row;
       if (i < numRows) {
@@ -989,7 +992,7 @@ public class Matrix implements Serializable {
   public Matrix concatAlongColumns(Matrix other) {
     int numCols = numColumns();
     int totalCols = numCols + other.numColumns();
-    PrimitiveDenseStore result = MatrixFactory.FACTORY.makeZero(numRows(), totalCols);
+    Primitive64Store result = MatrixFactory.FACTORY.makeZero(numRows(), totalCols);
     for (int i = 0; i < totalCols; i++) {
       Access1D<Double> col;
       if (i < numCols) {
@@ -1275,12 +1278,7 @@ public class Matrix implements Serializable {
    * @return True if matrix contains NaNs else false
    */
   public boolean containsNaN() {
-    for (double d : data) {
-      if (Double.isNaN(d)) {
-	return true;
-      }
-    }
-    return false;
+    return this.any(datum -> Double.isNaN(datum));
   }
 
   /**
@@ -1290,14 +1288,14 @@ public class Matrix implements Serializable {
    * @return True if any function return value is true
    */
   public boolean any(Function<Double, Boolean> function) {
-    for (Double datum : this.data) {
-      if (function.apply(datum)) {
-	return true;
+    for (ElementView2D<Double, ?> datum : this.data.elements()) {
+      if (function.apply(datum.doubleValue())) {
+        return true;
       }
     }
     return false;
   }
-
+  
   /**
    * Check if all values in this matrix meet the given constraint.
    *
@@ -1305,9 +1303,9 @@ public class Matrix implements Serializable {
    * @return True if all function return values are true
    */
   public boolean all(Function<Double, Boolean> function) {
-    for (Double datum : this.data) {
-      if (!function.apply(datum)) {
-	return false;
+    for (ElementView2D<Double, ?> datum : this.data.elements()) {
+      if (!function.apply(datum.doubleValue())) {
+        return false;
       }
     }
     return true;

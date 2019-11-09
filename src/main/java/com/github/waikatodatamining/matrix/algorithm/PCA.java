@@ -20,7 +20,6 @@
 
 package com.github.waikatodatamining.matrix.algorithm;
 
-import Jama.EigenvalueDecomposition;
 import com.github.waikatodatamining.matrix.algorithm.api.Filter;
 import com.github.waikatodatamining.matrix.core.Matrix;
 import com.github.waikatodatamining.matrix.core.MatrixFactory;
@@ -250,7 +249,6 @@ public class PCA
     int 			j;
     double[][] 			v;
     Matrix 			corr;
-    EigenvalueDecomposition 	eig;
     Matrix 			V;
     TDoubleSet 			distinct;
 
