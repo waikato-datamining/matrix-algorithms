@@ -7,7 +7,6 @@ import com.github.waikatodatamining.matrix.core.exceptions.MatrixInversionExcept
 import org.ojalgo.RecoverableCondition;
 import org.ojalgo.array.Array1D;
 import org.ojalgo.function.PrimitiveFunction;
-import org.ojalgo.function.UnaryFunction;
 import org.ojalgo.function.aggregator.Aggregator;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
 import org.ojalgo.matrix.decomposition.Eigenvalue.Eigenpair;
