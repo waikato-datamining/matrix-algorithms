@@ -1,6 +1,6 @@
 package com.github.waikatodatamining.matrix.test;
 
-import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.test.misc.TestDataset;
 import com.github.waikatodatamining.matrix.test.misc.TestRegression;
 import org.junit.jupiter.api.AfterEach;
@@ -97,7 +97,7 @@ public abstract class AbstractRegressionTest<T> {
    *
    * @return Input data
    */
-  private Matrix[] getInputData() {
+  protected Matrix[] getInputData() {
     return Arrays.stream(getDatasets())
       .map(TestDataset::load)
       .toArray(Matrix[]::new);

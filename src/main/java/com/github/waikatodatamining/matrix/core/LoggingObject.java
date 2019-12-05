@@ -33,36 +33,11 @@ public abstract class LoggingObject
 
   private static final long serialVersionUID = -8620918197044300603L;
 
-  /** the logger to use. */
-  protected transient Logger m_Logger;
+  /** The logger to use. */
+  private transient Logger m_Logger;
 
-  /** whether to output debug information. */
+  /** Whether to output debug information. */
   protected boolean m_Debug;
-
-  /**
-   * Default constructor.
-   */
-  protected LoggingObject() {
-    initialize();
-    reset();
-  }
-
-  /**
-   * For initializing members.
-   * <br>
-   * Default implementation does nothing.
-   */
-  protected void initialize() {
-    getLogger();
-  }
-
-  /**
-   * For resetting data structures when changing parameters.
-   * <br>
-   * Default implementation does nothing.
-   */
-  protected void reset() {
-  }
 
   /**
    * Sets whether to output debugging information.
@@ -71,7 +46,6 @@ public abstract class LoggingObject
    */
   public void setDebug(boolean value) {
     m_Debug = value;
-    // reset();  does not reset!
   }
 
   /**
@@ -89,8 +63,10 @@ public abstract class LoggingObject
    * @return		the logger
    */
   public synchronized Logger getLogger() {
+    // Lazy initialisation
     if (m_Logger == null)
       m_Logger = Logger.getLogger(getClass().getName());
+
     return m_Logger;
   }
 }

@@ -101,10 +101,8 @@ public class Utils {
     r--;
     while (true) {
       while ((array[index[++l]] < pivot)) {
-        ;
       }
       while ((array[index[--r]] > pivot)) {
-        ;
       }
       if (l >= r) {
         return l;
@@ -358,7 +356,7 @@ public class Utils {
       factor    = Math.pow(10, afterDecimalPoint);
       valueNew  = Math.floor(value * factor) / factor;
       result    = new StringBuilder(Long.toString(Math.round(Math.floor(valueNew))));
-      remainder = new StringBuilder("" + (long) Math.round((valueNew - Math.floor(valueNew)) * Math.pow(10, afterDecimalPoint)));
+      remainder = new StringBuilder("" + Math.round((valueNew - Math.floor(valueNew)) * Math.pow(10, afterDecimalPoint)));
       remainder.delete(0, remainder.indexOf("" + separator) + 1);
       if (afterDecimalPoint > 0) {
 	while (remainder.length() < afterDecimalPoint)
@@ -464,5 +462,21 @@ public class Utils {
    */
   public static String arrayToString(Object array) {
     return arrayToString(array, false);
+  }
+
+  /**
+   * Normalises a value against a given mean/standard deviation.
+   *
+   * @param value   The value to normalise.
+   * @param mean    The mean of the distribution.
+   * @param stdDev  The standard deviation of the distribution.
+   * @return        The normalised value.
+   */
+  public static double normalise(double value, double mean, double stdDev) {
+    // Avoid divide-by-zero error
+    if (stdDev == 0.0)
+      return value - mean;
+
+    return (value - mean) / stdDev;
   }
 }

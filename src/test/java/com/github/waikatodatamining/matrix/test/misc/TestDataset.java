@@ -1,8 +1,8 @@
 package com.github.waikatodatamining.matrix.test.misc;
 
 
-import com.github.waikatodatamining.matrix.core.Matrix;
-import com.github.waikatodatamining.matrix.core.MatrixHelper;
+import com.github.waikatodatamining.matrix.core.matrix.Matrix;
+import com.github.waikatodatamining.matrix.core.matrix.MatrixHelper;
 import org.junit.jupiter.api.Assertions;
 
 /**

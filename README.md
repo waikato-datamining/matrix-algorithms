@@ -51,8 +51,8 @@ Add the following dependency to your `pom.xml`:
 
 ```java
 import Jama.Matrix;
-import com.github.waikatodatamining.matrix.algorithm.PCA;
-import com.github.waikatodatamining.matrix.core.MatrixHelper;
+import com.github.waikatodatamining.matrix.algorithms.PCA;
+import com.github.waikatodatamining.matrix.core.matrix.MatrixHelper;
 ...
 Matrix data = MatrixHelper.read("bolts.csv", true, ',');
 // remove the class column, if present
@@ -70,8 +70,8 @@ System.out.println(MatrixHelper.toString(transformed));
 ### SIMPLS
 ```java
 import Jama.Matrix;
-import com.github.waikatodatamining.matrix.algorithm.pls.SIMPLS;
-import com.github.waikatodatamining.matrix.core.MatrixHelper;
+import com.github.waikatodatamining.matrix.algorithms.pls.SIMPLS;
+import com.github.waikatodatamining.matrix.core.matrix.MatrixHelper;
 ...
 Matrix predictors = MatrixHelper.read("bolts.csv", true, ',');
 Matrix response = MatrixHelper.read("bolts_response.csv", true, ',');

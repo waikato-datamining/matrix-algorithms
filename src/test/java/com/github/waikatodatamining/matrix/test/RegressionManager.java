@@ -1,6 +1,6 @@
 package com.github.waikatodatamining.matrix.test;
 
-import com.github.waikatodatamining.matrix.core.Matrix;
+import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.test.regression.AbstractRegression;
 import com.github.waikatodatamining.matrix.test.regression.DoubleRegression;
 import com.github.waikatodatamining.matrix.test.regression.MatrixRegression;
