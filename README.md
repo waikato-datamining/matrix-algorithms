@@ -95,7 +95,6 @@ public class Main {
     
     SIMPLS pls = new SIMPLS();
     pls.setNumComponents(3);
-    pls.configure(predictors, response);
     try {
       pls.configure(predictors, response);
     } catch (Exception e) {
