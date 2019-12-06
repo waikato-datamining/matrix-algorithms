@@ -37,7 +37,9 @@ public class OPLSTest extends AbstractPLSTest<OPLS> {
   }
 
   @TestRegression
-  @Disabled("Causes MatrixInversionException")
+  @Disabled("Causes MatrixInversionException in ojAlgo v48 (didn't in v46," +
+        " but it looks like that was due to errors in v46's implementation" +
+        " of matrix inversion).")
   public void baseCCARegression() {
     m_subject.setBasePLS(new CCARegression());
   }
