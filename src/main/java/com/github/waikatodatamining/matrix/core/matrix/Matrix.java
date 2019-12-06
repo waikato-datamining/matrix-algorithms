@@ -9,16 +9,17 @@ import org.ojalgo.RecoverableCondition;
 import org.ojalgo.array.Array1D;
 import org.ojalgo.function.PrimitiveFunction;
 import org.ojalgo.function.aggregator.Aggregator;
+import org.ojalgo.function.constant.PrimitiveMath;
 import org.ojalgo.matrix.decomposition.Eigenvalue;
 import org.ojalgo.matrix.decomposition.Eigenvalue.Eigenpair;
 import org.ojalgo.matrix.decomposition.QR;
 import org.ojalgo.matrix.decomposition.SingularValue;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.matrix.store.PhysicalStore;
-import org.ojalgo.matrix.store.PrimitiveDenseStore;
 import org.ojalgo.matrix.task.InverterTask;
 import org.ojalgo.scalar.ComplexNumber;
 import org.ojalgo.structure.Access1D;
+import org.ojalgo.structure.ElementView2D;
 import org.ojalgo.type.context.NumberContext;
 
 import java.io.Serializable;
@@ -27,14 +28,16 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.DoublePredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.github.waikatodatamining.matrix.core.matrix.MatrixFactory.create;
+import static com.github.waikatodatamining.matrix.core.matrix.MatrixFactory.fromColumn;
 
 /**
- * Matrix abstraction to the ojAlgo's Matrix PrimitiveDenseStore
+ * Matrix abstraction to the ojAlgo's Matrix Primitive64Store
  * implementation.
  *
  * @author Steven Lang
@@ -322,7 +325,7 @@ public class Matrix implements Serializable {
    */
   public Matrix svdU() {
     makeSingularValueDecomposition();
-    return create(singularvalueDecomposition.getQ1());
+    return create(singularvalueDecomposition.getU());
   }
 
   /**
@@ -332,7 +335,7 @@ public class Matrix implements Serializable {
    */
   public Matrix svdV() {
     makeSingularValueDecomposition();
-    return create(singularvalueDecomposition.getQ2());
+    return create(singularvalueDecomposition.getV());
   }
 
   /**
@@ -557,7 +560,7 @@ public class Matrix implements Serializable {
     if (!sameShapeAs(other)) {
       MatrixHelper.throwInvalidShapes(this, other);
     }
-    return create(data.operateOnMatching(PrimitiveFunction.MULTIPLY, other.data).get());
+    return create(data.operateOnMatching(PrimitiveMath.MULTIPLY, other.data).get());
   }
 
   /**
@@ -663,7 +666,7 @@ public class Matrix implements Serializable {
    * index in the other matrix
    */
   public Matrix divElementwise(Matrix other) {
-    return create(data.operateOnMatching(PrimitiveFunction.DIVIDE, other.data).get());
+    return create(data.operateOnMatching(PrimitiveMath.DIVIDE, other.data).get());
   }
 
 
@@ -717,8 +720,9 @@ public class Matrix implements Serializable {
    * @return Result of the addition
    */
   public Matrix add(double value) {
-    Matrix filled = MatrixFactory.filled(numRows(), numColumns(), value);
-    return add(filled);
+    PhysicalStore<Double> copy = data.copy();
+    copy.modifyAll(PrimitiveMath.ADD.by(value));
+    return create(copy);
   }
 
   /**
@@ -728,8 +732,9 @@ public class Matrix implements Serializable {
    * @return Result of the subtraction
    */
   public Matrix sub(double value) {
-    Matrix filled = MatrixFactory.filled(numRows(), numColumns(), value);
-    return sub(filled);
+    PhysicalStore<Double> copy = data.copy();
+    copy.modifyAll(PrimitiveMath.SUBTRACT.by(value));
+    return create(copy);
   }
 
   /**
@@ -739,7 +744,7 @@ public class Matrix implements Serializable {
    * @return Matrix with elementwise powered elements
    */
   public Matrix powElementwise(double exponent) {
-    return create(data.operateOnAll(PrimitiveFunction.POW, exponent).get());
+    return create(data.operateOnAll(PrimitiveMath.POW, exponent).get());
   }
 
   /**
@@ -748,7 +753,7 @@ public class Matrix implements Serializable {
    * @return Matrix with elementwise square roots
    */
   public Matrix sqrt() {
-    return create(data.operateOnAll(PrimitiveFunction.SQRT).get());
+    return create(data.operateOnAll(PrimitiveMath.SQRT).get());
   }
 
   /**
@@ -963,20 +968,7 @@ public class Matrix implements Serializable {
    * @return Concatenated matrices
    */
   public Matrix concatAlongRows(Matrix other) {
-    int numRows = numRows();
-    int totalRows = numRows + other.numRows();
-    PrimitiveDenseStore result = MatrixFactory.FACTORY.makeZero(totalRows, numColumns());
-    for (int i = 0; i < totalRows; i++) {
-      Access1D<Double> row;
-      if (i < numRows) {
-	row = data.sliceRow(i);
-      }
-      else {
-	row = other.data.sliceRow(i - numRows);
-      }
-      result.fillRow(i, row);
-    }
-    return create(result);
+    return create(data.logical().below(other.data).get());
   }
 
   /**
@@ -986,20 +978,7 @@ public class Matrix implements Serializable {
    * @return Concatenated matrices
    */
   public Matrix concatAlongColumns(Matrix other) {
-    int numCols = numColumns();
-    int totalCols = numCols + other.numColumns();
-    PrimitiveDenseStore result = MatrixFactory.FACTORY.makeZero(numRows(), totalCols);
-    for (int i = 0; i < totalCols; i++) {
-      Access1D<Double> col;
-      if (i < numCols) {
-	col = data.sliceColumn(i);
-      }
-      else {
-	col = other.data.sliceColumn(i - numCols);
-      }
-      result.fillColumn(i, col);
-    }
-    return create(result);
+    return create(data.logical().right(other.data).get());
   }
 
   /**
@@ -1167,13 +1146,7 @@ public class Matrix implements Serializable {
    * @return Diagonal vector of this matrix
    */
   public Matrix diag() {
-    Matrix res = MatrixFactory.zeros(Math.min(numRows(), numColumns()), 1);
-    data.loopAll((row, col) -> {
-      if (row == col) {
-	res.set((int) row, 0, get((int) row, (int) col));
-      }
-    });
-    return res;
+    return fromColumn(data.sliceDiagonal());
   }
 
   /**
@@ -1184,10 +1157,7 @@ public class Matrix implements Serializable {
    * @return Mean value of the matrix
    */
   public double mean() {
-    return create(data
-      .reduceColumns(Aggregator.SUM).get()
-      .reduceRows(Aggregator.SUM).get()).div(numRows() * numColumns()).asDouble();
-
+    return data.aggregateAll(Aggregator.AVERAGE);
   }
 
   /**
@@ -1274,12 +1244,7 @@ public class Matrix implements Serializable {
    * @return True if matrix contains NaNs else false
    */
   public boolean containsNaN() {
-    for (double d : data) {
-      if (Double.isNaN(d)) {
-	return true;
-      }
-    }
-    return false;
+    return this.any(datum -> Double.isNaN(datum));
   }
 
   /**
@@ -1289,9 +1254,9 @@ public class Matrix implements Serializable {
    * @return True if any function return value is true
    */
   public boolean any(Function<Double, Boolean> function) {
-    for (Double datum : this.data) {
-      if (function.apply(datum)) {
-	return true;
+    for (ElementView2D<Double, ?> datum : this.data.elements()) {
+      if (function.apply(datum.doubleValue())) {
+        return true;
       }
     }
     return false;
@@ -1304,9 +1269,9 @@ public class Matrix implements Serializable {
    * @return True if all function return values are true
    */
   public boolean all(Function<Double, Boolean> function) {
-    for (Double datum : this.data) {
-      if (!function.apply(datum)) {
-	return false;
+    for (ElementView2D<Double, ?> datum : this.data.elements()) {
+      if (!function.apply(datum.doubleValue())) {
+        return false;
       }
     }
     return true;
@@ -1334,7 +1299,7 @@ public class Matrix implements Serializable {
    * @return Trace of this matrix
    */
   public double trace(){
-    return diag().sum();
+    return data.aggregateDiagonal(Aggregator.SUM);
   }
 
   @Override
