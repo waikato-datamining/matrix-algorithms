@@ -35,12 +35,6 @@ public class RowNorm
 
   private static final long serialVersionUID = -4619086306634317821L;
 
-  /**
-   * Filters the data.
-   *
-   * @param data	the data to transform
-   * @return		the transformed data
-   */
   @Override
   protected Matrix doTransform(Matrix data) {
     // Calculate the mean and standard deviation for each row

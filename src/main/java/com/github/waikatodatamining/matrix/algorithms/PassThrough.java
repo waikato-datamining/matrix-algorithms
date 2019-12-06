@@ -33,12 +33,6 @@ public class PassThrough
 
   private static final long serialVersionUID = 8662408709654176200L;
 
-  /**
-   * Just returns the input data.
-   *
-   * @param data	the data to transform
-   * @return		the transformed data
-   */
   @Override
   protected Matrix doTransform(Matrix data) {
     return data;

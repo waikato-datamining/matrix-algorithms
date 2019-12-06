@@ -33,22 +33,14 @@ import com.github.waikatodatamining.matrix.core.Utils;
 public class Center
   extends UnsupervisedMatrixAlgorithm {
 
-  /** the means. */
+  /** The column means. */
   protected double[] m_Means;
 
-  /**
-   * Resets the transformer.
-   */
   @Override
   public void doReset() {
     m_Means = null;
   }
 
-  /**
-   * Configures the transformer.
-   *
-   * @param data	the data to configure with
-   */
   @Override
   public void doConfigure(Matrix data) {
     int		j;
@@ -61,23 +53,17 @@ public class Center
       getLogger().info("Means: " + Utils.arrayToString(m_Means));
   }
 
-  /**
-   * Transforms the data.
-   *
-   * @param data	the data to transform
-   * @return		the transformed data
-   */
   @Override
-  protected Matrix doTransform(Matrix data) {
+  protected Matrix doTransform(Matrix X) {
     Matrix	result;
     int		i;
     int		j;
 
-    result = data.copy();
+    result = X.copy();
     for (j = 0; j < result.numColumns(); j++) {
       if (m_Means[j] != 0) {
         for (i = 0; i < result.numRows(); i++) {
-          result.set(i, j, result.get(i, j) - m_Means[j]);
+          result.set(i, j, Utils.normalise(result.get(i, j) , m_Means[j], 0));
         }
       }
     }
@@ -95,7 +81,7 @@ public class Center
     for (j = 0; j < result.numColumns(); j++) {
       if (m_Means[j] != 0) {
         for (i = 0; i < result.numRows(); i++) {
-          result.set(i, j, result.get(i, j) + m_Means[j]);
+          result.set(i, j, Utils.unnormalise(result.get(i, j) , m_Means[j], 0));
         }
       }
     }

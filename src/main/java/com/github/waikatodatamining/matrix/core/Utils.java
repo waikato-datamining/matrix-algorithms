@@ -479,4 +479,20 @@ public class Utils {
 
     return (value - mean) / stdDev;
   }
+
+  /**
+   * Inverse of {@link Utils#normalise(double, double, double)}.
+   *
+   * @param value   The value to un-normalise.
+   * @param mean    The mean of the distribution.
+   * @param stdDev  The standard deviation of the distribution.
+   * @return        The un-normalised value.
+   */
+  public static double unnormalise(double value, double mean, double stdDev) {
+    // Corollary to avoid divide-by-zero error in normalise
+    if (stdDev == 0.0)
+      return value + mean;
+
+    return (value * stdDev) + mean;
+  }
 }

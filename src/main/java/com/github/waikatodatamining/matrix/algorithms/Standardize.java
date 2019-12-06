@@ -33,26 +33,18 @@ import com.github.waikatodatamining.matrix.core.Utils;
 public class Standardize
   extends UnsupervisedMatrixAlgorithm {
 
-  /** the means. */
+  /** The column means. */
   protected double[] m_Means;
 
-  /** the stdevs. */
+  /** The column standard deviations. */
   protected double[] m_StdDevs;
 
-  /**
-   * Resets the transformer.
-   */
   @Override
   public void doReset() {
     m_Means   = null;
     m_StdDevs = null;
   }
 
-  /**
-   * Configures the transformer.
-   *
-   * @param data	the data to configure with
-   */
   @Override
   public void doConfigure(Matrix data) {
     int		j;
@@ -70,12 +62,6 @@ public class Standardize
     }
   }
 
-  /**
-   * Filters the data.
-   *
-   * @param data	the data to transform
-   * @return		the transformed data
-   */
   @Override
   protected Matrix doTransform(Matrix data) {
     Matrix	result;
@@ -84,15 +70,8 @@ public class Standardize
 
     result = data.copy();
     for (j = 0; j < result.numColumns(); j++) {
-      if (m_StdDevs[j] > 0) {
-        for (i = 0; i < result.numRows(); i++) {
-          result.set(i, j, (result.get(i, j) - m_Means[j]) / m_StdDevs[j]);
-        }
-      }
-      else if (m_Means[j] != 0) {
-        for (i = 0; i < result.numRows(); i++) {
-          result.set(i, j, result.get(i, j) - m_Means[j]);
-        }
+      for (i = 0; i < result.numRows(); i++) {
+        result.set(i, j, Utils.normalise(result.get(i, j), m_Means[j], m_StdDevs[j]));
       }
     }
 
@@ -107,14 +86,8 @@ public class Standardize
 
     result = data.copy();
     for (j = 0; j < result.numColumns(); j++) {
-      if (m_StdDevs[j] > 0) {
-        for (i = 0; i < result.numRows(); i++) {
-          result.set(i, j, (result.get(i, j) * m_StdDevs[j]) + m_Means[j]);
-        }
-      } else if (m_Means[j] != 0) {
-        for (i = 0; i < result.numRows(); i++) {
-          result.set(i, j, result.get(i, j) + m_Means[j]);
-        }
+      for (i = 0; i < result.numRows(); i++) {
+        result.set(i, j, Utils.unnormalise(result.get(i, j), m_Means[j], m_StdDevs[j]));
       }
     }
 

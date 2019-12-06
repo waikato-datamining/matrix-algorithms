@@ -43,20 +43,20 @@ public class PCA
 
   private static final long serialVersionUID = 7150143741822676345L;
 
-  /** the variance to cover. */
+  /** The variance to cover. */
   protected double m_Variance = 0.95;
 
-  /** the maximum number of attributes. */
+  /** The maximum number of attributes. */
   protected int m_MaxColumns = -1;
 
-  /** whether to center (rather than standardize) the data and compute PCA from
+  /** Whether to center (rather than standardize) the data and compute PCA from
    * covariance (rather than correlation) matrix. */
   protected boolean m_Center = false;
 
-  /** the loadings. */
+  /** The loadings. */
   protected Matrix m_Loadings;
 
-  /** the scores. */
+  /** The scores. */
   protected Matrix m_Scores;
 
   /** Correlation matrix for the original data. */
@@ -71,7 +71,7 @@ public class PCA
   /** Sorted eigenvalues. */
   protected int[] m_SortedEigens;
 
-  /** sum of the eigenvalues. */
+  /** Sum of the eigenvalues. */
   protected double m_SumOfEigenValues;
 
   /** Number of columns. */
@@ -80,13 +80,13 @@ public class PCA
   /** Number of rows. */
   protected int m_NumRows;
 
-  /** the columns to delete. */
+  /** The columns to delete. */
   protected TIntList m_KeepCols;
 
-  /** the matrix used for training. */
+  /** The matrix used for training. */
   protected Matrix m_Train;
 
-  /** the filter for transforming the data. */
+  /** The filter for transforming the data. */
   protected UnsupervisedMatrixAlgorithm m_Transformation;
 
   /**
