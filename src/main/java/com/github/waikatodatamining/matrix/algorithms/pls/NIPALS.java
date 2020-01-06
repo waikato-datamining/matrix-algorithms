@@ -173,7 +173,7 @@ public class NIPALS
 
       if (xkScore.norm2squared() < eps) {
         getLogger().warning("X scores are null at component " + k);
-	break;
+	    break;
       }
 
       // Deflate X
@@ -254,12 +254,11 @@ public class NIPALS
 
       // Add eps if necessary to converge to a more acceptable solution
       if (xWeight.norm2squared() < eps) {
-	xWeight = xWeight.add(eps);
+	    xWeight = xWeight.add(eps);
       }
 
       // Normalize
       xWeight = xWeight.div(Math.sqrt(xWeight.norm2squared()) + eps);
-
 
       // 2) Calculate latent X scores
       xScore = X.mul(xWeight);
@@ -278,7 +277,7 @@ public class NIPALS
 
       // Normalize Y weights
       if (m_NormYWeights) {
-	yWeight = yWeight.div(Math.sqrt(yWeight.norm2squared()) + eps);
+	    yWeight = yWeight.div(Math.sqrt(yWeight.norm2squared()) + eps);
       }
 
       // 4) Calculate ykScores
@@ -287,11 +286,11 @@ public class NIPALS
       Matrix xWeightDiff = xWeight.sub(xWeightOld);
 
       if (xWeightDiff.norm2squared() < m_Tol || Y.numColumns() == 1) {
-	break;
+	    break;
       }
 
       if (iterations >= m_MaxIter) {
-	break;
+	    break;
       }
 
       // Update stopping conditions
