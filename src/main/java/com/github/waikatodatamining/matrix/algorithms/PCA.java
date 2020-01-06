@@ -25,6 +25,7 @@ import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.algorithm.UnsupervisedMatrixAlgorithm;
 import com.github.waikatodatamining.matrix.core.Utils;
+import com.github.waikatodatamining.matrix.core.matrix.MatrixHelper;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.TDoubleSet;
@@ -59,9 +60,6 @@ public class PCA
   /** The scores. */
   protected Matrix m_Scores;
 
-  /** Correlation matrix for the original data. */
-  protected double[][] m_Correlation;
-
   /** Will hold the unordered linear transformations of the (normalized) original data. */
   protected double[][] m_Eigenvectors;
 
@@ -90,6 +88,15 @@ public class PCA
   protected UnsupervisedMatrixAlgorithm m_Transformation;
 
   /**
+   * Returns the variance.
+   *
+   * @return the variance
+   */
+  public double getVariance() {
+    return m_Variance;
+  }
+
+  /**
    * Sets the variance.
    *
    * @param value	the variance
@@ -101,42 +108,23 @@ public class PCA
   }
 
   /**
-   * Returns the variance.
-   *
-   * @return		the variance
-   */
-  public double getVariance() {
-    return m_Variance;
-  }
-
-  /**
-   * Sets the maximum attributes.
-   *
-   * @param value	the maximum
-   */
-  public void setMaxColumns(int value) {
-    if ((value == -1) || (value > 0)) {
-      m_MaxColumns = value;
-    }
-  }
-
-  /**
    * Returns the maximum attributes.
    *
-   * @return		the maximum
+   * @return the maximum
    */
   public int getMaxColumns() {
     return m_MaxColumns;
   }
 
   /**
-   * Set whether to center (rather than standardize) the data. If set to true
-   * then PCA is computed from the covariance rather than correlation matrix.
+   * Sets the maximum attributes.
    *
-   * @param center true if the data is to be centered rather than standardized
+   * @param value the maximum
    */
-  public void setCenter(boolean center) {
-    m_Center = center;
+  public void setMaxColumns(int value) {
+    if ((value == -1) || (value > 0)) {
+      m_MaxColumns = value;
+    }
   }
 
   /**
@@ -147,6 +135,16 @@ public class PCA
    */
   public boolean getCenter() {
     return m_Center;
+  }
+
+  /**
+   * Set whether to center (rather than standardize) the data. If set to true
+   * then PCA is computed from the covariance rather than correlation matrix.
+   *
+   * @param center true if the data is to be centered rather than standardized
+   */
+  public void setCenter(boolean center) {
+    m_Center = center;
   }
 
   /**
@@ -168,25 +166,6 @@ public class PCA
   }
 
   /**
-   * Fills the covariance matrix.
-   */
-  protected void fillCorrelation() {
-    m_Correlation = new double[m_NumCols][m_NumCols];
-
-    for (int i = 0; i < m_NumCols; i++) {
-      for (int j = i; j < m_NumCols; j++) {
-        double cov = 0;
-        for (int n = 0; n < m_Train.numRows(); n++)
-          cov += m_Train.get(n, i) * m_Train.get(n, j);
-
-        cov /= m_Train.numRows() - 1;
-        m_Correlation[i][j] = cov;
-        m_Correlation[j][i] = cov;
-      }
-    }
-  }
-
-  /**
    * Removes the columns according to {@link #m_KeepCols}.
    *
    * @param data	the data to trim
@@ -199,7 +178,7 @@ public class PCA
     if (m_KeepCols.size() != data.numColumns()) {
       rows = new TIntArrayList();
       for (j = 0; j < data.numRows(); j++)
-	rows.add(j);
+        rows.add(j);
       data = data.getSubMatrix(rows.toArray(), m_KeepCols.toArray());
     }
 
@@ -226,13 +205,14 @@ public class PCA
     for (j = 0; j < m_Train.numColumns(); j++) {
       distinct = new TDoubleHashSet();
       for (i = 0; i < m_Train.numRows(); i++) {
-	distinct.add(m_Train.get(i, j));
-	if (distinct.size() > 1)
-	  break;
+        distinct.add(m_Train.get(i, j));
+        if (distinct.size() > 1)
+          break;
       }
       if (distinct.size() > 1)
-	m_KeepCols.add(j);
+        m_KeepCols.add(j);
     }
+
     m_Train = removeColumns(m_Train);
 
     // transform data
@@ -245,15 +225,13 @@ public class PCA
     m_NumRows = m_Train.numRows();
     m_NumCols = m_Train.numColumns();
 
-    fillCorrelation();
-
     // get eigen vectors/values
-    corr = MatrixFactory.fromRaw(m_Correlation);
+    corr = MatrixHelper.covariance(m_Train);
     V    = corr.getEigenvectors();
     v    = new double[m_NumCols][m_NumCols];
     for (i = 0; i < v.length; i++) {
       for (j = 0; j < v[0].length; j++)
-	v[i][j] = V.get(i, j);
+        v[i][j] = V.get(i, j);
     }
     m_Eigenvectors = v.clone();
     m_Eigenvalues = corr.getEigenvalues().toRawCopy1D();
@@ -261,7 +239,7 @@ public class PCA
     // any eigenvalues less than 0 are not worth anything --- change to 0
     for (i = 0; i < m_Eigenvalues.length; i++) {
       if (m_Eigenvalues[i] < 0)
-	m_Eigenvalues[i] = 0.0;
+        m_Eigenvalues[i] = 0.0;
     }
     m_SortedEigens = Utils.sort(m_Eigenvalues);
     m_SumOfEigenValues = Utils.sum(m_Eigenvalues);
@@ -310,14 +288,14 @@ public class PCA
       cols       = 0;
       for (i = m_NumCols - 1; i >= numColsLowerBound; i--) {
         cols++;
-	val = 0.0;
-	for (j = 0; j < m_NumCols; j++)
-	  val += m_Eigenvectors[j][m_SortedEigens[i]] * data.get(n, j);
+        val = 0.0;
+        for (j = 0; j < m_NumCols; j++)
+          val += m_Eigenvectors[j][m_SortedEigens[i]] * data.get(n, j);
 
-	newVals[m_NumCols - i - 1] = val;
-	cumulative += m_Eigenvalues[m_SortedEigens[i]];
-	if ((cumulative / m_SumOfEigenValues) >= m_Variance)
-	  break;
+        newVals[m_NumCols - i - 1] = val;
+        cumulative += m_Eigenvalues[m_SortedEigens[i]];
+        if ((cumulative / m_SumOfEigenValues) >= m_Variance)
+          break;
       }
       numColsAct = Math.max(numColsAct, cols);
       values[n] = newVals;
@@ -351,12 +329,12 @@ public class PCA
    */
   protected List<List<Double>> getCoefficients() {
     List<List<Double>> 	result;
-    List<Double> 	onePC;
-    double 		cumulative;
-    int 		i;
-    int 		j;
-    double 		coeffValue;
-    int 		numColsLowerBound;
+    List<Double> 	    onePC;
+    double 		        cumulative;
+    int 		        i;
+    int 		        j;
+    double 		        coeffValue;
+    int 		        numColsLowerBound;
 
     if (m_Eigenvalues == null)
       return null;
@@ -377,15 +355,15 @@ public class PCA
       onePC = new ArrayList<>();
 
       for (j = 0; j < m_NumCols; j++) {
-	coeffValue = m_Eigenvectors[j][m_SortedEigens[i]];
-	onePC.add(coeffValue);
+        coeffValue = m_Eigenvectors[j][m_SortedEigens[i]];
+        onePC.add(coeffValue);
       }
 
       result.add(onePC);
       cumulative += m_Eigenvalues[m_SortedEigens[i]];
 
       if ((cumulative / m_SumOfEigenValues) >= m_Variance)
-	break;
+        break;
     }
 
     return result;
@@ -395,7 +373,7 @@ public class PCA
    * Create a matrix to output from the coefficients 2D array
    *
    * @return		matrix containing the components
-   * @see		#getCoefficients()
+   * @see		    #getCoefficients()
    */
   protected Matrix extractLoadings() {
     Matrix 		result;
@@ -408,19 +386,19 @@ public class PCA
 
     // add the index column
     for (n = 0; n < m_NumCols; n++)
-      result.set(n, result.numColumns() - 1, n+1);
+      result.set(n, result.numColumns() - 1, n + 1);
 
     //each arraylist is a single column
-    for (i = 0; i< coeff.size() ; i++) {
+    for (i = 0; i < coeff.size(); i++) {
       for (n = 0; n < m_NumCols; n++) {
-	// column was kept earlier
-	double value = 0.0;
-	if (m_KeepCols.contains(n)) {
-	  int index = m_KeepCols.indexOf(n);
-	  if (index < coeff.get(i).size())
-	    value = coeff.get(i).get(index);
-	}
-	result.set(n, i, value);
+        // column was kept earlier
+        double value = 0.0;
+        if (m_KeepCols.contains(n)) {
+          int index = m_KeepCols.indexOf(n);
+          if (index < coeff.get(i).size())
+            value = coeff.get(i).get(index);
+        }
+        result.set(n, i, value);
       }
     }
 

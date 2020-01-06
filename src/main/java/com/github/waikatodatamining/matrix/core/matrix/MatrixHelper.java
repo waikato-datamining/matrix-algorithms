@@ -505,4 +505,44 @@ public class MatrixHelper {
 
     return result;
   }
+
+  /**
+   * Calculates the covariance matrix between 2 matrices,
+   * the rows of which represent the columns of the first
+   * matrix and the columns of which represent the columns
+   * of the second matrix.
+   *
+   * @param a   The first matrix.
+   * @param b   The second matrix.
+   * @return    The covariance matrix.
+   */
+  public static Matrix covariance(Matrix a, Matrix b) {
+    // Initialise the result matrix
+    Matrix covariance = MatrixFactory.zeros(a.numColumns(), b.numColumns());
+
+    // Calculate the covariance between each pair of columns in the input matrices
+    for (int i = 0; i < a.numColumns(); i++) {
+      for (int j = 0; j < b.numColumns(); j++) {
+        double cov = 0;
+        for (int n = 0; n < a.numRows(); n++)
+          cov += a.get(n, i) * b.get(n, j);
+
+        cov /= a.numRows() - 1;
+        covariance.set(i, j, cov);
+      }
+    }
+
+    return covariance;
+  }
+
+  /**
+   * Calculates the covariance between pairs of columns in a
+   * single matrix.
+   *
+   * @param a   The matrix.
+   * @return    The covariance matrix.
+   */
+  public static Matrix covariance(Matrix a) {
+    return covariance(a, a);
+  }
 }
