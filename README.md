@@ -24,6 +24,7 @@ Supervised:
 * [Canonical Correlation Analysis (CCA)](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.16)
 * [Domain Invariant PLS (DIPLS)](https://pubs.acs.org/doi/10.1021/acs.analchem.8b00498)
 * [Variance Constrained PLS](http://or.nsfc.gov.cn/bitstream/00001903-5/485833/1/1000013952154.pdf)
+* [Orthogonal Signal Correction (OSC)](https://www.sciencedirect.com/science/article/pii/S0169743998001099)
 
 Planned:
 
