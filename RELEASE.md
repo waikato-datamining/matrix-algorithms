@@ -1,6 +1,8 @@
 How to make a release
 =====================
 
+* Switch to Java 11
+
 * Run the following command to deploy the artifact:
 
   ```
@@ -8,3 +10,7 @@ How to make a release
   ```
 
 * Push all changes
+
+* Log into https://oss.sonatype.org/ and publish artifacts (close/release)
+
+* Update Maven artficat version in [README.md](README.md#maven)
