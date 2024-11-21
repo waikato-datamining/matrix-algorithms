@@ -13,4 +13,4 @@ How to make a release
 
 * Log into https://oss.sonatype.org/ and publish artifacts (close/release)
 
-* Update Maven artficat version in [README.md](README.md#maven)
+* Update Maven artifact version in [README.md](README.md#maven)
