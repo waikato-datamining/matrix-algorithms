@@ -1,6 +1,7 @@
 package com.github.waikatodatamining.matrix.algorithms.pls;
 
 import com.github.waikatodatamining.matrix.algorithms.Center;
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.exceptions.MatrixAlgorithmsException;
@@ -220,6 +221,8 @@ public class DIPLS
 
     // Start loop over number of components
     for (int a = 0; a < getNumComponents(); a++) {
+      if (m_Stopped)
+	throw new StoppedException();
 
       // Calculate domain invariant weights
       double yNorm2Squared = y.norm2squared();

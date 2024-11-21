@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithms.pls;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
 
@@ -153,6 +154,8 @@ public class OPLS
 
 
     for (int currentComponent = 0; currentComponent < getNumComponents(); currentComponent++) {
+      if (m_Stopped)
+	throw new StoppedException();
 
       // Calculate scores vector
       t = X.mul(w).mul(invL2Squared(w));

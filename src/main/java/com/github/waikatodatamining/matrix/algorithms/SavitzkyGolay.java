@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithms;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixHelper;
@@ -110,6 +111,9 @@ public class SavitzkyGolay
     int windowWidth = m_Coefficients.numColumns();
     int numOutputColumns = data.numColumns() - windowWidth + 1;
     for (int i = 0; i < numOutputColumns; i++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       Matrix column = data.getSubMatrix(0, data.numRows(), i, i + windowWidth);
       column = column.scaleByRowVector(m_Coefficients.transpose());
       column = column.sum(1);

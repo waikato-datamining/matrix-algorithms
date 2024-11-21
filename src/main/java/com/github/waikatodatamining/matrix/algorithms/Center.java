@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithms;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixHelper;
 import com.github.waikatodatamining.matrix.core.algorithm.UnsupervisedMatrixAlgorithm;
@@ -61,6 +62,9 @@ public class Center
 
     result = X.copy();
     for (j = 0; j < result.numColumns(); j++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       if (m_Means[j] != 0) {
         for (i = 0; i < result.numRows(); i++) {
           result.set(i, j, Utils.normalise(result.get(i, j) , m_Means[j], 0));

@@ -1,6 +1,7 @@
 package com.github.waikatodatamining.matrix.algorithms.pls;
 
 import com.github.waikatodatamining.matrix.algorithms.Center;
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
 import com.github.waikatodatamining.matrix.algorithms.pls.kernel.AbstractKernel;
@@ -145,6 +146,9 @@ public class KernelPLS
       // Repeat 1) - 3) until convergence: either change of u is lower than m_Tol or maximum
       // number of iterations has been reached (m_MaxIter)
       while (iterationChange > m_Tol && iterations < m_MaxIter) {
+	if (m_Stopped)
+	  throw new StoppedException();
+
 	// 1)
 	t = m_K_deflated.mul(u).normalized();
 	w = t.copy();

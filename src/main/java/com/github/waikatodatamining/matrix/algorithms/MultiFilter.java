@@ -15,11 +15,12 @@
 
 /*
  * MultiFilter.java
- * Copyright (C) 2019 University of Waikato, Hamilton, NZ
+ * Copyright (C) 2019-2024 University of Waikato, Hamilton, NZ
  */
 
 package com.github.waikatodatamining.matrix.algorithms;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.algorithm.MatrixAlgorithm;
 import com.github.waikatodatamining.matrix.core.algorithm.UnsupervisedMatrixAlgorithm;
@@ -50,6 +51,9 @@ public class MultiFilter
 
     // Apply each filter in ordered turn
     for (MatrixAlgorithm algorithm : m_Algorithms) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       if (algorithm instanceof UnsupervisedMatrixAlgorithm)
         result = ((UnsupervisedMatrixAlgorithm) algorithm).configureAndTransform(result);
       else

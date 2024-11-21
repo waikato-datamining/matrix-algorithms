@@ -3,6 +3,7 @@ package com.github.waikatodatamining.matrix.algorithms.ica;
 import com.github.waikatodatamining.matrix.algorithms.Center;
 import com.github.waikatodatamining.matrix.algorithms.ica.approxfun.LogCosH;
 import com.github.waikatodatamining.matrix.algorithms.ica.approxfun.NegEntropyApproximationFunction;
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.algorithm.MatrixAlgorithm;
 import com.github.waikatodatamining.matrix.core.Tuple;
@@ -233,6 +234,9 @@ public class FastICA
       Matrix w = Winit.getRow(j).t().copy();
       w = w.div(w.powElementwise(2).sum(-1).sqrt().asDouble());
       for (int i = 0; i < m_maxIter; i++) {
+	if (m_Stopped)
+	  throw new StoppedException();
+
 	Tuple<Matrix, Matrix> res = m_fun.apply(w.t().mul(X).t());
 
 	Matrix gwtx = res.getFirst();

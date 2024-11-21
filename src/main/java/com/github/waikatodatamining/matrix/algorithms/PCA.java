@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithms;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.algorithm.MatrixAlgorithm;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
@@ -282,6 +283,9 @@ public class PCA
     values     = new double[data.numRows()][];
     numColsAct = 0;
     for (n = 0; n < data.numRows(); n++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       newVals = new double[numCols];
 
       cumulative = 0;

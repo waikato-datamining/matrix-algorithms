@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithms.pls;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.Utils;
@@ -186,6 +187,9 @@ public class SIMPLS
     Q = MatrixFactory.zeros(1, getNumComponents());
 
     for (h = 0; h < getNumComponents(); h++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       // 1. qh as dominant EigenVector of Ah'*Ah
       A_trans = A.transpose();
       q = A_trans.mul(A).getDominantEigenvector();

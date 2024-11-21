@@ -1,5 +1,6 @@
 package com.github.waikatodatamining.matrix.algorithms.pls;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
 
@@ -330,6 +331,9 @@ public class PRM
 
     // Loop until convergence of gamma
     do {
+      if (m_Stopped)
+	throw new StoppedException();
+
       // 2) Perform PLS (SIMPLS) on reweighted data matrices
       Matrix Xp = getReweightedMatrix(X);
       Matrix yp = getReweightedMatrix(y);

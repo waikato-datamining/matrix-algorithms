@@ -15,11 +15,12 @@
 
 /*
  * PLS1.java
- * Copyright (C) 2018 University of Waikato, Hamilton, NZ
+ * Copyright (C) 2018-2024 University of Waikato, Hamilton, NZ
  */
 
 package com.github.waikatodatamining.matrix.algorithms.pls;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixHelper;
@@ -137,15 +138,16 @@ public class PLS1
     Xk = predictors;
     y = response;
 
-
     // init
     W = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
     P = MatrixFactory.zeros(predictors.numColumns(), getNumComponents());
     T = MatrixFactory.zeros(predictors.numRows(), getNumComponents());
     b_hat = MatrixFactory.zeros(getNumComponents(), 1);
 
-
     for (k = 0; k < getNumComponents(); k++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       // 1. step: wj
       wk = calculateWeights(Xk, y);
       W.setColumn(k, wk);
@@ -177,7 +179,6 @@ public class PLS1
     m_P = P;
     m_W = W;
     m_b_hat = b_hat;
-
   }
 
   /**
@@ -213,6 +214,9 @@ public class PLS1
       T = MatrixFactory.zeros(1, getNumComponents());
 
       for (j = 0; j < getNumComponents(); j++) {
+	if (m_Stopped)
+	  throw new StoppedException();
+
 	X.setColumn(j, x);
 	// 1. step: tj = xj * wj
 	t = x.mul(m_W.getColumn(j));
@@ -258,6 +262,9 @@ public class PLS1
       T = MatrixFactory.zeros(1, getNumComponents());
 
       for (j = 0; j < getNumComponents(); j++) {
+	if (m_Stopped)
+	  throw new StoppedException();
+
 	X.setColumn(j, x);
 	// 1. step: tj = xj * wj
 	t = x.mul(m_W.getColumn(j));

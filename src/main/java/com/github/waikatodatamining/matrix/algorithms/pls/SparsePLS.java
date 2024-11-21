@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithms.pls;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
 import com.github.waikatodatamining.matrix.algorithms.Standardize;
@@ -196,6 +197,9 @@ public class SparsePLS
     m_W = MatrixFactory.zeros(X.numColumns(), getNumComponents());
 
     for (int k = 0; k < getNumComponents(); k++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       wk = getDirectionVector(Xj, yj, k);
       m_W.setColumn(k, wk);
 
@@ -391,6 +395,9 @@ public class SparsePLS
     Matrix T = MatrixFactory.zeros(predictors.numRows(), numComponents);
     Matrix X = predictors.copy();
     for (int k = 0; k < numComponents; k++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       Matrix wk = m_W.getColumn(k);
       Matrix tk = X.mul(wk);
       T.setColumn(k, tk);

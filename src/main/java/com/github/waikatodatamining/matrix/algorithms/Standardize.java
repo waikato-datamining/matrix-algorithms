@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithms;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixHelper;
 import com.github.waikatodatamining.matrix.core.algorithm.UnsupervisedMatrixAlgorithm;
@@ -52,6 +53,9 @@ public class Standardize
     m_Means = new double[data.numColumns()];
     m_StdDevs = new double[data.numColumns()];
     for (j = 0; j < data.numColumns(); j++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       m_Means[j] = MatrixHelper.mean(data, j);
       m_StdDevs[j] = MatrixHelper.stdev(data, j);
     }
@@ -70,6 +74,9 @@ public class Standardize
 
     result = data.copy();
     for (j = 0; j < result.numColumns(); j++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       for (i = 0; i < result.numRows(); i++) {
         result.set(i, j, Utils.normalise(result.get(i, j), m_Means[j], m_StdDevs[j]));
       }
@@ -86,6 +93,9 @@ public class Standardize
 
     result = data.copy();
     for (j = 0; j < result.numColumns(); j++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       for (i = 0; i < result.numRows(); i++) {
         result.set(i, j, Utils.unnormalise(result.get(i, j), m_Means[j], m_StdDevs[j]));
       }

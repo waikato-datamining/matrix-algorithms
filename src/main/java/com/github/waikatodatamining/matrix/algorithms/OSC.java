@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithms;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.algorithm.SupervisedMatrixAlgorithm;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
@@ -67,13 +68,19 @@ public class OSC
     // (This stage should be handled externally if required)
 
     for (int oscComponent = 0; oscComponent < m_NumComponents; oscComponent++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       // (2) Start by calculating the first principal component of X, with the score vector, t
       Matrix t = firstPrincipalComponent(X);
 
       Matrix t_new;
       Matrix w;
       do {
-        // (3) Orthogonalize t to Y
+	if (m_Stopped)
+	  throw new StoppedException();
+
+	// (3) Orthogonalize t to Y
         t_new = orthogonalise(t, y);
 
         // (4) Calculate a weight vector, w, that makes Xw=t

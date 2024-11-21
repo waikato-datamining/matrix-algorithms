@@ -20,6 +20,7 @@
 
 package com.github.waikatodatamining.matrix.algorithms;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.algorithm.MatrixAlgorithm;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixHelper;
@@ -56,6 +57,9 @@ public class RowNorm
 
     // Normalise each row
     for (int rowIndex = 0; rowIndex < result.numRows(); rowIndex++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       // Get the mean and standard deviation for this row
       double mean = means[rowIndex];
       double stdDev = stdDevs[rowIndex];

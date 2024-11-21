@@ -15,7 +15,7 @@
 
 /*
  * MatrixAlgorithm.java
- * Copyright (C) 2019 University of Waikato, Hamilton, NZ
+ * Copyright (C) 2019-2024 University of Waikato, Hamilton, NZ
  */
 
 package com.github.waikatodatamining.matrix.core.algorithm;
@@ -32,6 +32,9 @@ import com.github.waikatodatamining.matrix.core.matrix.Matrix;
  */
 public abstract class MatrixAlgorithm
   extends LoggingObject {
+
+  /** whether the transform was stopped. */
+  protected boolean m_Stopped;
 
   /**
    * Performs the transformation that this algorithm represents on
@@ -99,4 +102,19 @@ public abstract class MatrixAlgorithm
     return false;
   }
 
+  /**
+   * Sets the stopped flag, indicating the algorithm to throw an exception.
+   */
+  public void stop() {
+    m_Stopped = true;
+  }
+
+  /**
+   * Returns whether the algorithm was stopped.
+   *
+   * @return		true if stopped
+   */
+  public boolean isStopped() {
+    return m_Stopped;
+  }
 }

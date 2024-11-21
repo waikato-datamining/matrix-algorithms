@@ -1,5 +1,6 @@
 package com.github.waikatodatamining.matrix.algorithms.pls;
 
+import com.github.waikatodatamining.matrix.core.StoppedException;
 import com.github.waikatodatamining.matrix.core.matrix.Matrix;
 import com.github.waikatodatamining.matrix.core.matrix.MatrixFactory;
 import com.github.waikatodatamining.matrix.algorithms.Standardize;
@@ -157,6 +158,9 @@ public class NIPALS
 
     double eps = 1e-10;
     for (int k = 0; k < numComponents; k++) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       if (Y.transpose().mul(Y).all(e -> e < eps)) {
         getLogger().warning("Y residual constant at iteration " + k);
         break;
@@ -192,7 +196,6 @@ public class NIPALS
 	  break;
       }
 
-
       // Store results
       m_XScores.setColumn(k, xkScore);
       m_YScores.setColumn(k, ykScore);
@@ -200,8 +203,6 @@ public class NIPALS
       m_YWeights.setColumn(k, ykWeight);
       m_XLoadings.setColumn(k, xkLoading);
       m_YLoadings.setColumn(k, ykLoading);
-
-
     }
 
     m_X = X;
@@ -241,6 +242,9 @@ public class NIPALS
     // Repeat 1) - 3) until convergence: either change of u is lower than m_Tol or maximum
     // number of iterations has been reached (m_MaxIter)
     while (true) {
+      if (m_Stopped)
+	throw new StoppedException();
+
       // 1) Update X weights
       if (getWeightCalculationMode() == WeightCalculationMode.CCA){
         if (XpInv == null){
