@@ -11,6 +11,10 @@ How to make a release
 
 * Push all changes
 
-* Log into https://oss.sonatype.org/ and publish artifacts (close/release)
+* Go to the following URL and publish the artifact:
+
+  ```
+  https://central.sonatype.com/publishing/deployments
+  ```
 
 * Update Maven artifact version in [README.md](README.md#maven)
